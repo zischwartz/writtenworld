@@ -1,5 +1,18 @@
 (function() {
 
+  window.buildTile = function() {
+    var c, cell, frag, r, _ref, _ref2;
+    frag = document.createDocumentFragment();
+    for (r = 0, _ref = state.numRows() - 1; 0 <= _ref ? r <= _ref : r >= _ref; 0 <= _ref ? r++ : r--) {
+      for (c = 0, _ref2 = state.numCols() - 1; 0 <= _ref2 ? c <= _ref2 : c >= _ref2; 0 <= _ref2 ? c++ : c--) {
+        cell = new L.Cell();
+        cell.element = frag.appendChild(document.createElement('span'));
+        cell.innerHTML = config.defaultChar();
+      }
+    }
+    return frag;
+  };
+
   L.TileLayer.Dom = L.TileLayer.extend({
     options: {
       async: false
@@ -26,25 +39,18 @@
       return true;
     },
     _createTileProto: function() {
-      var cell, i, tileSize;
+      var tileSize;
       dbg('creatingTileProto');
       this._divProto = L.DomUtil.create('div', 'leaflet-tile');
       tileSize = this.options.tileSize;
       this._divProto.style.width = tileSize.x + 'px';
       this._divProto.style.height = tileSize.y + 'px';
-      this._docFragment = document.createDocumentFragment();
-      for (i = 1; i <= 30; i++) {
-        cell = this._docFragment.appendChild(document.createElement("span"));
-        cell.innerHTML = 'A';
-      }
       return true;
     },
     _createTile: function() {
       var tile;
       dbg('_createTile called');
-      dbg(state.zoomDiff());
-      tile = this._divProto.cloneNode(true);
-      tile.appendChild(this._docFragment.cloneNode(true));
+      tile = this._divProto.cloneNode(false);
       tile.onselectstart = tile.onmousemove = L.Util.falseFn;
       return tile;
     },
@@ -58,6 +64,9 @@
       return true;
     },
     drawTile: function(tile, tilePoint, zoom) {
+      var content;
+      content = buildTile();
+      tile.appendChild(content.cloneNode(true));
       dbg('drawTile called, does nothing');
       return true;
     },
@@ -86,6 +95,25 @@
       });
       layer._tilesToLoad--;
       if (!layer._tilesToLoad) layer.fire('load');
+      return true;
+    }
+  });
+
+  L.Cell = L.Class.extend({
+    includes: L.Mixin.Events,
+    awesome: 'abcdefghijkl',
+    options: {
+      clickable: true,
+      draggable: false
+    },
+    initialize: function(tile, row, col, options) {
+      L.Util.setOptions(this, options);
+      this.tile = tile;
+      this.row = row;
+      this.col = col;
+      return true;
+    },
+    addToTile: function() {
       return true;
     }
   });

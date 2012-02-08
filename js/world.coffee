@@ -1,24 +1,27 @@
-window.DEBUG = true
+window.DEBUG = false
+# window.DEBUG = true
 
 window.Configuration = class Configuration
   constructor: (spec = {}) ->
     @tileSize = -> spec.tileSize ? {x: 128, y: 256}
-    @maxZoom = -> spec.maxZoom ? 18
+    @maxZoom = -> spec.maxZoom ? 17
     @defaultChar = -> spec.defaultChar ? "."
 
 window.config = new Configuration
 
 window.state =
-  selectedEl: null
-  selectedTileKey: null
   selectedCellKey: null
+  selectedCellEl: null
+  # selectedEl: null
+  # selectedTileKey: null
+  # selectedCellKey: null
   # lastClick: null
   # lastChar: null
   # canRead: true
   # canWrite: true
-  geoInitialPos: null
-  geoCurrentPos: null
-  geoAccuracy: null
+  # geoInitialPos: null
+  # geoCurrentPos: null
+  # geoAccuracy: null
   writeDirection: 'right'
   zoomDiff: ->
     config.maxZoom()-map.getZoom()+1 #log here is that the true maxzoom is one greater than you can acutally zoom (and should be one cell per tile)
@@ -28,6 +31,21 @@ window.state =
     numCols = Math.pow(2, state.zoomDiff())# *2 # 3:2 RATIO OF ROWS TO COLUMNS. Should probably put this in config!
 
 #should set these up here beyond null, so it's clear what they represent
+
+setTileStyle = ->
+ width = config.tileSize().x/state.numCols()
+ height = config.tileSize().y/state.numRows()
+ rules = []
+ rules.push(".leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{height}px;}")
+ # console.log rules
+ $("#dynamicStyles").text rules.join("\n")
+# 
+# window.getKey =(x) ->
+#   console.log x._tilePoint
+#   if x._tilePoint
+#     return "#{x._tilePoint.x}:#{x._tilePoint.y}"
+#   if x._cellPoint
+#     return "#{x._cellPoint.tileX}: #{x._cellPoint.tileY}:#{x._cellPoint.x}:#{x._cellPoint.y}"
 
 setSelected = (el) ->
   if state.selectedEl
@@ -41,8 +59,8 @@ setSelected = (el) ->
 
 moveCursor = (direction, from = state.selected) ->
   # if not from then from= state.selected
-  console.log 'from',from
-  console.log direction
+  # console.log 'from',from
+  # console.log direction
   # console.log 'Tile.getcellcoords',Tile.getCellCoords(from)
   # coords= Tile.getCellCoords(from)
   target = {}
@@ -84,6 +102,14 @@ moveCursor = (direction, from = state.selected) ->
 #INITIALIZER 
 initializeInterface = ->
 
+  # this is hacky
+  # $(".leaflet-tile span").live 'click', (e) ->
+  #   console.log e
+  $("#map").click (e) ->
+    console.log e
+
+  # map.on 'click', (e) ->
+    # console.log e, e.latlng
   # $("#map").click (e) ->
   #   console.log e
   #   setSelected(e.target)
@@ -141,27 +167,19 @@ initializeInterface = ->
 
 jQuery ->
   tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png'
-  tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
+  tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()+1})
   window.map = new L.Map('map', {center: new L.LatLng(51.505, -0.09), zoom: 16}).addLayer(tileServeLayer)
   # initializeGeo()
   window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
   
   map.addLayer(domTiles)
-
+  setTileStyle() #set initial
+  map.on 'zoomend', ->
+    setTileStyle()
   initializeInterface()
   true
 # END DOC READY
 
-buildTile = ->
-      for r in [0..state.numRows()]
-        for c in [0..state.numCols()]
-           cell.setAttribute("y", cellHeight*r)
-           cell.setAttribute("x", cellWidth*c)
-           cell.setAttribute("font-size", cellWidth)
-           cell.textContent= config.defaultChar()
-           cell.tileKey = tile.key
-           cell.cellKey = c + '/' + r
-    true
 
 #CLASSES
 #

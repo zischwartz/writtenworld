@@ -1,8 +1,8 @@
 (function() {
-  var Configuration, buildTile, filter, getNodeIndex, initializeInterface, moveCursor, setSelected,
+  var Configuration, filter, getNodeIndex, initializeInterface, moveCursor, setSelected, setTileStyle,
     __slice = Array.prototype.slice;
 
-  window.DEBUG = true;
+  window.DEBUG = false;
 
   window.Configuration = Configuration = (function() {
 
@@ -17,7 +17,7 @@
       };
       this.maxZoom = function() {
         var _ref;
-        return (_ref = spec.maxZoom) != null ? _ref : 18;
+        return (_ref = spec.maxZoom) != null ? _ref : 17;
       };
       this.defaultChar = function() {
         var _ref;
@@ -32,12 +32,8 @@
   window.config = new Configuration;
 
   window.state = {
-    selectedEl: null,
-    selectedTileKey: null,
     selectedCellKey: null,
-    geoInitialPos: null,
-    geoCurrentPos: null,
-    geoAccuracy: null,
+    selectedCellEl: null,
     writeDirection: 'right',
     zoomDiff: function() {
       return config.maxZoom() - map.getZoom() + 1;
@@ -52,6 +48,15 @@
     }
   };
 
+  setTileStyle = function() {
+    var height, rules, width;
+    width = config.tileSize().x / state.numCols();
+    height = config.tileSize().y / state.numRows();
+    rules = [];
+    rules.push(".leaflet-tile span { width: " + width + "px; height: " + height + "px; font-size: " + height + "px;}");
+    return $("#dynamicStyles").text(rules.join("\n"));
+  };
+
   setSelected = function(el) {
     if (state.selectedEl) state.selectedEl.className.baseVal = '';
     state.selectedEl = el;
@@ -64,8 +69,6 @@
   moveCursor = function(direction, from) {
     var target, zoom, _ref, _ref2;
     if (from == null) from = state.selected;
-    console.log('from', from);
-    console.log(direction);
     target = {};
     _ref = state.selectedCellKey.split('/'), target.col = _ref[0], target.row = _ref[1];
     _ref2 = state.selectedTileKey.split('/'), zoom = _ref2[0], target.lat = _ref2[1], target.lng = _ref2[2];
@@ -104,6 +107,9 @@
 
   initializeInterface = function() {
     var inputEl;
+    $("#map").click(function(e) {
+      return console.log(e);
+    });
     inputEl = $("#input");
     inputEl.focus();
     inputEl.keypress(function(e) {
@@ -150,7 +156,7 @@
     var tileServeLayer, tileServeUrl;
     tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png';
     tileServeLayer = new L.TileLayer(tileServeUrl, {
-      maxZoom: config.maxZoom()
+      maxZoom: config.maxZoom() + 1
     });
     window.map = new L.Map('map', {
       center: new L.LatLng(51.505, -0.09),
@@ -160,32 +166,13 @@
       tileSize: config.tileSize()
     });
     map.addLayer(domTiles);
+    setTileStyle();
+    map.on('zoomend', function() {
+      return setTileStyle();
+    });
     initializeInterface();
     return true;
   });
-
-  buildTile = function() {
-    var c, r, _ref, _results;
-    _results = [];
-    for (r = 0, _ref = state.numRows(); 0 <= _ref ? r <= _ref : r >= _ref; 0 <= _ref ? r++ : r--) {
-      _results.push((function() {
-        var _ref2, _results2;
-        _results2 = [];
-        for (c = 0, _ref2 = state.numCols(); 0 <= _ref2 ? c <= _ref2 : c >= _ref2; 0 <= _ref2 ? c++ : c--) {
-          cell.setAttribute("y", cellHeight * r);
-          cell.setAttribute("x", cellWidth * c);
-          cell.setAttribute("font-size", cellWidth);
-          cell.textContent = config.defaultChar();
-          cell.tileKey = tile.key;
-          _results2.push(cell.cellKey = c + '/' + r);
-        }
-        return _results2;
-      })());
-    }
-    return _results;
-  };
-
-  true;
 
   filter = function(list, func) {
     var x, _i, _len, _results;

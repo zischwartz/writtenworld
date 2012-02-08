@@ -1,4 +1,7 @@
-
+#map
+{
+  font-family: courier, sanserif;
+}
 		div.leaflet-tile
 		{
 			/*border-right: 1px solid red;*/
@@ -6,7 +9,21 @@
 		}
 		div.leaflet-tile span
 		{
-			float:left;
+      text-align: center;
+      float:left;
 			display: block;
-			font-size: 8px;
+      overflow: hidden;
+      background: rgba(0,250, 0, 0.3);
+			/* font-size: 8px; */
 		}
+    
+    div.leaflet-tile-drawn
+    {
+      /* background: rgba(0,250, 0, 0.3); */
+    }
+
+    div.leaflet-tile-loaded
+    {
+      /* background: rgba(255, 0, 0, 0.3); */
+    }
+
