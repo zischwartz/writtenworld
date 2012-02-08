@@ -5,7 +5,7 @@
       async: false
     },
     initialize: function(options) {
-      console.log('init!');
+      dbg('init!');
       L.Util.setOptions(this, options);
       return true;
     },
@@ -27,11 +27,11 @@
     },
     _createTileProto: function() {
       var cell, i, tileSize;
-      console.log('creatingTileProto');
+      dbg('creatingTileProto');
       this._divProto = L.DomUtil.create('div', 'leaflet-tile');
       tileSize = this.options.tileSize;
-      this._divProto.style.width = tileSize + 'px';
-      this._divProto.style.height = tileSize + 'px';
+      this._divProto.style.width = tileSize.x + 'px';
+      this._divProto.style.height = tileSize.y + 'px';
       this._docFragment = document.createDocumentFragment();
       for (i = 1; i <= 30; i++) {
         cell = this._docFragment.appendChild(document.createElement("span"));
@@ -41,14 +41,15 @@
     },
     _createTile: function() {
       var tile;
-      console.log('_createTile called');
+      dbg('_createTile called');
+      dbg(state.zoomDiff());
       tile = this._divProto.cloneNode(true);
       tile.appendChild(this._docFragment.cloneNode(true));
       tile.onselectstart = tile.onmousemove = L.Util.falseFn;
       return tile;
     },
     _loadTile: function(tile, tilePoint, zoom) {
-      console.log('_loadTile called');
+      dbg('_loadTile called');
       tile._layer = this;
       tile._tilePoint = tilePoint;
       tile._zoom = zoom;
@@ -57,11 +58,12 @@
       return true;
     },
     drawTile: function(tile, tilePoint, zoom) {
+      dbg('drawTile called, does nothing');
       return true;
     },
     _getTile: function() {
       var tile;
-      console.log('_getTile called');
+      dbg('_getTile called');
       if (this.options.reuseTiles && this._unusedTiles.length > 0) {
         tile = this._unusedTiles.pop();
         this._resetTile(tile);
@@ -70,12 +72,12 @@
       return this._createTile();
     },
     tileDrawn: function(tile) {
-      console.log('tileDrawn called');
+      dbg('tileDrawn called');
       return this._tileOnLoad.call(tile);
     },
     _tileOnLoad: function(e) {
       var layer;
-      console.log('_tileOnLoad called');
+      dbg('_tileOnLoad called');
       layer = this._layer;
       this.className += ' leaflet-tile-loaded';
       layer.fire('tileload', {

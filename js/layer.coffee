@@ -8,7 +8,7 @@ L.TileLayer.Dom = L.TileLayer.extend
   options: { async: false }
 
   initialize: (options) ->
-    console.log 'init!'
+    dbg 'init!'
     L.Util.setOptions(this, options)
     true
 
@@ -23,11 +23,11 @@ L.TileLayer.Dom = L.TileLayer.extend
     true
 
   _createTileProto: ->
-    console.log('creatingTileProto')
+    dbg 'creatingTileProto'
     this._divProto = L.DomUtil.create('div', 'leaflet-tile')
     tileSize = this.options.tileSize
-    this._divProto.style.width = tileSize+'px'
-    this._divProto.style.height = tileSize+'px'
+    this._divProto.style.width = tileSize.x+'px'
+    this._divProto.style.height = tileSize.y+'px'
     this._docFragment = document.createDocumentFragment()
     for i in [1..30]
       cell=this._docFragment.appendChild(document.createElement("span"))
@@ -35,7 +35,8 @@ L.TileLayer.Dom = L.TileLayer.extend
     true
 
   _createTile: ->
-    console.log '_createTile called'
+    dbg '_createTile called'
+    dbg state.zoomDiff()
     # // var tile = this._divProto.cloneNode(true);
     # //alternatively
     tile = this._divProto.cloneNode(true)
@@ -44,7 +45,7 @@ L.TileLayer.Dom = L.TileLayer.extend
     return tile
 
   _loadTile: (tile, tilePoint, zoom) ->
-    console.log('_loadTile called')
+    dbg '_loadTile called'
     tile._layer = this
     tile._tilePoint = tilePoint
     tile._zoom = zoom
@@ -54,10 +55,11 @@ L.TileLayer.Dom = L.TileLayer.extend
     true
 
   drawTile: (tile, tilePoint, zoom)->
+    dbg 'drawTile called, does nothing'
     true
 
   _getTile: ->
-    console.log('_getTile called')
+    dbg '_getTile called'
     # console.log('current zoom in _getTile', map.getZoom());
     if (this.options.reuseTiles && this._unusedTiles.length > 0)
       tile = this._unusedTiles.pop()
@@ -66,11 +68,11 @@ L.TileLayer.Dom = L.TileLayer.extend
     return this._createTile()
 
   tileDrawn: (tile) ->
-    console.log('tileDrawn called')
+    dbg 'tileDrawn called'
     this._tileOnLoad.call(tile)
 
-  _tileOnLoad: (e) -> #maybe => ?
-    console.log('_tileOnLoad called')
+  _tileOnLoad: (e) ->
+    dbg '_tileOnLoad called'
     layer = this._layer
     this.className += ' leaflet-tile-loaded'
     layer.fire('tileload', {tile: this, url: this.src})

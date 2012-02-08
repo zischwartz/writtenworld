@@ -371,7 +371,12 @@ L.Point.prototype = {
 	},
 
 	multiplyBy: function (num) {
-		return new L.Point(this.x * num, this.y * num);
+        if (typeof num === 'number') {
+            return new L.Point(this.x * num, this.y * num);
+        }
+        else {
+            return new L.Point(this.x * num.x, this.y * num.y);
+        }
 	},
 
 	distanceTo: function (point) {
@@ -1592,7 +1597,7 @@ L.TileLayer = L.Class.extend({
 	options: {
 		minZoom: 0,
 		maxZoom: 18,
-		tileSize: 256,
+		tileSize: {x: 256, y: 256},
 		subdomains: 'abc',
 		errorTileUrl: '',
 		attribution: '',
@@ -1608,8 +1613,12 @@ L.TileLayer = L.Class.extend({
 	},
 
 	initialize: function (url, options, urlParams) {
-		L.Util.setOptions(this, options);
-
+    // Adding support for nonsquare tiles, keeping it compatible.
+        if (typeof options.tileSize === 'number') {
+            options.tileSize = {x: options.tileSize, y: options.tileSize};
+        }
+        L.Util.setOptions(this, options);
+    
 		this._url = url;
 		this._urlParams = urlParams;
 
@@ -1725,11 +1734,11 @@ L.TileLayer = L.Class.extend({
 			tileSize = this.options.tileSize;
 
 		var nwTilePoint = new L.Point(
-				Math.floor(bounds.min.x / tileSize),
-				Math.floor(bounds.min.y / tileSize)),
+				Math.floor(bounds.min.x / tileSize.x),
+				Math.floor(bounds.min.y / tileSize.y)),
 			seTilePoint = new L.Point(
-				Math.floor(bounds.max.x / tileSize),
-				Math.floor(bounds.max.y / tileSize)),
+				Math.floor(bounds.max.x / tileSize.x),
+				Math.floor(bounds.max.y / tileSize.y)),
 			tileBounds = new L.Bounds(nwTilePoint, seTilePoint);
 
 		this._addTilesFromCenterOut(tileBounds);
@@ -1865,8 +1874,8 @@ L.TileLayer = L.Class.extend({
 		this._tileImg.galleryimg = 'no';
 
 		var tileSize = this.options.tileSize;
-		this._tileImg.style.width = tileSize + 'px';
-		this._tileImg.style.height = tileSize + 'px';
+		this._tileImg.style.width = tileSize.x + 'px';
+		this._tileImg.style.height = tileSize.y + 'px';
 	},
 
 	_getTile: function () {

@@ -1,5 +1,8 @@
 (function() {
-  var Configuration, buildTile, filter, geoAlternative, geoFailed, geoHasPosition, geoSucceeded, geoWatch, getNodeIndex, initializeGeo, initializeInterface, moveCursor, setSelected;
+  var Configuration, buildTile, filter, getNodeIndex, initializeInterface, moveCursor, setSelected,
+    __slice = Array.prototype.slice;
+
+  window.DEBUG = true;
 
   window.Configuration = Configuration = (function() {
 
@@ -7,7 +10,10 @@
       if (spec == null) spec = {};
       this.tileSize = function() {
         var _ref;
-        return (_ref = spec.tileSize) != null ? _ref : 256;
+        return (_ref = spec.tileSize) != null ? _ref : {
+          x: 128,
+          y: 256
+        };
       };
       this.maxZoom = function() {
         var _ref;
@@ -34,7 +40,7 @@
     geoAccuracy: null,
     writeDirection: 'right',
     zoomDiff: function() {
-      return config.maxZoom() - map.zoom() + 1;
+      return config.maxZoom() - map.getZoom() + 1;
     },
     numRows: function() {
       var numRows;
@@ -42,7 +48,7 @@
     },
     numCols: function() {
       var numCols;
-      return numCols = Math.pow(2, state.zoomDiff()) * 2;
+      return numCols = Math.pow(2, state.zoomDiff());
     }
   };
 
@@ -140,58 +146,6 @@
     });
   };
 
-  initializeGeo = function() {
-    if (navigator.geolocation) {
-      console.log('Geolocation is supported!');
-      navigator.geolocation.getCurrentPosition(geoSucceeded, geoFailed);
-    } else {
-      console.log('Geolocation is not supported for this Browser/OS version yet.');
-      geoAlternative();
-    }
-    return true;
-  };
-
-  geoFailed = function(error) {
-    geoAlternative();
-    console.log(error.message);
-    return true;
-  };
-
-  geoSucceeded = function(position) {
-    geoHasPosition(position);
-    state.geoInitialPos = position;
-    console.log(position);
-    return true;
-  };
-
-  geoWatch = function(position) {
-    geoHasPosition(position);
-    return console.log('Moved position, or just the initial');
-  };
-
-  geoAlternative = function() {
-    return $.getScript('http://j.maxmind.com/app/geoip.js', function(data, textStatus) {
-      geoHasPosition({
-        coords: {
-          latitude: geoip_latitude(),
-          longitude: geoip_longitude(),
-          accuracy: -1
-        }
-      });
-      return true;
-    });
-  };
-
-  geoHasPosition = function(position) {
-    state.geoCurrentPos = position;
-    map.center({
-      lat: position.coords.latitude,
-      lon: position.coords.longitude
-    });
-    console.log('we have the position');
-    return true;
-  };
-
   jQuery(function() {
     var tileServeLayer, tileServeUrl;
     tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png';
@@ -202,11 +156,9 @@
       center: new L.LatLng(51.505, -0.09),
       zoom: 16
     }).addLayer(tileServeLayer);
-    window.domTiles = new L.TileLayer.Dom();
-    domTiles.drawTiles = function(tile, tilePoint, zoom) {
-      console.log('draw');
-      return true;
-    };
+    window.domTiles = new L.TileLayer.Dom({
+      tileSize: config.tileSize()
+    });
     map.addLayer(domTiles);
     initializeInterface();
     return true;
@@ -254,6 +206,20 @@
 
   getNodeIndex = function(node) {
     return $(node).parent().children().index(node);
+  };
+
+  window.dbg = function() {
+    var message, more;
+    message = arguments[0], more = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+    if (DEBUG) {
+      console.log(message);
+      return true;
+    }
+    if (DEBUG && more) {
+      console.log(message, more);
+      return true;
+    }
+    return true;
   };
 
 }).call(this);
