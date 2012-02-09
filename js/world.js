@@ -1,5 +1,6 @@
 (function() {
-  var Configuration, filter, getNodeIndex, initializeInterface, moveCursor, setSelected, setTileStyle,
+  var Cell, Configuration, filter, getNodeIndex, initializeInterface, moveCursor, pan, setTileStyle,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __slice = Array.prototype.slice;
 
   window.DEBUG = false;
@@ -11,17 +12,17 @@
       this.tileSize = function() {
         var _ref;
         return (_ref = spec.tileSize) != null ? _ref : {
-          x: 128,
+          x: 192,
           y: 256
         };
       };
       this.maxZoom = function() {
         var _ref;
-        return (_ref = spec.maxZoom) != null ? _ref : 17;
+        return (_ref = spec.maxZoom) != null ? _ref : 18;
       };
       this.defaultChar = function() {
         var _ref;
-        return (_ref = spec.defaultChar) != null ? _ref : ".";
+        return (_ref = spec.defaultChar) != null ? _ref : " ";
       };
     }
 
@@ -36,7 +37,7 @@
     selectedCellEl: null,
     writeDirection: 'right',
     zoomDiff: function() {
-      return config.maxZoom() - map.getZoom() + 1;
+      return config.maxZoom() - map.getZoom();
     },
     numRows: function() {
       var numRows;
@@ -49,121 +50,122 @@
   };
 
   setTileStyle = function() {
-    var height, rules, width;
+    var fontSize, height, rules, width;
     width = config.tileSize().x / state.numCols();
     height = config.tileSize().y / state.numRows();
+    fontSize = height;
     rules = [];
-    rules.push(".leaflet-tile span { width: " + width + "px; height: " + height + "px; font-size: " + height + "px;}");
+    rules.push(".leaflet-tile span { width: " + width + "px; height: " + height + "px; font-size: " + fontSize + "px;}");
     return $("#dynamicStyles").text(rules.join("\n"));
   };
 
-  setSelected = function(el) {
-    if (state.selectedEl) state.selectedEl.className.baseVal = '';
-    state.selectedEl = el;
-    el.className.baseVal = 'selected';
-    state.selectedTileKey = el.tileKey;
-    state.selectedCellKey = el.cellKey;
+  window.setSelected = function(cell) {
+    dbg('selecting', cell);
+    if (state.selectedEl) $(state.selectedEl).removeClass('selected');
+    state.selectedEl = cell.span;
+    $(cell.span).addClass('selected');
+    state.selectedCell = cell;
     return true;
   };
 
   moveCursor = function(direction, from) {
-    var target, zoom, _ref, _ref2;
-    if (from == null) from = state.selected;
+    var key, target, targetCell, _ref;
+    if (from == null) from = state.selectedCell;
+    dbg('move cursor');
     target = {};
-    _ref = state.selectedCellKey.split('/'), target.col = _ref[0], target.row = _ref[1];
-    _ref2 = state.selectedTileKey.split('/'), zoom = _ref2[0], target.lat = _ref2[1], target.lng = _ref2[2];
+    _ref = from.key.slice(1).split('x'), target.x = _ref[0], target.y = _ref[1];
+    target.x = parseInt(target.x, 10);
+    target.y = parseInt(target.y, 10);
     switch (direction) {
       case 'up':
-        target.row = target.row - 1;
+        target.y = target.y - 1;
         break;
       case 'down':
-        target.row = target.row + 1;
+        target.y = target.y + 1;
         break;
       case 'left':
-        target.col = target.col - 1;
+        target.x = target.x - 1;
         break;
       case 'right':
-        target.col = target.col + 1;
+        target.x = target.x + 1;
     }
-    if (target.row < 0) {
-      target.lng = target.lng - 1;
-      target.row = state.numRows() - 1;
-    }
-    if (target.row >= state.numRows()) {
-      target.lng = target.lng + 1;
-      target.row = 0;
-    }
-    if (target.col < 0) {
-      target.lat = target.lat - 1;
-      target.col = state.numCols() - 1;
-    }
-    if (target.col >= state.numCols()) {
-      target.lat = target.lat + 1;
-      target.col = 0;
-    }
-    setSelected(el);
+    key = "c" + target.x + "x" + target.y;
+    targetCell = Cell.all()[key];
+    setSelected(targetCell);
     return true;
   };
 
   initializeInterface = function() {
     var inputEl;
     $("#map").click(function(e) {
-      return console.log(e);
+      var cell;
+      if ($(e.target).hasClass('cell')) {
+        cell = Cell.all()[e.target.id];
+        return setSelected(cell);
+      } else {
+        return false;
+      }
     });
     inputEl = $("#input");
     inputEl.focus();
     inputEl.keypress(function(e) {
       var c;
       c = String.fromCharCode(e.which);
-      console.log(c, 'PRESSED!!!!');
-      state.lastChar = c;
-      state.selectedTile.write(state.selectedRC, c);
+      dbg(c, 'PRESSED!!!!');
+      state.selectedCell.write(c);
       return moveCursor(state.writeDirection);
     });
     return inputEl.keydown(function(e) {
-      var isNearEdge, panOnDist, selectedPP;
+      var isNearEdge, panByDist, panOnDist, selectedPP;
       isNearEdge = false;
       selectedPP = $(state.selectedEl).offset();
-      panOnDist = 150;
+      panOnDist = 200;
+      panByDist = 50;
       switch (e.which) {
         case 9:
           e.preventDefault();
           return false;
         case 38:
           moveCursor('up');
-          if (selectedPP.top < panOnDist) return map.panBy(0, -30);
+          if (selectedPP.top < panOnDist) return pan(0, 0 - panByDist);
           break;
         case 40:
           moveCursor('down');
-          if (selectedPP.top > document.height - panOnDist) {
-            return map.panBy(0, 30);
+          if (selectedPP.top > document.height - panOnDist * 1.5) {
+            return pan(0, panByDist);
           }
           break;
         case 39:
           moveCursor('right');
           if (selectedPP.left > document.width - panOnDist) {
-            return map.panBy(30, 0);
+            return pan(panByDist, 0);
           }
           break;
         case 37:
           moveCursor('left');
-          if (selectedPP.left < panOnDist) return map.panBy(-30, 0);
+          if (selectedPP.left < panOnDist) return pan(0 - panByDist, 0);
       }
     });
   };
 
   jQuery(function() {
-    var tileServeLayer, tileServeUrl;
+    var testMarker, tileServeLayer, tileServeUrl;
     tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png';
     tileServeLayer = new L.TileLayer(tileServeUrl, {
-      maxZoom: config.maxZoom() + 1
+      maxZoom: config.maxZoom()
     });
     window.map = new L.Map('map', {
       center: new L.LatLng(51.505, -0.09),
-      zoom: 16
+      zoom: 16,
+      scrollWheelZoom: false
     }).addLayer(tileServeLayer);
     window.domTiles = new L.TileLayer.Dom({
       tileSize: config.tileSize()
+    });
+    testMarker = new L.Marker(map.getCenter());
+    map.addLayer(testMarker);
+    testMarker.on('click', function(e) {
+      return console.log(e);
     });
     map.addLayer(domTiles);
     setTileStyle();
@@ -173,6 +175,58 @@
     initializeInterface();
     return true;
   });
+
+  window.Cell = Cell = (function() {
+    var all;
+
+    all = {};
+
+    Cell.all = function() {
+      return all;
+    };
+
+    Cell.prototype.generateKey = function() {
+      var x, y;
+      x = this.tile._tilePoint.x * Math.pow(2, state.zoomDiff());
+      y = this.tile._tilePoint.y * Math.pow(2, state.zoomDiff());
+      x += this.col;
+      y += this.row;
+      return "c" + x + "x" + y;
+    };
+
+    function Cell(row, col, tile, contents, properties, events) {
+      this.row = row;
+      this.col = col;
+      this.tile = tile;
+      this.contents = contents != null ? contents : config.defaultChar();
+      this.properties = properties != null ? properties : null;
+      this.events = events != null ? events : null;
+      this.generateKey = __bind(this.generateKey, this);
+      this.history = {};
+      this.timestamp = null;
+      this.key = this.generateKey();
+      all[this.key] = this;
+      this.span = document.createElement('span');
+      this.span.innerHTML = config.defaultChar();
+      this.span.id = this.key;
+      this.span.className = 'cell';
+    }
+
+    Cell.prototype.write = function(c) {
+      this.contents = c;
+      return this.span.innerHTML = c;
+    };
+
+    return Cell;
+
+  })();
+
+  pan = function(x, y) {
+    var p;
+    p = new L.Point(x, y);
+    map.panBy(p);
+    return map;
+  };
 
   filter = function(list, func) {
     var x, _i, _len, _results;

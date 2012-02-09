@@ -1,13 +1,13 @@
 (function() {
 
-  window.buildTile = function() {
+  window.buildTile = function(tile) {
     var c, cell, frag, r, _ref, _ref2;
+    tile._cells = {};
     frag = document.createDocumentFragment();
     for (r = 0, _ref = state.numRows() - 1; 0 <= _ref ? r <= _ref : r >= _ref; 0 <= _ref ? r++ : r--) {
       for (c = 0, _ref2 = state.numCols() - 1; 0 <= _ref2 ? c <= _ref2 : c >= _ref2; 0 <= _ref2 ? c++ : c--) {
-        cell = new L.Cell();
-        cell.element = frag.appendChild(document.createElement('span'));
-        cell.innerHTML = config.defaultChar();
+        cell = new Cell(r, c, tile);
+        frag.appendChild(cell.span);
       }
     }
     return frag;
@@ -65,9 +65,9 @@
     },
     drawTile: function(tile, tilePoint, zoom) {
       var content;
-      content = buildTile();
-      tile.appendChild(content.cloneNode(true));
-      dbg('drawTile called, does nothing');
+      content = buildTile(tile);
+      tile.appendChild(content);
+      console.log('drawtile');
       return true;
     },
     _getTile: function() {
@@ -95,25 +95,6 @@
       });
       layer._tilesToLoad--;
       if (!layer._tilesToLoad) layer.fire('load');
-      return true;
-    }
-  });
-
-  L.Cell = L.Class.extend({
-    includes: L.Mixin.Events,
-    awesome: 'abcdefghijkl',
-    options: {
-      clickable: true,
-      draggable: false
-    },
-    initialize: function(tile, row, col, options) {
-      L.Util.setOptions(this, options);
-      this.tile = tile;
-      this.row = row;
-      this.col = col;
-      return true;
-    },
-    addToTile: function() {
       return true;
     }
   });

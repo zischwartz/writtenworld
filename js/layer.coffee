@@ -1,11 +1,11 @@
 
-window.buildTile =  ->
+window.buildTile = (tile)  ->
+  tile._cells = {}
   frag = document.createDocumentFragment()
   for r in [0..state.numRows()-1] # -1 because using 0 index
     for c in [0..state.numCols()-1]
-      cell = new L.Cell()
-      cell.element = frag.appendChild document.createElement 'span'
-      cell.innerHTML = config.defaultChar()
+      cell = new Cell r, c, tile
+      frag.appendChild(cell.span)
   return frag
 
 
@@ -60,9 +60,9 @@ L.TileLayer.Dom = L.TileLayer.extend
     true
 
   drawTile: (tile, tilePoint, zoom)->
-    content = buildTile()
-    tile.appendChild(content.cloneNode(true))
-    dbg 'drawTile called, does nothing'
+    content = buildTile(tile)
+    tile.appendChild(content) # tile.appendChild(content.cloneNode(true))
+    console.log 'drawtile'
     true
 
   _getTile: ->
@@ -89,19 +89,32 @@ L.TileLayer.Dom = L.TileLayer.extend
       layer.fire('load')
     true
 
-
-L.Cell = L.Class.extend
-  includes: L.Mixin.Events
-  awesome: 'abcdefghijkl'
-  options:
-    clickable: true
-    draggable: false
-
-  initialize: (tile, row, col, options) ->
-    L.Util.setOptions(this, options)
-    this.tile= tile
-    this.row = row
-    this.col = col
-    true
-  addToTile: ->
-    true
+ 
+# L.Cell = L.Class.extend
+#   includes: L.Mixin.Events
+#   options:
+#     clickable: true
+#     draggable: false
+# 
+#   initialize: (tile, row, col, options) ->
+#     # console.log 'cell initid', tile.className, row, col
+#     # console.log tile
+#     L.Util.setOptions(this, options)
+#     # console.log this
+#     this.tile= tile
+#     this.row = row
+#     this.col = col
+#     this._span = document.createElement('span')
+#     this._span.innerHTML = '.'
+#     tile.appendChild(this._span)
+#     L.DomEvent.addListener(this._span, 'click', this._onMouseClick, this)
+#     #may be better to write my own event listener that returns the tile object. just base it on the dom id, and look it up. 
+#     # probably more powerful anyway, to do it based on the absolute (zoom independent) cell id for the whole world, maintain my own list/obj of objects
+#     true
+# 
+#   _onMouseClick: (e) ->
+#     console.log 'click!', e
+#     L.DomEvent.stopPropagation(e)
+#     this.fire(e.type)
+#     console.log(this)
+#     setSelected(this)

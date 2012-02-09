@@ -1,11 +1,12 @@
 #map
 {
-  font-family: courier, sanserif;
+  /* font-family: courier, san-serif; */
+  font-family:monospace; 
 }
 		div.leaflet-tile
 		{
 			/*border-right: 1px solid red;*/
-			overflow: hidden;
+			/* overflow: hidden; */
 		}
 		div.leaflet-tile span
 		{
@@ -13,10 +14,15 @@
       float:left;
 			display: block;
       overflow: hidden;
-      background: rgba(0,250, 0, 0.3);
+      /* background: rgba(0,250, 0, 0.3); */
 			/* font-size: 8px; */
 		}
     
+    div.leaflet-tile span.selected
+    {
+      background-color: white;
+      color: red;
+    }
     div.leaflet-tile-drawn
     {
       /* background: rgba(0,250, 0, 0.3); */
