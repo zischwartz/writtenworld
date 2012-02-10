@@ -1,9 +1,19 @@
+/* @import url(http://fonts.googleapis.com/css?family=Terminal+Dosis:400,200,600,800); */
+
 #map
 {
   /* font-family: courier, san-serif; */
   font-family:monospace; 
+  /* font-family: 'Terminal Dosis', sans-serif; */
 }
-		div.leaflet-tile
+
+#input
+{
+  margin-left: -1000px;
+  position: absolute;
+}
+
+div.leaflet-tile
 		{
 			/*border-right: 1px solid red;*/
 			/* overflow: hidden; */
@@ -13,7 +23,8 @@
       text-align: center;
       float:left;
 			display: block;
-      overflow: hidden;
+      font-weight: 400;
+      /* overflow: hidden; */
       /* background: rgba(0,250, 0, 0.3); */
 			/* font-size: 8px; */
 		}

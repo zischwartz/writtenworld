@@ -1,5 +1,5 @@
 (function() {
-  var Cell, Configuration, filter, getNodeIndex, initializeInterface, moveCursor, pan, setTileStyle,
+  var Cell, Configuration, filter, getNodeIndex, initializeInterface, moveCursor, pan, panIfAppropriate, setTileStyle,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __slice = Array.prototype.slice;
 
@@ -33,8 +33,8 @@
   window.config = new Configuration;
 
   window.state = {
-    selectedCellKey: null,
-    selectedCellEl: null,
+    selectedCell: null,
+    lastClickCell: null,
     writeDirection: 'right',
     zoomDiff: function() {
       return config.maxZoom() - map.getZoom();
@@ -46,16 +46,22 @@
     numCols: function() {
       var numCols;
       return numCols = Math.pow(2, state.zoomDiff());
+    },
+    cellWidth: function() {
+      return config.tileSize().x / state.numCols();
+    },
+    cellHeight: function() {
+      return config.tileSize().y / state.numRows();
     }
   };
 
   setTileStyle = function() {
     var fontSize, height, rules, width;
-    width = config.tileSize().x / state.numCols();
-    height = config.tileSize().y / state.numRows();
-    fontSize = height;
+    width = state.cellWidth();
+    height = state.cellHeight();
+    fontSize = height * 0.9;
     rules = [];
-    rules.push(".leaflet-tile span { width: " + width + "px; height: " + height + "px; font-size: " + fontSize + "px;}");
+    rules.push("div.leaflet-tile span { width: " + width + "px; height: " + height + "px; font-size: " + fontSize + "px;}");
     return $("#dynamicStyles").text(rules.join("\n"));
   };
 
@@ -96,56 +102,79 @@
   };
 
   initializeInterface = function() {
-    var inputEl;
     $("#map").click(function(e) {
       var cell;
       if ($(e.target).hasClass('cell')) {
         cell = Cell.all()[e.target.id];
-        return setSelected(cell);
+        state.lastClickCell = cell;
+        setSelected(cell);
+        return inputEl.focus();
       } else {
+        inputEl.focus();
         return false;
       }
     });
-    inputEl = $("#input");
+    window.inputEl = $("#input");
     inputEl.focus();
+    map.on('zoomend', function() {
+      return inputEl.focus();
+    });
     inputEl.keypress(function(e) {
       var c;
-      c = String.fromCharCode(e.which);
-      dbg(c, 'PRESSED!!!!');
-      state.selectedCell.write(c);
-      return moveCursor(state.writeDirection);
+      console.log(e.which, 'pressed');
+      if (e.which === 13) {
+        moveCursor('down', state.lastClickCell);
+        panIfAppropriate('down');
+        return state.lastClickCell = state.selectedCell;
+      } else {
+        c = String.fromCharCode(e.which);
+        dbg(c, 'PRESSED!!!!');
+        state.selectedCell.write(c);
+        moveCursor(state.writeDirection);
+        return panIfAppropriate(state.writeDirection);
+      }
     });
     return inputEl.keydown(function(e) {
-      var isNearEdge, panByDist, panOnDist, selectedPP;
-      isNearEdge = false;
-      selectedPP = $(state.selectedEl).offset();
-      panOnDist = 200;
-      panByDist = 50;
+      console.log(e, e.which, ' keydownd');
       switch (e.which) {
         case 9:
           e.preventDefault();
           return false;
         case 38:
           moveCursor('up');
-          if (selectedPP.top < panOnDist) return pan(0, 0 - panByDist);
-          break;
+          return panIfAppropriate('up');
         case 40:
           moveCursor('down');
-          if (selectedPP.top > document.height - panOnDist * 1.5) {
-            return pan(0, panByDist);
-          }
-          break;
+          return panIfAppropriate('down');
         case 39:
           moveCursor('right');
-          if (selectedPP.left > document.width - panOnDist) {
-            return pan(panByDist, 0);
-          }
-          break;
+          return panIfAppropriate('right');
         case 37:
           moveCursor('left');
-          if (selectedPP.left < panOnDist) return pan(0 - panByDist, 0);
+          return panIfAppropriate('left');
+        case 8:
+          moveCursor('left');
+          panIfAppropriate('left');
+          return state.selectedCell.write(' ');
       }
     });
+  };
+
+  panIfAppropriate = function(direction) {
+    var panByDist, panOnDist, selectedPP;
+    selectedPP = $(state.selectedEl).offset();
+    panOnDist = 200;
+    panByDist = state.cellHeight();
+    if (direction === 'up') if (selectedPP.top < panOnDist) pan(0, 0 - panByDist);
+    if (direction === 'down') {
+      if (selectedPP.top > document.height - panOnDist * 1.5) pan(0, panByDist);
+    }
+    if (direction === 'right') {
+      if (selectedPP.left > document.width - panOnDist) pan(panByDist, 0);
+    }
+    if (direction === 'left') {
+      if (selectedPP.left < panOnDist) return pan(0 - panByDist, 0);
+    }
   };
 
   jQuery(function() {

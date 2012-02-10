@@ -3,22 +3,23 @@ window.DEBUG = false
 
 window.Configuration = class Configuration
   constructor: (spec = {}) ->
-    # @tileSize = -> spec.tileSize ? {x: 128, y: 256}
+    # @tileSize = -> spec.tileSize ? {x: 128, y: 256} #the best powers of 2
+    # @tileSize = -> spec.tileSize ? {x: 128, y: 196}
+    # @tileSize = -> spec.tileSize ? {x: 128, y: 160} #this one is good, but 160 isn't a power of 2
     @tileSize = -> spec.tileSize ? {x: 192, y: 256}
     # @tileSize = -> spec.tileSize ? {x: 256, y: 256}
     @maxZoom = -> spec.maxZoom ? 18
     @defaultChar = -> spec.defaultChar ? " "
 
+#ratio of row/cols in WW was .77.. (14/18)
+
 window.config = new Configuration
 
 window.state =
-  selectedCellKey: null
-  selectedCellEl: null
-  # selectedEl: null
-  # selectedTileKey: null
+  selectedCell: null
   # selectedCellKey: null
-  # lastClick: null
-  # lastChar: null
+  # selectedCellEl: null
+  lastClickCell: null
   # canRead: true
   # canWrite: true
   # geoInitialPos: null
@@ -26,20 +27,23 @@ window.state =
   # geoAccuracy: null
   writeDirection: 'right'
   zoomDiff: ->
-    config.maxZoom()-map.getZoom()#+1 #+1 here is that the true maxzoom is one greater than you can acutally zoom (and should be one cell per tile)
+    config.maxZoom()-map.getZoom()#+1 
   numRows: ->
-    numRows = Math.pow(2, state.zoomDiff())# *2
+    numRows = Math.pow(2, state.zoomDiff())
   numCols: ->
-    numCols = Math.pow(2, state.zoomDiff())# *2 # 3:2 RATIO OF ROWS TO COLUMNS. Should probably put this in config!
-
+    numCols = Math.pow(2, state.zoomDiff()) #old method for setting ratio was to multiply this, but now we just change the tilesize
+  cellWidth: ->
+    config.tileSize().x/state.numCols()
+  cellHeight: ->
+    config.tileSize().y/state.numRows()
 #should set these up here beyond null, so it's clear what they represent
 
 setTileStyle = ->
- width = config.tileSize().x/state.numCols()
- height = config.tileSize().y/state.numRows()
- fontSize = height#width*1.5 #why not
+ width = state.cellWidth()
+ height = state.cellHeight()
+ fontSize = height*0.9 #width*1.5 #why not
  rules = []
- rules.push(".leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
+ rules.push("div.leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
  # console.log rules
  $("#dynamicStyles").text rules.join("\n")
 
@@ -76,60 +80,80 @@ moveCursor = (direction, from = state.selectedCell) ->
   targetCell=Cell.all()[key]
   setSelected(targetCell)
   true
-#
+
 #INITIALIZER 
 initializeInterface = ->
   $("#map").click (e) ->
     if $(e.target).hasClass 'cell'
       cell=Cell.all()[e.target.id]
+      state.lastClickCell = cell
       setSelected(cell)
+      inputEl.focus()
     else
+      inputEl.focus()
       return false
 
-  inputEl = $ "#input"
+  window.inputEl = $ "#input"
   inputEl.focus()
+  map.on 'zoomend', ->
+    inputEl.focus()
 
   inputEl.keypress (e) ->
-    c = String.fromCharCode e.which
-    dbg  c,  'PRESSED!!!!'
-    state.selectedCell.write( c)
-    moveCursor(state.writeDirection)
-
+    console.log  e.which, 'pressed'
+    if e.which ==13
+      moveCursor 'down', state.lastClickCell
+      panIfAppropriate('down')
+      state.lastClickCell = state.selectedCell
+    else
+      c = String.fromCharCode e.which
+      dbg  c,  'PRESSED!!!!'
+      state.selectedCell.write( c)
+      moveCursor(state.writeDirection)
+      panIfAppropriate(state.writeDirection)
     # inp = String.fromCharCode(event.keyCode)
     # if (/[a-zA-Z0-9-_ ]/.test(inp))
       # console.log("input was a letter, number, hyphen, underscore or space")
-      
 
   inputEl.keydown (e) ->
-    isNearEdge = false
-    selectedPP= $(state.selectedEl).offset()
-    panOnDist = 200
-    panByDist = 50
+    console.log e, e.which,' keydownd'
     switch e.which
       when 9 #tab
         e.preventDefault()
         return false
       when 38
         moveCursor('up')
-        if selectedPP.top < panOnDist
-          pan(0, 0-panByDist)
+        panIfAppropriate('up')
       when 40
         moveCursor('down')
-        if selectedPP.top > document.height-panOnDist*1.5 #need to include size of a cell in state
-          pan(0,panByDist)
+        panIfAppropriate('down')
       when 39
         moveCursor('right')
-        if selectedPP.left > document.width-panOnDist
-          pan(panByDist, 0)
+        panIfAppropriate('right')
       when 37
         moveCursor('left')
-        if selectedPP.left < panOnDist
-          pan(0-panByDist, 0)
+        panIfAppropriate('left')
+      when 8
+        moveCursor('left')
+        panIfAppropriate('left')
+        state.selectedCell.write(' ')
 
+panIfAppropriate = (direction)->
+  selectedPP= $(state.selectedEl).offset()
+  panOnDist = 200
+  panByDist = state.cellHeight() 
+  if direction == 'up'
+    if selectedPP.top < panOnDist
+      pan(0, 0-panByDist)
+  if direction == 'down'
+    if selectedPP.top > document.height-panOnDist*1.5 #need to include size of a cell in state
+      pan(0,panByDist)
+  if direction == 'right'
+      if selectedPP.left > document.width-panOnDist
+        pan(panByDist, 0)
+  if direction == 'left'
+      if selectedPP.left < panOnDist
+        pan(0-panByDist, 0)
 
-    # inp = String.fromCharCode(event.keyCode)
-    # if (/[a-zA-Z0-9-_ ]/.test(inp))
-    #   console.log("input was a letter, number, hyphen, underscore or space")
 
 
 jQuery ->

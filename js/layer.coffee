@@ -33,10 +33,6 @@ L.TileLayer.Dom = L.TileLayer.extend
     tileSize = this.options.tileSize
     this._divProto.style.width = tileSize.x+'px'
     this._divProto.style.height = tileSize.y+'px'
-    # this._docFragment = document.createDocumentFragment()
-    # for i in [1..30]
-    #   cell=this._docFragment.appendChild(document.createElement("span"))
-    #   cell.innerHTML = 'A'
     true
 
   _createTile: ->
