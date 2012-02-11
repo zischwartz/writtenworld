@@ -1,5 +1,5 @@
 (function() {
-  var Cell, Configuration, filter, getNodeIndex, initializeInterface, moveCursor, pan, panIfAppropriate, setTileStyle,
+  var Cell, Configuration, cellKeyToXY, cellXYToKey, filter, getNodeIndex, initializeInterface, moveCursor, pan, panIfAppropriate, setTileStyle,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __slice = Array.prototype.slice;
 
@@ -71,17 +71,15 @@
     state.selectedEl = cell.span;
     $(cell.span).addClass('selected');
     state.selectedCell = cell;
+    now.setSelected(cellKeyToXY(cell.key));
     return true;
   };
 
   moveCursor = function(direction, from) {
-    var key, target, targetCell, _ref;
+    var key, target, targetCell;
     if (from == null) from = state.selectedCell;
     dbg('move cursor');
-    target = {};
-    _ref = from.key.slice(1).split('x'), target.x = _ref[0], target.y = _ref[1];
-    target.x = parseInt(target.x, 10);
-    target.y = parseInt(target.y, 10);
+    target = cellKeyToXY(from.key);
     switch (direction) {
       case 'up':
         target.y = target.y - 1;
@@ -102,8 +100,10 @@
   };
 
   initializeInterface = function() {
+    dbg('initializing interface');
     $("#map").click(function(e) {
       var cell;
+      dbg(e);
       if ($(e.target).hasClass('cell')) {
         cell = Cell.all()[e.target.id];
         state.lastClickCell = cell;
@@ -121,7 +121,6 @@
     });
     inputEl.keypress(function(e) {
       var c;
-      console.log(e.which, 'pressed');
       if (e.which === 13) {
         moveCursor('down', state.lastClickCell);
         panIfAppropriate('down');
@@ -135,7 +134,6 @@
       }
     });
     return inputEl.keydown(function(e) {
-      console.log(e, e.which, ' keydownd');
       switch (e.which) {
         case 9:
           e.preventDefault();
@@ -178,7 +176,7 @@
   };
 
   jQuery(function() {
-    var testMarker, tileServeLayer, tileServeUrl;
+    var absBounds, tileServeLayer, tileServeUrl;
     tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png';
     tileServeLayer = new L.TileLayer(tileServeUrl, {
       maxZoom: config.maxZoom()
@@ -191,17 +189,31 @@
     window.domTiles = new L.TileLayer.Dom({
       tileSize: config.tileSize()
     });
-    testMarker = new L.Marker(map.getCenter());
-    map.addLayer(testMarker);
-    testMarker.on('click', function(e) {
-      return console.log(e);
-    });
     map.addLayer(domTiles);
     setTileStyle();
     map.on('zoomend', function() {
       return setTileStyle();
     });
     initializeInterface();
+    absBounds = domTiles.getTilePointAbsoluteBounds();
+    now.ready(function() {
+      console.log('now ready absbounds', absBounds);
+      now.setBounds(absBounds);
+      return now.drawCursors = function(users) {
+        var id, otherSelected, user, _results;
+        $('.otherSelected').removeClass('otherSelected');
+        console.log(users, 'users');
+        _results = [];
+        for (id in users) {
+          user = users[id];
+          console.log(user);
+          otherSelected = Cell.get(user.selected.x, user.selected.y);
+          console.log(otherSelected);
+          _results.push($(otherSelected.span).addClass('otherSelected'));
+        }
+        return _results;
+      };
+    });
     return true;
   });
 
@@ -212,6 +224,10 @@
 
     Cell.all = function() {
       return all;
+    };
+
+    Cell.get = function(x, y) {
+      return all["c" + x + "x" + y];
     };
 
     Cell.prototype.generateKey = function() {
@@ -255,6 +271,19 @@
     p = new L.Point(x, y);
     map.panBy(p);
     return map;
+  };
+
+  cellKeyToXY = function(key) {
+    var target, _ref;
+    target = {};
+    _ref = key.slice(1).split('x'), target.x = _ref[0], target.y = _ref[1];
+    target.x = parseInt(target.x, 10);
+    target.y = parseInt(target.y, 10);
+    return target;
+  };
+
+  cellXYToKey = function(target) {
+    return "c" + target.x + "x" + target.y;
   };
 
   filter = function(list, func) {

@@ -55,10 +55,18 @@
       return tile;
     },
     _loadTile: function(tile, tilePoint, zoom) {
+      var d;
       dbg('_loadTile called');
       tile._layer = this;
       tile._tilePoint = tilePoint;
       tile._zoom = zoom;
+      if (DEBUG) {
+        d = document.createElement('div');
+        d.className = 'debug';
+        d.innerHTML = tilePoint + ' ' + zoom;
+        tile.appendChild(d);
+        $(tile).addClass('debugTile');
+      }
       this.drawTile(tile, tilePoint, zoom);
       if (!this.options.async) this.tileDrawn(tile);
       return true;
@@ -96,6 +104,25 @@
       layer._tilesToLoad--;
       if (!layer._tilesToLoad) layer.fire('load');
       return true;
+    },
+    getTilePointBounds: function() {
+      var bounds, nwTilePoint, seTilePoint, tileBounds, tileSize;
+      bounds = this._map.getPixelBounds();
+      tileSize = this.options.tileSize;
+      nwTilePoint = new L.Point(Math.floor(bounds.min.x / tileSize.x), Math.floor(bounds.min.y / tileSize.y));
+      seTilePoint = new L.Point(Math.floor(bounds.max.x / tileSize.x), Math.floor(bounds.max.y / tileSize.y));
+      tileBounds = new L.Bounds(nwTilePoint, seTilePoint);
+      return tileBounds;
+    },
+    getTilePointAbsoluteBounds: function() {
+      var bounds, nwTilePoint, offset, seTilePoint, tileBounds, tileSize;
+      bounds = this._map.getPixelBounds();
+      tileSize = this.options.tileSize;
+      offset = Math.pow(2, state.zoomDiff());
+      nwTilePoint = new L.Point(Math.floor(bounds.min.x / tileSize.x) * offset, Math.floor(bounds.min.y / tileSize.y) * offset);
+      seTilePoint = new L.Point(Math.floor(bounds.max.x / tileSize.x) * offset, Math.floor(bounds.max.y / tileSize.y) * offset);
+      tileBounds = new L.Bounds(nwTilePoint, seTilePoint);
+      return tileBounds;
     }
   });
 

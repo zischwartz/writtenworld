@@ -48,8 +48,12 @@ L.TileLayer.Dom = L.TileLayer.extend
     tile._tilePoint = tilePoint
     tile._zoom = zoom
     
-    # tile.innerHTML = tilePoint + ' '+ zoom
-
+    if DEBUG
+      d= document.createElement 'div'
+      d.className= 'debug'
+      d.innerHTML= tilePoint + ' '+ zoom
+      tile.appendChild d
+      $(tile).addClass 'debugTile'
     this.drawTile(tile, tilePoint, zoom)
     if (!this.options.async)
       this.tileDrawn(tile)
@@ -85,32 +89,19 @@ L.TileLayer.Dom = L.TileLayer.extend
       layer.fire('load')
     true
 
- 
-# L.Cell = L.Class.extend
-#   includes: L.Mixin.Events
-#   options:
-#     clickable: true
-#     draggable: false
-# 
-#   initialize: (tile, row, col, options) ->
-#     # console.log 'cell initid', tile.className, row, col
-#     # console.log tile
-#     L.Util.setOptions(this, options)
-#     # console.log this
-#     this.tile= tile
-#     this.row = row
-#     this.col = col
-#     this._span = document.createElement('span')
-#     this._span.innerHTML = '.'
-#     tile.appendChild(this._span)
-#     L.DomEvent.addListener(this._span, 'click', this._onMouseClick, this)
-#     #may be better to write my own event listener that returns the tile object. just base it on the dom id, and look it up. 
-#     # probably more powerful anyway, to do it based on the absolute (zoom independent) cell id for the whole world, maintain my own list/obj of objects
-#     true
-# 
-#   _onMouseClick: (e) ->
-#     console.log 'click!', e
-#     L.DomEvent.stopPropagation(e)
-#     this.fire(e.type)
-#     console.log(this)
-#     setSelected(this)
+  getTilePointBounds: ->
+    bounds = this._map.getPixelBounds()
+    tileSize= this.options.tileSize
+    nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x), Math.floor(bounds.min.y / tileSize.y))
+    seTilePoint = new L.Point( Math.floor(bounds.max.x / tileSize.x), Math.floor(bounds.max.y / tileSize.y))
+    tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
+    tileBounds
+
+  getTilePointAbsoluteBounds: ->
+    bounds = this._map.getPixelBounds()
+    tileSize= this.options.tileSize
+    offset = Math.pow 2, state.zoomDiff()
+    nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x)*offset, Math.floor(bounds.min.y / tileSize.y)*offset)
+    seTilePoint = new L.Point( Math.floor(bounds.max.x / tileSize.x)*offset, Math.floor(bounds.max.y / tileSize.y)*offset)
+    tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
+    tileBounds

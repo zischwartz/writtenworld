@@ -1,6 +1,7 @@
 window.DEBUG = false
 # window.DEBUG = true
 
+
 window.Configuration = class Configuration
   constructor: (spec = {}) ->
     # @tileSize = -> spec.tileSize ? {x: 128, y: 256} #the best powers of 2
@@ -17,8 +18,6 @@ window.config = new Configuration
 
 window.state =
   selectedCell: null
-  # selectedCellKey: null
-  # selectedCellEl: null
   lastClickCell: null
   # canRead: true
   # canWrite: true
@@ -55,16 +54,13 @@ window.setSelected = (cell) ->
   state.selectedEl=cell.span
   $(cell.span).addClass('selected')
   state.selectedCell =cell
+  now.setSelected cellKeyToXY cell.key
   true
 
 
 moveCursor = (direction, from = state.selectedCell) ->
   dbg 'move cursor'
-  target = {}
-  
-  [target.x, target.y] = from.key.slice(1).split('x') #splice to get rid of first char (only there to follow w3 spec for dom ids)
-  target.x = parseInt target.x, 10
-  target.y = parseInt target.y, 10
+  target = cellKeyToXY(from.key)
   
   switch direction
     when 'up'
@@ -83,7 +79,9 @@ moveCursor = (direction, from = state.selectedCell) ->
 
 #INITIALIZER 
 initializeInterface = ->
+  dbg 'initializing interface'
   $("#map").click (e) ->
+    dbg e
     if $(e.target).hasClass 'cell'
       cell=Cell.all()[e.target.id]
       state.lastClickCell = cell
@@ -99,7 +97,6 @@ initializeInterface = ->
     inputEl.focus()
 
   inputEl.keypress (e) ->
-    console.log  e.which, 'pressed'
     if e.which ==13
       moveCursor 'down', state.lastClickCell
       panIfAppropriate('down')
@@ -115,7 +112,7 @@ initializeInterface = ->
       # console.log("input was a letter, number, hyphen, underscore or space")
 
   inputEl.keydown (e) ->
-    console.log e, e.which,' keydownd'
+    # console.log e, e.which,' keydownd'
     switch e.which
       when 9 #tab
         e.preventDefault()
@@ -137,10 +134,13 @@ initializeInterface = ->
         panIfAppropriate('left')
         state.selectedCell.write(' ')
 
+
+#end interface initi
+
 panIfAppropriate = (direction)->
   selectedPP= $(state.selectedEl).offset()
   panOnDist = 200
-  panByDist = state.cellHeight() 
+  panByDist = state.cellHeight()
   if direction == 'up'
     if selectedPP.top < panOnDist
       pan(0, 0-panByDist)
@@ -155,7 +155,6 @@ panIfAppropriate = (direction)->
         pan(0-panByDist, 0)
 
 
-
 jQuery ->
   tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png'
   tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
@@ -163,23 +162,48 @@ jQuery ->
   # initializeGeo()
   window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
   
-  testMarker = new L.Marker map.getCenter()
-  map.addLayer(testMarker)
-  testMarker.on 'click', (e) -> console.log e
+  # testMarker = new L.Marker map.getCenter()
+  # map.addLayer(testMarker)
+  # testMarker.on 'click', (e) -> console.log e
 
   map.addLayer(domTiles)
   setTileStyle() #set initial
   map.on 'zoomend', ->
     setTileStyle()
   initializeInterface()
+
+  absBounds = domTiles.getTilePointAbsoluteBounds()
+  # now.bounds = absBounds
+  # now.setBounds(absBounds)
+
+  now.ready ->
+    console.log 'now ready absbounds', absBounds
+    now.setBounds(absBounds)
+    now.drawCursors = (users) ->
+      $('.otherSelected').removeClass('otherSelected') #this is a dumb way 
+      console.log users, 'users'
+      for id, user of users
+        console.log user
+        otherSelected = Cell.get(user.selected.x, user.selected.y)
+        console.log otherSelected
+        $(otherSelected.span).addClass('otherSelected')
+      # console.log users
+      # for u in users
+          # otherSelected= Cell.get(u.selected.x,u.selected.y)
+
+    
   true
 # END DOC READY
+
+
 
 
 window.Cell = class Cell
   all = {}
   @all: -> all
-  
+  @get: (x,y) ->
+    return all["c#{x}x#{y}"]
+
   generateKey: =>
     x = @tile._tilePoint.x * Math.pow(2, state.zoomDiff())
     y = @tile._tilePoint.y * Math.pow(2, state.zoomDiff())
@@ -200,12 +224,22 @@ window.Cell = class Cell
   write: (c) ->
     @contents= c
     @span.innerHTML = c
-
+  
 #Having to create a point is dumb
 pan = (x, y)->
   p= new L.Point( x, y )
   map.panBy(p)
   map
+
+cellKeyToXY = (key) ->
+  target= {}
+  [target.x, target.y] = key.slice(1).split('x') #splice to get rid of first char (only there to follow w3 spec for dom ids)
+  target.x = parseInt target.x, 10
+  target.y = parseInt target.y, 10
+  return target
+
+cellXYToKey= (target) ->
+  return "c#{target.x}x#{target.y}"
 
 # UTILITY FUNCTIONS
 filter = (list, func) -> x for x in list when func(x)
