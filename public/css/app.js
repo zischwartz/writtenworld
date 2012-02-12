@@ -16,9 +16,6 @@
 
   app.configure('development', function() {
     app.use(express.static(__dirname + '/public'));
-    app.use(express.logger({
-      format: ':method :url'
-    }));
     return app.use(express.errorHandler({
       dumpExceptions: true,
       showStack: true
@@ -31,7 +28,7 @@
 
   nowjs.on('connect', function() {
     connectedUsers[this.user.clientId] = {};
-    return console.log(this.user.clientId, 'connected');
+    return console.log(this.user.clientID, 'connected');
   });
 
   nowjs.on('disconnect', function() {
@@ -51,9 +48,7 @@
     connectedUsers[this.user.clientId].selected = cellPoint;
     _results = [];
     for (i in connectedUsers) {
-      _results.push(nowjs.getClient(i, function() {
-        return this.now.drawCursors(connectedUsers);
-      }));
+      _results.push(console.log(i, 'iii'));
     }
     return _results;
   };

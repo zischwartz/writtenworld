@@ -1,7 +1,6 @@
 window.DEBUG = false
 # window.DEBUG = true
 
-
 window.Configuration = class Configuration
   constructor: (spec = {}) ->
     # @tileSize = -> spec.tileSize ? {x: 128, y: 256} #the best powers of 2
@@ -158,7 +157,8 @@ panIfAppropriate = (direction)->
 jQuery ->
   tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png'
   tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
-  window.map = new L.Map('map', {center: new L.LatLng(51.505, -0.09), zoom: 16, scrollWheelZoom: false}).addLayer(tileServeLayer)
+  # window.map = new L.Map('map', {center: new L.LatLng(51.505, -0.09), zoom: 16, scrollWheelZoom: false}).addLayer(tileServeLayer)
+  window.map = new L.Map('map', {center: new L.LatLng(51.505, -0.09), zoom: 16, scrollWheelZoom: false})#.addLayer(tileServeLayer)
   # initializeGeo()
   window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
   
@@ -172,26 +172,25 @@ jQuery ->
     setTileStyle()
   initializeInterface()
 
-  absBounds = domTiles.getTilePointAbsoluteBounds()
-  # now.bounds = absBounds
-  # now.setBounds(absBounds)
 
   now.ready ->
-    console.log 'now ready absbounds', absBounds
-    now.setBounds(absBounds)
+
+    now.setBounds domTiles.getTilePointAbsoluteBounds()
+
     now.drawCursors = (users) ->
-      $('.otherSelected').removeClass('otherSelected') #this is a dumb way 
+      # $('.otherSelected').removeClass('otherSelected') #this is a dumb way 
       console.log users, 'users'
       for id, user of users
-        console.log user
-        otherSelected = Cell.get(user.selected.x, user.selected.y)
-        console.log otherSelected
-        $(otherSelected.span).addClass('otherSelected')
-      # console.log users
-      # for u in users
-          # otherSelected= Cell.get(u.selected.x,u.selected.y)
-
+        if user.selected.x
+          otherSelected = Cell.get(user.selected.x, user.selected.y)
+          console.log otherSelected
+          $(otherSelected.span).addClass('otherSelected')
     
+    map.on 'moveend', ->
+      now.setBounds domTiles.getTilePointAbsoluteBounds()
+    map.on 'zoomend', ->
+      now.setBounds domTiles.getTilePointAbsoluteBounds()
+
   true
 # END DOC READY
 
