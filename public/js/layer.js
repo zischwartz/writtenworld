@@ -1,4 +1,5 @@
 (function() {
+  var betterBuildTile;
 
   window.buildTile = function(tile) {
     var c, cell, frag, r, _ref, _ref2;
@@ -6,36 +7,43 @@
     frag = document.createDocumentFragment();
     for (r = 0, _ref = state.numRows() - 1; 0 <= _ref ? r <= _ref : r >= _ref; 0 <= _ref ? r++ : r--) {
       for (c = 0, _ref2 = state.numCols() - 1; 0 <= _ref2 ? c <= _ref2 : c >= _ref2; 0 <= _ref2 ? c++ : c--) {
-        cell = new Cell(r, c, tile);
+        cell = Cell.getOrCreate(r, c, tile);
         frag.appendChild(cell.span);
       }
     }
     return frag;
   };
 
+  betterBuildTile = function(tile, tileData, absTilePoint) {
+    var c, cell, cellData, frag, r, _ref, _ref2, _ref3, _ref4;
+    frag = document.createDocumentFragment();
+    if (tileData) {
+      for (r = 0, _ref = state.numRows() - 1; 0 <= _ref ? r <= _ref : r >= _ref; 0 <= _ref ? r++ : r--) {
+        for (c = 0, _ref2 = state.numCols() - 1; 0 <= _ref2 ? c <= _ref2 : c >= _ref2; 0 <= _ref2 ? c++ : c--) {
+          cellData = tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)];
+          if (cellData) {
+            console.log('cell loaded from server');
+            cell = new Cell(r, c, tile, cellData.contents);
+            frag.appendChild(cell.span);
+          }
+        }
+      }
+    } else {
+      for (r = 0, _ref3 = state.numRows() - 1; 0 <= _ref3 ? r <= _ref3 : r >= _ref3; 0 <= _ref3 ? r++ : r--) {
+        for (c = 0, _ref4 = state.numCols() - 1; 0 <= _ref4 ? c <= _ref4 : c >= _ref4; 0 <= _ref4 ? c++ : c--) {
+          cell = Cell.getOrCreate(r, c, tile);
+          frag.appendChild(cell.span);
+          console.log('cell created');
+        }
+      }
+    }
+    return frag;
+  };
+
   L.TileLayer.Dom = L.TileLayer.extend({
-    options: {
-      async: false
-    },
     initialize: function(options) {
       dbg('init!');
       L.Util.setOptions(this, options);
-      return true;
-    },
-    redraw: function() {
-      var i, tile, _i, _len, _ref, _results;
-      _ref = this._tiles;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        i = _ref[_i];
-        tile = this._tiles[i];
-        this._redrawTile(tile);
-        _results.push(true);
-      }
-      return _results;
-    },
-    _redrawTile: function(tile) {
-      this.drawTile(tile, tile._tilePoint, tile._zoom);
       return true;
     },
     _createTileProto: function() {
@@ -49,13 +57,12 @@
     },
     _createTile: function() {
       var tile;
-      dbg('_createTile called');
       tile = this._divProto.cloneNode(false);
       tile.onselectstart = tile.onmousemove = L.Util.falseFn;
       return tile;
     },
     _loadTile: function(tile, tilePoint, zoom) {
-      var d;
+      var d, layer;
       dbg('_loadTile called');
       tile._layer = this;
       tile._tilePoint = tilePoint;
@@ -67,25 +74,30 @@
         tile.appendChild(d);
         $(tile).addClass('debugTile');
       }
-      this.drawTile(tile, tilePoint, zoom);
-      if (!this.options.async) this.tileDrawn(tile);
+      layer = this;
+      now.ready(function() {
+        var absTilePoint;
+        absTilePoint = {
+          x: tilePoint.x * Math.pow(2, state.zoomDiff()),
+          y: tilePoint.y * Math.pow(2, state.zoomDiff())
+        };
+        now.getTile(absTilePoint, state.numRows());
+        return now.gotTile = function(tileData, atp) {
+          var frag;
+          frag = betterBuildTile(tile, tileData, atp);
+          return layer.drawTile(tile, tilePoint, zoom, frag);
+        };
+      });
       return true;
     },
-    drawTile: function(tile, tilePoint, zoom) {
-      var content;
-      content = buildTile(tile);
-      tile.appendChild(content);
-      console.log('drawtile');
+    drawTile: function(tile, tilePoint, zoom, frag) {
+      console.log(tilePoint);
+      tile.appendChild(frag);
+      console.log('drawtile', tile);
       return true;
     },
     _getTile: function() {
-      var tile;
       dbg('_getTile called');
-      if (this.options.reuseTiles && this._unusedTiles.length > 0) {
-        tile = this._unusedTiles.pop();
-        this._resetTile(tile);
-        return tile;
-      }
       return this._createTile();
     },
     tileDrawn: function(tile) {

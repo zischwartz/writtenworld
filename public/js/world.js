@@ -71,7 +71,7 @@
     state.selectedEl = cell.span;
     $(cell.span).addClass('selected');
     state.selectedCell = cell;
-    now.setSelected(cellKeyToXY(cell.key));
+    now.setSelectedCell(cellKeyToXY(cell.key));
     return true;
   };
 
@@ -120,7 +120,7 @@
       return inputEl.focus();
     });
     inputEl.keypress(function(e) {
-      var c;
+      var c, cellPoint;
       if (e.which === 13) {
         moveCursor('down', state.lastClickCell);
         panIfAppropriate('down');
@@ -129,6 +129,8 @@
         c = String.fromCharCode(e.which);
         dbg(c, 'PRESSED!!!!');
         state.selectedCell.write(c);
+        cellPoint = cellKeyToXY(state.selectedCell.key);
+        now.writeCell(cellPoint, c);
         moveCursor(state.writeDirection);
         return panIfAppropriate(state.writeDirection);
       }
@@ -199,17 +201,26 @@
       now.setBounds(domTiles.getTilePointAbsoluteBounds());
       now.drawCursors = function(users) {
         var id, otherSelected, user, _results;
-        console.log(users, 'users');
+        $('.otherSelected').removeClass('otherSelected');
         _results = [];
         for (id in users) {
           user = users[id];
           if (user.selected.x) {
             otherSelected = Cell.get(user.selected.x, user.selected.y);
-            console.log(otherSelected);
             _results.push($(otherSelected.span).addClass('otherSelected'));
           } else {
             _results.push(void 0);
           }
+        }
+        return _results;
+      };
+      now.drawEdits = function(edits) {
+        var c, edit, id, _results;
+        _results = [];
+        for (id in edits) {
+          edit = edits[id];
+          c = Cell.get(edit.cellPoint.x, edit.cellPoint.y);
+          _results.push(c.write(edit.content));
         }
         return _results;
       };
@@ -237,12 +248,9 @@
     };
 
     Cell.prototype.generateKey = function() {
-      var x, y;
-      x = this.tile._tilePoint.x * Math.pow(2, state.zoomDiff());
-      y = this.tile._tilePoint.y * Math.pow(2, state.zoomDiff());
-      x += this.col;
-      y += this.row;
-      return "c" + x + "x" + y;
+      this.x = this.tile._tilePoint.x * Math.pow(2, state.zoomDiff()) + this.col;
+      this.y = this.tile._tilePoint.y * Math.pow(2, state.zoomDiff()) + this.row;
+      return "c" + this.x + "x" + this.y;
     };
 
     function Cell(row, col, tile, contents, properties, events) {
@@ -266,6 +274,19 @@
     Cell.prototype.write = function(c) {
       this.contents = c;
       return this.span.innerHTML = c;
+    };
+
+    Cell.getOrCreate = function(row, col, tile) {
+      var cell, x, y;
+      x = tile._tilePoint.x * Math.pow(2, state.zoomDiff()) + col;
+      y = tile._tilePoint.y * Math.pow(2, state.zoomDiff()) + row;
+      cell = Cell.get(x, y);
+      if (cell) {
+        return cell;
+      } else {
+        cell = new Cell(row, col, tile);
+        return cell;
+      }
     };
 
     return Cell;

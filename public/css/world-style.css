@@ -23,7 +23,10 @@
  -webkit-box-shadow: 1px 1px 1px black;
 }  
 
-
+.cell
+{
+    /* background: rgba(0,0,190, 0.3); */
+}
 .cell.otherSelected
 {
   background-color: gray;
@@ -32,6 +35,7 @@
 
 div.leaflet-tile
 		{
+      /* background: rgba(0,250, 0, 0.3); */
 			/*border-right: 1px solid red;*/
 			/* overflow: hidden; */
 		}

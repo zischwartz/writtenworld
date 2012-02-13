@@ -25,7 +25,7 @@ window.state =
   # geoAccuracy: null
   writeDirection: 'right'
   zoomDiff: ->
-    config.maxZoom()-map.getZoom()#+1 
+    config.maxZoom()-map.getZoom()
   numRows: ->
     numRows = Math.pow(2, state.zoomDiff())
   numCols: ->
@@ -53,7 +53,7 @@ window.setSelected = (cell) ->
   state.selectedEl=cell.span
   $(cell.span).addClass('selected')
   state.selectedCell =cell
-  now.setSelected cellKeyToXY cell.key
+  now.setSelectedCell cellKeyToXY cell.key
   true
 
 
@@ -104,8 +104,13 @@ initializeInterface = ->
       c = String.fromCharCode e.which
       dbg  c,  'PRESSED!!!!'
       state.selectedCell.write( c)
+
+      cellPoint = cellKeyToXY state.selectedCell.key
+      now.writeCell(cellPoint, c)
+
       moveCursor(state.writeDirection)
       panIfAppropriate(state.writeDirection)
+
     # inp = String.fromCharCode(event.keyCode)
     # if (/[a-zA-Z0-9-_ ]/.test(inp))
       # console.log("input was a letter, number, hyphen, underscore or space")
@@ -178,14 +183,19 @@ jQuery ->
     now.setBounds domTiles.getTilePointAbsoluteBounds()
 
     now.drawCursors = (users) ->
-      # $('.otherSelected').removeClass('otherSelected') #this is a dumb way 
-      console.log users, 'users'
+      $('.otherSelected').removeClass('otherSelected') #this is a dumb way 
+      # console.log users, 'users'
       for id, user of users
         if user.selected.x
           otherSelected = Cell.get(user.selected.x, user.selected.y)
-          console.log otherSelected
           $(otherSelected.span).addClass('otherSelected')
     
+    now.drawEdits = (edits) ->
+      # console.log edits
+      for id, edit of  edits
+        c=Cell.get(edit.cellPoint.x, edit.cellPoint.y)
+        c.write(edit.content)
+
     map.on 'moveend', ->
       now.setBounds domTiles.getTilePointAbsoluteBounds()
     map.on 'zoomend', ->
@@ -204,11 +214,9 @@ window.Cell = class Cell
     return all["c#{x}x#{y}"]
 
   generateKey: =>
-    x = @tile._tilePoint.x * Math.pow(2, state.zoomDiff())
-    y = @tile._tilePoint.y * Math.pow(2, state.zoomDiff())
-    x+= @col
-    y+= @row
-    return "c#{x}x#{y}"
+    @x = @tile._tilePoint.x * Math.pow(2, state.zoomDiff())+@col
+    @y = @tile._tilePoint.y * Math.pow(2, state.zoomDiff())+@row
+    return "c#{@x}x#{@y}"
 
   constructor: (@row, @col, @tile, @contents = config.defaultChar(), @properties=null, @events=null) ->
     @history = {}
@@ -223,7 +231,18 @@ window.Cell = class Cell
   write: (c) ->
     @contents= c
     @span.innerHTML = c
-  
+
+  @getOrCreate:(row, col, tile) ->
+    x=tile._tilePoint.x * Math.pow(2, state.zoomDiff())+col
+    y=tile._tilePoint.y * Math.pow(2, state.zoomDiff())+row
+    cell=Cell.get(x,y)
+    if cell
+      return cell
+    else
+      cell = new Cell row, col, tile
+      return cell
+
+    
 #Having to create a point is dumb
 pan = (x, y)->
   p= new L.Point( x, y )

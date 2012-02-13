@@ -1,6 +1,9 @@
 express = require 'express'
 nowjs = require 'now'
 leaflet = require './leaflet-custom-src.js'
+mongoose = require 'mongoose'
+
+mongoose.connect('mongodb://localhost/mapist')
 
 app = express.createServer()
 
@@ -15,33 +18,121 @@ app.configure 'development', ->
 
 everyone = nowjs.initialize app
 
-connectedUsers = {}
+config = {maxZoom: 18}
+
+cUsers = {} #all of the connected users
 
 nowjs.on 'connect', ->
-  connectedUsers[this.user.clientId]={}
+  cUsers[this.user.clientId]={}
   console.log this.user.clientId, 'connected'
 
 nowjs.on 'disconnect', ->
-  delete connectedUsers[this.user.clientId]
+  delete cUsers[this.user.clientId]
   console.log 'removing disconnected user'
 
 everyone.now.setBounds = (bounds) ->
   b = new leaflet.L.Bounds bounds.max, bounds.min
   # console.log b
-  connectedUsers[this.user.clientId].bounds = b
+  cUsers[this.user.clientId].bounds = b
   
-everyone.now.setSelected = (cellPoint) ->
+everyone.now.setSelectedCell = (cellPoint) ->
   cid = this.user.clientId
-  toUpdate = {}
-  connectedUsers[cid].selected = cellPoint
-  for i of connectedUsers
-    if connectedUsers[i].bounds.contains(cellPoint)
-      if i != cid
-        toUpdate[i] = connectedUsers[i]
+  cUsers[cid].selected = cellPoint
+  toUpdate = getWhoCanSee(cellPoint)
   
   for i of toUpdate
-    updates = {cid:connectedUsers[cid]}
-    nowjs.getClient i, -> this.now.drawCursors(updates)
+    if i != cid
+      updates = {cid:cUsers[cid]} #client side is set up to recieve a number of updates, hence this
+      nowjs.getClient i, -> this.now.drawCursors(updates)
 
+everyone.now.writeCell = (cellPoint, content) ->
+  cid = this.user.clientId
+  toUpdate = getWhoCanSee(cellPoint)
+  console.log cellPoint, content
+  edits = {}
+  writeCellToDb(cellPoint, content)
+  for i of toUpdate
+    if i !=cid
+      edits[cid] = {cellPoint: cellPoint, content: content}
+      nowjs.getClient i, -> this.now.drawEdits(edits)
+  true
+
+everyone.now.getTile= (absTilePoint, numRows) ->
+  # console.log 'wants a tile', absTilePoint, numRows
+  CellModel.where('world', mainWorldId)
+    .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows) #numrows for both, numcol == numrows
+    .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows) #lt or lte??
+    .run (err,docs) =>
+      results = {}
+      if docs.length
+        for c in docs
+          results["#{c.x}x#{c.y}"] = c
+          console.log "#{c.x}x#{c.y}"
+        this.now.gotTile(results, absTilePoint)
+        console.log 'abstilepoint', absTilePoint
+      else
+        this.now.gotTile(null)
+      # console.log 'docs.length',  docs.length
+      # console.log 'found some shit', docs
+
+#utility for the above
+getWhoCanSee = (cellPoint) ->
+  toUpdate = {}
+  for i of cUsers
+    if cUsers[i].bounds.contains(cellPoint)
+      toUpdate[i] = cUsers[i]
+  return toUpdate
+
+
+
+Schema = mongoose.Schema
+ObjectId = Schema.ObjectId
+
+mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")
+
+WorldSchema = new Schema
+  owner: ObjectId
+  name: {type: String, unique: true,}
+  created: { type: Date, default: Date.now }
+  personal: {type: Boolean, default: true}
+
+WorldModel = mongoose.model('World', WorldSchema)
+
+CellSchema = new Schema
+  world: ObjectId
+  x: {type: Number, required: true, min: 0}
+  y: {type: Number, required: true, min: 0}
+  contents: {type: String, default: ' '}
+  properties: {}
+
+CellSchema.index {world:1, x:1, y:1}, {unique:true}
+
+CellModel = mongoose.model('Cell', CellSchema)
+
+writeCellToDb = (cellPoint, contents) ->
+  CellModel.findOne {world: mainWorldId, x:cellPoint.x, y: cellPoint.y}, (err, cell) ->
+    if not cell
+      cell = new CellModel {x:cellPoint.x, y:cellPoint.y, contents: contents, world: mainWorldId}
+      cell.save (err) -> console.log err
+      console.log 'created  cell!!', cell
+    else
+      cell.contents = contents
+      cell.save (err) -> console.log err
+      console.log 'updated cell', cell
+
+getCellFromDb = (cellPoint) ->
+  cellModel.findOne {world: mainWorldId, x:cellPoint.x, y: cellPoint.y}, (err, cell) ->
+    console.log 'found', cell
+
+# instance = new WorldModel({personal: false, name:'world'})
+# instance.save() # instance.save (err) -> console.log err 
+# mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")
+     
+# cell = new CellModel {x:1, y:1, world: mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")}
+# cell.save()
+# console.log 'cell', cell
+
+# WorldModel.findOne {name: 'main'}, (err,doc) ->
+  # console.log doc
 
 app.listen 3000
