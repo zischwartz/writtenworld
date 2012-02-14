@@ -9,6 +9,7 @@ app = express.createServer()
 
 app.configure ->
    app.use express.bodyParser()
+   # app.use express.cookieParser()
    app.use app.router
 
 app.configure 'development', ->
@@ -67,12 +68,11 @@ everyone.now.getTile= (absTilePoint, numRows, callback) ->
       if docs.length
         for c in docs
           results["#{c.x}x#{c.y}"] = c
-          console.log "#{c.x}x#{c.y}"
-        # this.now.gotTile(results, absTilePoint)
+          # console.log "#{c.x}x#{c.y}"
         callback(results, absTilePoint)
-        console.log 'abstilepoint', absTilePoint
+        # console.log 'abstilepoint', absTilePoint
       else
-        console.log 'nope'
+        # console.log 'nope'
         callback(results, absTilePoint)
 
 #utility for the above
@@ -113,12 +113,12 @@ writeCellToDb = (cellPoint, contents) ->
   CellModel.findOne {world: mainWorldId, x:cellPoint.x, y: cellPoint.y}, (err, cell) ->
     if not cell
       cell = new CellModel {x:cellPoint.x, y:cellPoint.y, contents: contents, world: mainWorldId}
-      cell.save (err) -> console.log err
-      console.log 'created  cell!!', cell
+      cell.save (err) -> console.log err if err
+      console.log 'created  cell!!', cell.x, cell.y
     else
       cell.contents = contents
-      cell.save (err) -> console.log err
-      console.log 'updated cell', cell
+      cell.save (err) -> console.log err if err
+      console.log 'updated cell', cell.x, cell.y
 
 getCellFromDb = (cellPoint) ->
   cellModel.findOne {world: mainWorldId, x:cellPoint.x, y: cellPoint.y}, (err, cell) ->

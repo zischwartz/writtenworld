@@ -16,16 +16,9 @@
           y: 256
         };
       };
-      this.tileSize = function() {
-        var _ref;
-        return (_ref = spec.tileSize) != null ? _ref : {
-          x: 192,
-          y: 224
-        };
-      };
       this.maxZoom = function() {
         var _ref;
-        return (_ref = spec.maxZoom) != null ? _ref : 18;
+        return (_ref = spec.maxZoom) != null ? _ref : 20;
       };
       this.defaultChar = function() {
         var _ref;
@@ -185,16 +178,17 @@
   };
 
   jQuery(function() {
-    var tileServeLayer, tileServeUrl;
-    tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png';
+    var centerPoint, tileServeLayer, tileServeUrl;
+    tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png';
     tileServeLayer = new L.TileLayer(tileServeUrl, {
       maxZoom: config.maxZoom()
     });
+    centerPoint = new L.LatLng(40.714269, -74.005972);
     window.map = new L.Map('map', {
-      center: new L.LatLng(51.505, -0.09),
-      zoom: 16,
+      center: centerPoint,
+      zoom: 17,
       scrollWheelZoom: false
-    }).addLayer(tileServeLayer);
+    });
     window.domTiles = new L.TileLayer.Dom({
       tileSize: config.tileSize()
     });
@@ -293,7 +287,7 @@
     };
 
     Cell.prototype.kill = function() {
-      dbgg('killing a cell');
+      dbg('killing a cell');
       this.span = null;
       return delete all[this.key];
     };

@@ -8,8 +8,8 @@ window.Configuration = class Configuration
     # @tileSize = -> spec.tileSize ? {x: 128, y: 160} #this one is good, but 160 isn't a power of 2
     @tileSize = -> spec.tileSize ? {x: 192, y: 256} #been using THIS one
     # @tileSize = -> spec.tileSize ? {x: 256, y: 256}
-    @tileSize = -> spec.tileSize ? {x: 192, y: 224} 
-    @maxZoom = -> spec.maxZoom ? 18
+    # @tileSize = -> spec.tileSize ? {x: 192, y: 224}
+    @maxZoom = -> spec.maxZoom ? 20 # was 18, current image tiles are only 18
     @defaultChar = -> spec.defaultChar ? " "
 
 #ratio of row/cols in WW was .77.. (14/18)
@@ -161,13 +161,21 @@ panIfAppropriate = (direction)->
 
 
 jQuery ->
-  tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png'
+  # tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png'
+  tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png'
   tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
-  window.map = new L.Map('map', {center: new L.LatLng(51.505, -0.09), zoom: 16, scrollWheelZoom: false}).addLayer(tileServeLayer)
-  # window.map = new L.Map('map', {center: new L.LatLng(51.505, -0.09), zoom: 16, scrollWheelZoom: false})#.addLayer(tileServeLayer)
+  centerPoint= new L.LatLng(40.714269, -74.005972)
+  window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false})#.addLayer(tileServeLayer)
   # initializeGeo()
   window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
-  
+ 
+  # map.locateAndSetView(17)
+  # map.on 'locationfound', (e)->
+  #   radius = e.accuracy / 2
+  #   circle = new L.Circle(e.latlng, radius)
+  #   map.addLayer(circle)
+  #   return true
+
   now.ready ->
     map.addLayer(domTiles)
     setTileStyle() #set initial
@@ -234,7 +242,7 @@ window.Cell = class Cell
     @span.innerHTML = c
 
   kill: ->
-    dbgg 'killing a cell'#, @key
+    dbg 'killing a cell'#, @key
     @span= null
     delete all[@key]
 

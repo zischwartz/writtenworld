@@ -25,11 +25,13 @@
 
 .cell.otherSelected
 {
-  background-color: gray;
+  background-color: red; 
 }
 
 div.leaflet-tile
 		{
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
       /* background: rgba(0,250, 0, 0.3); */
 			/*border-right: 1px solid red;*/
 			/* overflow: hidden; */
