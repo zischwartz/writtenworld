@@ -3,6 +3,7 @@
 
   betterBuildTile = function(tile, tileData, absTilePoint) {
     var c, cell, cellData, frag, r, _ref, _ref2;
+    tile._cells = [];
     frag = document.createDocumentFragment();
     for (r = 0, _ref = state.numRows() - 1; 0 <= _ref ? r <= _ref : r >= _ref; 0 <= _ref ? r++ : r--) {
       for (c = 0, _ref2 = state.numCols() - 1; 0 <= _ref2 ? c <= _ref2 : c >= _ref2; 0 <= _ref2 ? c++ : c--) {
@@ -16,6 +17,7 @@
           dbg('cell created, but others in tile were from server');
         }
         frag.appendChild(cell.span);
+        tile._cells.push(cell);
       }
     }
     return frag;
@@ -23,6 +25,8 @@
 
   getTileLocally = function(absTilePoint, tile) {
     var c, cell, cellsNeeded, frag, r, _ref, _ref2;
+    console.log('getting locally');
+    tile._cells = [];
     frag = document.createDocumentFragment();
     cellsNeeded = state.numRows() * state.numCols();
     for (r = 0, _ref = state.numRows() - 1; 0 <= _ref ? r <= _ref : r >= _ref; 0 <= _ref ? r++ : r--) {
@@ -33,6 +37,7 @@
           frag.appendChild(cell.span);
           dbg('FOUND CELL--------', cell);
           cellsNeeded--;
+          tile._cells.push(cell);
         }
       }
     }
@@ -40,14 +45,21 @@
       dbg('we have the entire tile');
       return frag;
     } else {
+      tile._cells = null;
       return false;
     }
   };
 
   L.TileLayer.Dom = L.TileLayer.extend({
+    options: {
+      unloadInvisibleTiles: true
+    },
     initialize: function(options) {
       dbg('init!');
       L.Util.setOptions(this, options);
+      this.on('tileunload', function(e) {
+        return this._onTileUnload(e);
+      });
       return true;
     },
     _createTileProto: function() {
@@ -80,7 +92,6 @@
         tile.appendChild(d);
         $(tile).addClass('debugTile');
       }
-      console.log('this._layer:', this);
       layer = this;
       absTilePoint = {
         x: tilePoint.x * Math.pow(2, state.zoomDiff()),
@@ -124,6 +135,24 @@
       layer._tilesToLoad--;
       if (!layer._tilesToLoad) layer.fire('load');
       return true;
+    },
+    _onTileUnload: function(e) {
+      var c, _i, _len, _ref, _results;
+      if (e.tile._zoom === map.getZoom()) {
+        dbg('unload due to pan, easy');
+        _ref = e.tile._cells;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          c = _ref[_i];
+          _results.push(c.kill());
+        }
+        return _results;
+      } else if (e.tile._zoom < map.getZoom()) {
+        dbg('zoom in');
+        return console.log('unload due to zoom, less easy');
+      } else if (e.tile._zoom > map.getZoom()) {
+        return dbg('zoom out');
+      }
     },
     getTilePointBounds: function() {
       var bounds, nwTilePoint, seTilePoint, tileBounds, tileSize;

@@ -208,6 +208,12 @@ window.Cell = class Cell
   @get: (x,y) ->
     return all["c#{x}x#{y}"]
 
+  @count:->
+    i=0
+    for c of all
+      i++
+    return  i
+
   generateKey: =>
     @x = @tile._tilePoint.x * Math.pow(2, state.zoomDiff())+@col
     @y = @tile._tilePoint.y * Math.pow(2, state.zoomDiff())+@row
@@ -226,6 +232,12 @@ window.Cell = class Cell
   write: (c) ->
     @contents= c
     @span.innerHTML = c
+
+  kill: ->
+    dbgg 'killing a cell'#, @key
+    @span= null
+    delete all[@key]
+
 
   @getOrCreate:(row, col, tile, contents=null) ->
     x=tile._tilePoint.x * Math.pow(2, state.zoomDiff())+col

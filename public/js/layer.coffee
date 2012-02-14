@@ -1,5 +1,5 @@
 betterBuildTile= (tile, tileData, absTilePoint)->
-  # tile._cells = {} #this would be good to use for removing old cells
+  tile._cells = [] #this would be good to use for removing old cells
   frag = document.createDocumentFragment()
   for r in [0..state.numRows()-1]
     for c in [0..state.numCols()-1]
@@ -12,11 +12,14 @@ betterBuildTile= (tile, tileData, absTilePoint)->
         cell= Cell.getOrCreate r,c, tile
         dbg 'cell created, but others in tile were from server'
       frag.appendChild(cell.span)
+      tile._cells.push(cell)
   return frag
 
 getTileLocally =(absTilePoint, tile) ->
+  console.log 'getting locally'
+  tile._cells = []
   frag = document.createDocumentFragment()
-  cellsNeeded = state.numRows()*state.numCols()
+  cellsNeeded = state.numRows()*state.numCols() #cellsNeeded to have a full tile
   for r in [0..state.numRows()-1]
     for c in [0..state.numCols()-1]
       cell=Cell.get(absTilePoint.x+c, absTilePoint.y+r)
@@ -25,18 +28,25 @@ getTileLocally =(absTilePoint, tile) ->
         frag.appendChild(cell.span)
         dbg 'FOUND CELL--------', cell
         cellsNeeded--
+        tile._cells.push(cell)
   if cellsNeeded <=0
     dbg 'we have the entire tile'
     return frag
   else
+    tile._cells= null
     return false
 
 L.TileLayer.Dom = L.TileLayer.extend
   # options: { async: false }
+  options:
+    unloadInvisibleTiles: true
+    # reuseTiles: true
+    # updateWhenIdle: true
 
   initialize: (options) ->
     dbg 'init!'
     L.Util.setOptions(this, options)
+    this.on 'tileunload', (e) -> this._onTileUnload(e)
     true
 
   _createTileProto: ->
@@ -61,7 +71,7 @@ L.TileLayer.Dom = L.TileLayer.extend
     tile.onerror= this._tileOnError
     if DEBUG
       d= document.createElement 'div'; d.className= 'debug'; d.innerHTML= tilePoint + ' '+ zoom; tile.appendChild d; $(tile).addClass 'debugTile'
-    console.log 'this._layer:', this
+    # console.log 'this._layer:', this
     layer =this
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
     
@@ -100,6 +110,23 @@ L.TileLayer.Dom = L.TileLayer.extend
     if (!layer._tilesToLoad)
       layer.fire('load')
     true
+  
+  _onTileUnload: (e) ->
+    # console.log e
+    if e.tile._zoom == map.getZoom()
+      dbg 'unload due to pan, easy'
+      for c in e.tile._cells
+        c.kill()
+      # e.tile = null #maybe dont' need to do this
+    else if e.tile._zoom < map.getZoom()
+      dbg 'zoom in'
+      console.log 'unload due to zoom, less easy'
+    else if e.tile._zoom > map.getZoom()
+      dbg 'zoom out' # this case requires nothing, every cell will still be there
+      #on zoom out, we don't need to do anything
+      # for c in e.tile._cells
+        # c.kill()
+      # e.tile = null #maybe dont' need to do this
 
   getTilePointBounds: ->
     bounds = this._map.getPixelBounds()

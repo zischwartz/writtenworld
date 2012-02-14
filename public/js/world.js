@@ -254,6 +254,15 @@
       return all["c" + x + "x" + y];
     };
 
+    Cell.count = function() {
+      var c, i;
+      i = 0;
+      for (c in all) {
+        i++;
+      }
+      return i;
+    };
+
     Cell.prototype.generateKey = function() {
       this.x = this.tile._tilePoint.x * Math.pow(2, state.zoomDiff()) + this.col;
       this.y = this.tile._tilePoint.y * Math.pow(2, state.zoomDiff()) + this.row;
@@ -281,6 +290,12 @@
     Cell.prototype.write = function(c) {
       this.contents = c;
       return this.span.innerHTML = c;
+    };
+
+    Cell.prototype.kill = function() {
+      dbgg('killing a cell');
+      this.span = null;
+      return delete all[this.key];
     };
 
     Cell.getOrCreate = function(row, col, tile, contents) {
