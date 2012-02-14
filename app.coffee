@@ -2,20 +2,24 @@ express = require 'express'
 nowjs = require 'now'
 leaflet = require './leaflet-custom-src.js'
 mongoose = require 'mongoose'
-
+connect = require('connect')
 mongoose.connect('mongodb://localhost/mapist')
+
+sessionStore = require("connect-mongoose")(connect)
 
 app = express.createServer()
 
 app.configure ->
    app.use express.bodyParser()
-   # app.use express.cookieParser()
+   app.use express.cookieParser()
+   app.use express.session {secret: 'tshh secret', store : new sessionStore()}
    app.use app.router
 
 app.configure 'development', ->
   app.use express.static __dirname+'/public'
   app.use express.logger({ format: ':method :url' })
   app.use express.errorHandler {dumpExceptions:true, showStack:true}
+
 
 everyone = nowjs.initialize app
 
@@ -24,9 +28,12 @@ config = {maxZoom: 18}
 cUsers = {} #all of the connected users
 
 nowjs.on 'connect', ->
+  sid=this.user.cookie['connect.sid']
   cUsers[this.user.clientId]={}
   console.log this.user.clientId, 'connected'
-
+  console.log sid
+  console.log 'this.user.session \n', this.user.session
+  # this.user.session.name = 'zach'
 nowjs.on 'disconnect', ->
   delete cUsers[this.user.clientId]
   console.log 'removing disconnected user'
@@ -59,7 +66,8 @@ everyone.now.writeCell = (cellPoint, content) ->
   true
 
 everyone.now.getTile= (absTilePoint, numRows, callback) ->
-  # console.log 'wants a tile', absTilePoint, numRows
+  # sid=this.user.cookie['connect.sid']
+  # console.log sid
   CellModel.where('world', mainWorldId)
     .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows) #numrows for both, numcol == numrows
     .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows) #lt or lte??
@@ -82,7 +90,6 @@ getWhoCanSee = (cellPoint) ->
     if cUsers[i].bounds.contains(cellPoint)
       toUpdate[i] = cUsers[i]
   return toUpdate
-
 
 
 Schema = mongoose.Schema
