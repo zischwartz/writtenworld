@@ -1,5 +1,5 @@
 (function() {
-  var Cell, Configuration, cellKeyToXY, cellXYToKey, filter, getNodeIndex, initializeInterface, moveCursor, pan, panIfAppropriate, setTileStyle,
+  var Cell, Configuration, cellKeyToXY, filter, getNodeIndex, initializeInterface, moveCursor, pan, panIfAppropriate, setTileStyle,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __slice = Array.prototype.slice;
 
@@ -14,6 +14,13 @@
         return (_ref = spec.tileSize) != null ? _ref : {
           x: 192,
           y: 256
+        };
+      };
+      this.tileSize = function() {
+        var _ref;
+        return (_ref = spec.tileSize) != null ? _ref : {
+          x: 192,
+          y: 224
         };
       };
       this.maxZoom = function() {
@@ -187,17 +194,17 @@
       center: new L.LatLng(51.505, -0.09),
       zoom: 16,
       scrollWheelZoom: false
-    });
+    }).addLayer(tileServeLayer);
     window.domTiles = new L.TileLayer.Dom({
       tileSize: config.tileSize()
     });
-    map.addLayer(domTiles);
-    setTileStyle();
-    map.on('zoomend', function() {
-      return setTileStyle();
-    });
-    initializeInterface();
     now.ready(function() {
+      map.addLayer(domTiles);
+      setTileStyle();
+      map.on('zoomend', function() {
+        return setTileStyle();
+      });
+      initializeInterface();
       now.setBounds(domTiles.getTilePointAbsoluteBounds());
       now.drawCursors = function(users) {
         var id, otherSelected, user, _results;
@@ -266,7 +273,7 @@
       this.key = this.generateKey();
       all[this.key] = this;
       this.span = document.createElement('span');
-      this.span.innerHTML = config.defaultChar();
+      this.span.innerHTML = this.contents;
       this.span.id = this.key;
       this.span.className = 'cell';
     }
@@ -276,15 +283,16 @@
       return this.span.innerHTML = c;
     };
 
-    Cell.getOrCreate = function(row, col, tile) {
+    Cell.getOrCreate = function(row, col, tile, contents) {
       var cell, x, y;
+      if (contents == null) contents = null;
       x = tile._tilePoint.x * Math.pow(2, state.zoomDiff()) + col;
       y = tile._tilePoint.y * Math.pow(2, state.zoomDiff()) + row;
       cell = Cell.get(x, y);
       if (cell) {
         return cell;
       } else {
-        cell = new Cell(row, col, tile);
+        cell = new Cell(row, col, tile, contents);
         return cell;
       }
     };
@@ -309,7 +317,7 @@
     return target;
   };
 
-  cellXYToKey = function(target) {
+  window.cellXYToKey = function(target) {
     return "c" + target.x + "x" + target.y;
   };
 

@@ -295,7 +295,7 @@ L.Mixin.Events.fire = L.Mixin.Events.fireEvent;
 		webkit: webkit,
 		webkit3d: webkit && ('WebKitCSSMatrix' in window) && ('m11' in new window.WebKitCSSMatrix()),
 
-		gecko: false, // ua.indexOf("gecko") !== -1,
+		gecko: ua.indexOf("gecko") !== -1,
 
 		opera: opera,
 

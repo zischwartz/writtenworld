@@ -57,7 +57,7 @@ everyone.now.writeCell = (cellPoint, content) ->
       nowjs.getClient i, -> this.now.drawEdits(edits)
   true
 
-everyone.now.getTile= (absTilePoint, numRows) ->
+everyone.now.getTile= (absTilePoint, numRows, callback) ->
   # console.log 'wants a tile', absTilePoint, numRows
   CellModel.where('world', mainWorldId)
     .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows) #numrows for both, numcol == numrows
@@ -68,12 +68,12 @@ everyone.now.getTile= (absTilePoint, numRows) ->
         for c in docs
           results["#{c.x}x#{c.y}"] = c
           console.log "#{c.x}x#{c.y}"
-        this.now.gotTile(results, absTilePoint)
+        # this.now.gotTile(results, absTilePoint)
+        callback(results, absTilePoint)
         console.log 'abstilepoint', absTilePoint
       else
-        this.now.gotTile(null)
-      # console.log 'docs.length',  docs.length
-      # console.log 'found some shit', docs
+        console.log 'nope'
+        callback(results, absTilePoint)
 
 #utility for the above
 getWhoCanSee = (cellPoint) ->

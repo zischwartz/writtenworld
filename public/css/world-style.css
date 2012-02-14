@@ -20,17 +20,12 @@
 }
 .debugTile
 {
- -webkit-box-shadow: 1px 1px 1px black;
+   -webkit-box-shadow: 1px 1px 1px black;
 }  
 
-.cell
-{
-    /* background: rgba(0,0,190, 0.3); */
-}
 .cell.otherSelected
 {
   background-color: gray;
-
 }
 
 div.leaflet-tile

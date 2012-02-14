@@ -6,8 +6,9 @@ window.Configuration = class Configuration
     # @tileSize = -> spec.tileSize ? {x: 128, y: 256} #the best powers of 2
     # @tileSize = -> spec.tileSize ? {x: 128, y: 196}
     # @tileSize = -> spec.tileSize ? {x: 128, y: 160} #this one is good, but 160 isn't a power of 2
-    @tileSize = -> spec.tileSize ? {x: 192, y: 256}
+    @tileSize = -> spec.tileSize ? {x: 192, y: 256} #been using THIS one
     # @tileSize = -> spec.tileSize ? {x: 256, y: 256}
+    @tileSize = -> spec.tileSize ? {x: 192, y: 224} 
     @maxZoom = -> spec.maxZoom ? 18
     @defaultChar = -> spec.defaultChar ? " "
 
@@ -162,23 +163,17 @@ panIfAppropriate = (direction)->
 jQuery ->
   tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png'
   tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
-  # window.map = new L.Map('map', {center: new L.LatLng(51.505, -0.09), zoom: 16, scrollWheelZoom: false}).addLayer(tileServeLayer)
-  window.map = new L.Map('map', {center: new L.LatLng(51.505, -0.09), zoom: 16, scrollWheelZoom: false})#.addLayer(tileServeLayer)
+  window.map = new L.Map('map', {center: new L.LatLng(51.505, -0.09), zoom: 16, scrollWheelZoom: false}).addLayer(tileServeLayer)
+  # window.map = new L.Map('map', {center: new L.LatLng(51.505, -0.09), zoom: 16, scrollWheelZoom: false})#.addLayer(tileServeLayer)
   # initializeGeo()
   window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
   
-  # testMarker = new L.Marker map.getCenter()
-  # map.addLayer(testMarker)
-  # testMarker.on 'click', (e) -> console.log e
-
-  map.addLayer(domTiles)
-  setTileStyle() #set initial
-  map.on 'zoomend', ->
-    setTileStyle()
-  initializeInterface()
-
-
   now.ready ->
+    map.addLayer(domTiles)
+    setTileStyle() #set initial
+    map.on 'zoomend', ->
+      setTileStyle()
+    initializeInterface()
 
     now.setBounds domTiles.getTilePointAbsoluteBounds()
 
@@ -224,7 +219,7 @@ window.Cell = class Cell
     @key = this.generateKey()
     all[@key]=this
     @span = document.createElement('span')
-    @span.innerHTML= config.defaultChar()
+    @span.innerHTML= @contents
     @span.id= @key
     @span.className= 'cell'
 
@@ -232,14 +227,14 @@ window.Cell = class Cell
     @contents= c
     @span.innerHTML = c
 
-  @getOrCreate:(row, col, tile) ->
+  @getOrCreate:(row, col, tile, contents=null) ->
     x=tile._tilePoint.x * Math.pow(2, state.zoomDiff())+col
     y=tile._tilePoint.y * Math.pow(2, state.zoomDiff())+row
     cell=Cell.get(x,y)
     if cell
       return cell
     else
-      cell = new Cell row, col, tile
+      cell = new Cell row, col, tile, contents
       return cell
 
     
@@ -256,7 +251,7 @@ cellKeyToXY = (key) ->
   target.y = parseInt target.y, 10
   return target
 
-cellXYToKey= (target) ->
+window.cellXYToKey= (target) ->
   return "c#{target.x}x#{target.y}"
 
 # UTILITY FUNCTIONS

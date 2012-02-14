@@ -1,43 +1,47 @@
 (function() {
-  var betterBuildTile;
+  var betterBuildTile, getTileLocally;
 
-  window.buildTile = function(tile) {
-    var c, cell, frag, r, _ref, _ref2;
-    tile._cells = {};
+  betterBuildTile = function(tile, tileData, absTilePoint) {
+    var c, cell, cellData, frag, r, _ref, _ref2;
     frag = document.createDocumentFragment();
     for (r = 0, _ref = state.numRows() - 1; 0 <= _ref ? r <= _ref : r >= _ref; 0 <= _ref ? r++ : r--) {
       for (c = 0, _ref2 = state.numCols() - 1; 0 <= _ref2 ? c <= _ref2 : c >= _ref2; 0 <= _ref2 ? c++ : c--) {
-        cell = Cell.getOrCreate(r, c, tile);
+        cellData = tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)];
+        if (cellData) {
+          dbg('cell loaded from server');
+          dbg('cellData', cellData.contents);
+          cell = Cell.getOrCreate(r, c, tile, cellData.contents);
+        } else {
+          cell = Cell.getOrCreate(r, c, tile);
+          dbg('cell created, but others in tile were from server');
+        }
         frag.appendChild(cell.span);
       }
     }
     return frag;
   };
 
-  betterBuildTile = function(tile, tileData, absTilePoint) {
-    var c, cell, cellData, frag, r, _ref, _ref2, _ref3, _ref4;
+  getTileLocally = function(absTilePoint, tile) {
+    var c, cell, cellsNeeded, frag, r, _ref, _ref2;
     frag = document.createDocumentFragment();
-    if (tileData) {
-      for (r = 0, _ref = state.numRows() - 1; 0 <= _ref ? r <= _ref : r >= _ref; 0 <= _ref ? r++ : r--) {
-        for (c = 0, _ref2 = state.numCols() - 1; 0 <= _ref2 ? c <= _ref2 : c >= _ref2; 0 <= _ref2 ? c++ : c--) {
-          cellData = tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)];
-          if (cellData) {
-            console.log('cell loaded from server');
-            cell = new Cell(r, c, tile, cellData.contents);
-            frag.appendChild(cell.span);
-          }
-        }
-      }
-    } else {
-      for (r = 0, _ref3 = state.numRows() - 1; 0 <= _ref3 ? r <= _ref3 : r >= _ref3; 0 <= _ref3 ? r++ : r--) {
-        for (c = 0, _ref4 = state.numCols() - 1; 0 <= _ref4 ? c <= _ref4 : c >= _ref4; 0 <= _ref4 ? c++ : c--) {
+    cellsNeeded = state.numRows() * state.numCols();
+    for (r = 0, _ref = state.numRows() - 1; 0 <= _ref ? r <= _ref : r >= _ref; 0 <= _ref ? r++ : r--) {
+      for (c = 0, _ref2 = state.numCols() - 1; 0 <= _ref2 ? c <= _ref2 : c >= _ref2; 0 <= _ref2 ? c++ : c--) {
+        cell = Cell.get(absTilePoint.x + c, absTilePoint.y + r);
+        if (cell) {
           cell = Cell.getOrCreate(r, c, tile);
           frag.appendChild(cell.span);
-          console.log('cell created');
+          dbg('FOUND CELL--------', cell);
+          cellsNeeded--;
         }
       }
     }
-    return frag;
+    if (cellsNeeded <= 0) {
+      dbg('we have the entire tile');
+      return frag;
+    } else {
+      return false;
+    }
   };
 
   L.TileLayer.Dom = L.TileLayer.extend({
@@ -62,11 +66,13 @@
       return tile;
     },
     _loadTile: function(tile, tilePoint, zoom) {
-      var d, layer;
+      var absTilePoint, d, frag, layer;
       dbg('_loadTile called');
       tile._layer = this;
       tile._tilePoint = tilePoint;
       tile._zoom = zoom;
+      tile.onload = this._tileOnLoad;
+      tile.onerror = this._tileOnError;
       if (DEBUG) {
         d = document.createElement('div');
         d.className = 'debug';
@@ -74,26 +80,27 @@
         tile.appendChild(d);
         $(tile).addClass('debugTile');
       }
+      console.log('this._layer:', this);
       layer = this;
-      now.ready(function() {
-        var absTilePoint;
-        absTilePoint = {
-          x: tilePoint.x * Math.pow(2, state.zoomDiff()),
-          y: tilePoint.y * Math.pow(2, state.zoomDiff())
-        };
-        now.getTile(absTilePoint, state.numRows());
-        return now.gotTile = function(tileData, atp) {
-          var frag;
+      absTilePoint = {
+        x: tilePoint.x * Math.pow(2, state.zoomDiff()),
+        y: tilePoint.y * Math.pow(2, state.zoomDiff())
+      };
+      frag = getTileLocally(absTilePoint, tile);
+      if (frag) {
+        layer.drawTile(tile, tilePoint, zoom, frag);
+        layer.tileDrawn(tile);
+      } else {
+        now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
           frag = betterBuildTile(tile, tileData, atp);
-          return layer.drawTile(tile, tilePoint, zoom, frag);
-        };
-      });
+          layer.drawTile(tile, tilePoint, zoom, frag);
+          return layer.tileDrawn(tile);
+        });
+      }
       return true;
     },
     drawTile: function(tile, tilePoint, zoom, frag) {
-      console.log(tilePoint);
       tile.appendChild(frag);
-      console.log('drawtile', tile);
       return true;
     },
     _getTile: function() {
@@ -102,6 +109,7 @@
     },
     tileDrawn: function(tile) {
       dbg('tileDrawn called');
+      tile.className += ' leaflet-tile-drawn';
       return this._tileOnLoad.call(tile);
     },
     _tileOnLoad: function(e) {
