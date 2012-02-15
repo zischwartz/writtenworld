@@ -10,10 +10,12 @@ sessionStore = require("connect-mongoose")(connect)
 app = express.createServer()
 
 app.configure ->
-   app.use express.bodyParser()
-   app.use express.cookieParser()
-   app.use express.session {secret: 'tshh secret', store : new sessionStore()}
-   app.use app.router
+  app.use express.bodyParser()
+  app.use express.cookieParser()
+  app.use express.session {secret: 'tshh secret', store : new sessionStore()}
+  app.use express.favicon(__dirname + '/public/favicon.ico')
+  app.use express.compiler { src: __dirname + '/public', enable: ['less', 'coffeescript'] }
+  app.use app.router
 
 app.configure 'development', ->
   app.use express.static __dirname+'/public'
@@ -29,11 +31,10 @@ cUsers = {} #all of the connected users
 
 nowjs.on 'connect', ->
   sid=this.user.cookie['connect.sid']
-  cUsers[this.user.clientId]={}
+  cUsers[this.user.clientId]={sid:sid}
   console.log this.user.clientId, 'connected'
-  console.log sid
-  console.log 'this.user.session \n', this.user.session
-  # this.user.session.name = 'zach'
+  # console.log this.user.session
+
 nowjs.on 'disconnect', ->
   delete cUsers[this.user.clientId]
   console.log 'removing disconnected user'
@@ -54,6 +55,7 @@ everyone.now.setSelectedCell = (cellPoint) ->
       nowjs.getClient i, -> this.now.drawCursors(updates)
 
 everyone.now.writeCell = (cellPoint, content) ->
+  console.log this.user
   cid = this.user.clientId
   toUpdate = getWhoCanSee(cellPoint)
   console.log cellPoint, content
@@ -66,8 +68,6 @@ everyone.now.writeCell = (cellPoint, content) ->
   true
 
 everyone.now.getTile= (absTilePoint, numRows, callback) ->
-  # sid=this.user.cookie['connect.sid']
-  # console.log sid
   CellModel.where('world', mainWorldId)
     .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows) #numrows for both, numcol == numrows
     .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows) #lt or lte??
@@ -127,19 +127,5 @@ writeCellToDb = (cellPoint, contents) ->
       cell.save (err) -> console.log err if err
       console.log 'updated cell', cell.x, cell.y
 
-getCellFromDb = (cellPoint) ->
-  cellModel.findOne {world: mainWorldId, x:cellPoint.x, y: cellPoint.y}, (err, cell) ->
-    console.log 'found', cell
-
-# instance = new WorldModel({personal: false, name:'world'})
-# instance.save() # instance.save (err) -> console.log err 
-# mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")
-     
-# cell = new CellModel {x:1, y:1, world: mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")}
-# cell.save()
-# console.log 'cell', cell
-
-# WorldModel.findOne {name: 'main'}, (err,doc) ->
-  # console.log doc
 
 app.listen 3000
