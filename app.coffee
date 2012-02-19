@@ -2,10 +2,13 @@ express = require 'express'
 nowjs = require 'now'
 leaflet = require './leaflet-custom-src.js'
 mongoose = require 'mongoose'
-connect = require('connect')
+connect = require 'connect'
 mongoose.connect('mongodb://localhost/mapist')
 
+models= require './models.js'
+
 sessionStore = require("connect-mongoose")(connect)
+# require('mongoose-auth')
 
 app = express.createServer()
 
@@ -22,6 +25,7 @@ app.configure 'development', ->
   app.use express.logger({ format: ':method :url' })
   app.use express.errorHandler {dumpExceptions:true, showStack:true}
 
+mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")
 
 everyone = nowjs.initialize app
 
@@ -55,12 +59,12 @@ everyone.now.setSelectedCell = (cellPoint) ->
       nowjs.getClient i, -> this.now.drawCursors(updates)
 
 everyone.now.writeCell = (cellPoint, content) ->
-  console.log this.user
+  # console.log this.user
   cid = this.user.clientId
   toUpdate = getWhoCanSee(cellPoint)
-  console.log cellPoint, content
+  # console.log cellPoint, content
   edits = {}
-  writeCellToDb(cellPoint, content)
+  models.writeCellToDb(cellPoint, content, mainWorldId)
   for i of toUpdate
     if i !=cid
       edits[cid] = {cellPoint: cellPoint, content: content}
@@ -68,7 +72,7 @@ everyone.now.writeCell = (cellPoint, content) ->
   true
 
 everyone.now.getTile= (absTilePoint, numRows, callback) ->
-  CellModel.where('world', mainWorldId)
+  models.CellModel.where('world', mainWorldId)
     .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows) #numrows for both, numcol == numrows
     .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows) #lt or lte??
     .run (err,docs) =>
@@ -91,41 +95,41 @@ getWhoCanSee = (cellPoint) ->
       toUpdate[i] = cUsers[i]
   return toUpdate
 
-
-Schema = mongoose.Schema
-ObjectId = Schema.ObjectId
-
-mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")
-
-WorldSchema = new Schema
-  owner: ObjectId
-  name: {type: String, unique: true,}
-  created: { type: Date, default: Date.now }
-  personal: {type: Boolean, default: true}
-
-WorldModel = mongoose.model('World', WorldSchema)
-
-CellSchema = new Schema
-  world: ObjectId
-  x: {type: Number, required: true, min: 0}
-  y: {type: Number, required: true, min: 0}
-  contents: {type: String, default: ' '}
-  properties: {}
-
-CellSchema.index {world:1, x:1, y:1}, {unique:true}
-
-CellModel = mongoose.model('Cell', CellSchema)
-
-writeCellToDb = (cellPoint, contents) ->
-  CellModel.findOne {world: mainWorldId, x:cellPoint.x, y: cellPoint.y}, (err, cell) ->
-    if not cell
-      cell = new CellModel {x:cellPoint.x, y:cellPoint.y, contents: contents, world: mainWorldId}
-      cell.save (err) -> console.log err if err
-      console.log 'created  cell!!', cell.x, cell.y
-    else
-      cell.contents = contents
-      cell.save (err) -> console.log err if err
-      console.log 'updated cell', cell.x, cell.y
+# 
+# Schema = mongoose.Schema
+# ObjectId = Schema.ObjectId
+# 
+# mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")
+# 
+# WorldSchema = new Schema
+#   owner: ObjectId
+#   name: {type: String, unique: true,}
+#   created: { type: Date, default: Date.now }
+#   personal: {type: Boolean, default: true}
+# 
+# WorldModel = mongoose.model('World', WorldSchema)
+# 
+# CellSchema = new Schema
+#   world: ObjectId
+#   x: {type: Number, required: true, min: 0}
+#   y: {type: Number, required: true, min: 0}
+#   contents: {type: String, default: ' '}
+#   properties: {}
+# 
+# CellSchema.index {world:1, x:1, y:1}, {unique:true}
+# 
+# CellModel = mongoose.model('Cell', CellSchema)
+# 
+# writeCellToDb = (cellPoint, contents) ->
+#   CellModel.findOne {world: mainWorldId, x:cellPoint.x, y: cellPoint.y}, (err, cell) ->
+#     if not cell
+#       cell = new CellModel {x:cellPoint.x, y:cellPoint.y, contents: contents, world: mainWorldId}
+#       cell.save (err) -> console.log err if err
+#       console.log 'created  cell!!', cell.x, cell.y
+#     else
+#       cell.contents = contents
+#       cell.save (err) -> console.log err if err
+#       console.log 'updated cell', cell.x, cell.y
 
 
 app.listen 3000
