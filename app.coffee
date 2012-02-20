@@ -4,11 +4,11 @@ leaflet = require './leaflet-custom-src.js'
 mongoose = require 'mongoose'
 connect = require 'connect'
 mongoose.connect('mongodb://localhost/mapist')
+# less = require('less')
 
 models= require './models.js'
 
-sessionStore = require("connect-mongoose")(connect)
-# require('mongoose-auth')
+[sessionStore, SessionModel] = require("./mongoose-session.js")(connect) #my edited version returns the model as well because looks weren't working through the get() interface
 
 app = express.createServer()
 
@@ -17,12 +17,15 @@ app.configure ->
   app.use express.cookieParser()
   app.use express.session {secret: 'tshh secret', store : new sessionStore()}
   app.use express.favicon(__dirname + '/public/favicon.ico')
-  app.use express.compiler { src: __dirname + '/public', enable: ['less', 'coffeescript'] }
-  app.use app.router
+  # app.use express.compiler { src: __dirname + '/public', enable: ['less', 'coffeescript'] }
+  app.use models.mongooseAuth.middleware()
+  # app.use app.router #the above says not to use this.
 
 app.configure 'development', ->
   app.use express.static __dirname+'/public'
+  app.set 'view engine', 'jade'
   app.use express.logger({ format: ':method :url' })
+  app.set 'view options', { layout: false }
   app.use express.errorHandler {dumpExceptions:true, showStack:true}
 
 mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")
@@ -34,10 +37,12 @@ config = {maxZoom: 18}
 cUsers = {} #all of the connected users
 
 nowjs.on 'connect', ->
-  sid=this.user.cookie['connect.sid']
+  console.log this.user
+  # console.log everyauth.user
+  sid=decodeURIComponent(this.user.cookie['connect.sid'])
   cUsers[this.user.clientId]={sid:sid}
   console.log this.user.clientId, 'connected'
-  # console.log this.user.session
+  console.log 'connected sid: ', sid
 
 nowjs.on 'disconnect', ->
   delete cUsers[this.user.clientId]
@@ -59,12 +64,17 @@ everyone.now.setSelectedCell = (cellPoint) ->
       nowjs.getClient i, -> this.now.drawCursors(updates)
 
 everyone.now.writeCell = (cellPoint, content) ->
-  # console.log this.user
+  # console.log 'this.user', this.user
   cid = this.user.clientId
+  sid= decodeURIComponent this.user.cookie['connect.sid']
+  SessionModel.findOne {'sid': sid } , (err, doc) ->
+    console.log err if err
+    ownerId=doc._id
+    models.writeCellToDb(cellPoint, content, mainWorldId, ownerId) #userId shouldbe an objectID for consistancy, either session or real user
+  
   toUpdate = getWhoCanSee(cellPoint)
   # console.log cellPoint, content
   edits = {}
-  models.writeCellToDb(cellPoint, content, mainWorldId)
   for i of toUpdate
     if i !=cid
       edits[cid] = {cellPoint: cellPoint, content: content}
@@ -72,7 +82,7 @@ everyone.now.writeCell = (cellPoint, content) ->
   true
 
 everyone.now.getTile= (absTilePoint, numRows, callback) ->
-  models.CellModel.where('world', mainWorldId)
+  models.Cell.where('world', mainWorldId)
     .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows) #numrows for both, numcol == numrows
     .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows) #lt or lte??
     .run (err,docs) =>
@@ -95,41 +105,13 @@ getWhoCanSee = (cellPoint) ->
       toUpdate[i] = cUsers[i]
   return toUpdate
 
-# 
-# Schema = mongoose.Schema
-# ObjectId = Schema.ObjectId
-# 
-# mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")
-# 
-# WorldSchema = new Schema
-#   owner: ObjectId
-#   name: {type: String, unique: true,}
-#   created: { type: Date, default: Date.now }
-#   personal: {type: Boolean, default: true}
-# 
-# WorldModel = mongoose.model('World', WorldSchema)
-# 
-# CellSchema = new Schema
-#   world: ObjectId
-#   x: {type: Number, required: true, min: 0}
-#   y: {type: Number, required: true, min: 0}
-#   contents: {type: String, default: ' '}
-#   properties: {}
-# 
-# CellSchema.index {world:1, x:1, y:1}, {unique:true}
-# 
-# CellModel = mongoose.model('Cell', CellSchema)
-# 
-# writeCellToDb = (cellPoint, contents) ->
-#   CellModel.findOne {world: mainWorldId, x:cellPoint.x, y: cellPoint.y}, (err, cell) ->
-#     if not cell
-#       cell = new CellModel {x:cellPoint.x, y:cellPoint.y, contents: contents, world: mainWorldId}
-#       cell.save (err) -> console.log err if err
-#       console.log 'created  cell!!', cell.x, cell.y
-#     else
-#       cell.contents = contents
-#       cell.save (err) -> console.log err if err
-#       console.log 'updated cell', cell.x, cell.y
+app.get '/home', (req, res) ->
+    res.render 'home.jade', { title: 'My Site' }
+
+app.get '/test', (req, res) ->
+    res.render 'map_base.jade', { title: 'My Site' }
 
 
+
+models.mongooseAuth.helpExpress(app)
 app.listen 3000

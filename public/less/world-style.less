@@ -1,0 +1,84 @@
+body, html
+{
+  height: 100%;
+  width: 100%;
+}
+
+
+
+#map
+{
+  font-family:monospace; 
+  width: 100%;
+  height: 100%;
+  line-height: normal;
+  //margin-top: @navbarHeight;
+}
+
+#input
+{
+  margin-left: -1000px;
+  position: absolute;
+}
+
+.debug
+{
+  color: lightgreen;
+  background: rgba(0, 0, 0, 0.5);
+}
+.debugTile
+{
+   -webkit-box-shadow: 1px 1px 1px black;
+}  
+
+.cell.otherSelected
+{
+  background-color: red; 
+}
+
+div.leaflet-tile
+		{
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
+      /* background: rgba(0,250, 0, 0.3); */
+			/*border-right: 1px solid red;*/
+			/* overflow: hidden; */
+		}
+		div.leaflet-tile span
+		{
+      text-align: center;
+      float:left;
+			display: block;
+      font-weight: 400;
+      /* overflow: hidden; */
+      /* background: rgba(0,250, 0, 0.3); */
+			/* font-size: 8px; */
+		}
+    
+    div.leaflet-tile span.selected
+    {
+      background-color: white;
+      color: red;
+    }
+    div.leaflet-tile-drawn
+    {
+      /* background: rgba(0,250, 0, 0.3); */
+    }
+
+    div.leaflet-tile-loaded
+    {
+      /* background: rgba(255, 0, 0, 0.3); */
+    }
+
+
+.navbar-fixed-top
+{
+  position: fixed !important;
+}
+
+
+//for the zoom controls, hacky
+.leaflet-top.leaflet-left
+{
+  margin-top: @navbarHeight;
+}

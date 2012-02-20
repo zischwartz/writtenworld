@@ -1,5 +1,5 @@
 (function() {
-  var CellSchema, ObjectId, RiteModel, RiteSchema, Schema, WorldSchema, mongoose;
+  var CellSchema, ObjectId, Rite, RiteSchema, Schema, UserSchema, WorldSchema, mongoose, mongooseAuth;
 
   mongoose = require('mongoose');
 
@@ -23,7 +23,7 @@
     }
   });
 
-  exports.WorldModel = mongoose.model('World', WorldSchema);
+  exports.World = mongoose.model('World', WorldSchema);
 
   RiteSchema = new Schema({
     contents: {
@@ -35,17 +35,21 @@
       "default": Date.now
     },
     owner: ObjectId,
-    echos: {
+    echoes: {
       type: Number,
       "default": 0
     },
     color: {
       type: String,
       "default": ' '
+    },
+    isEcho: {
+      type: Boolean,
+      "default": false
     }
   });
 
-  RiteModel = mongoose.model('Rite', RiteSchema);
+  Rite = mongoose.model('Rite', RiteSchema);
 
   CellSchema = new Schema({
     world: ObjectId,
@@ -63,7 +67,16 @@
       type: String,
       "default": ' '
     },
-    history: [RiteSchema]
+    current: {
+      type: Schema.ObjectId,
+      ref: 'Rite'
+    },
+    history: [
+      {
+        type: Schema.ObjectId,
+        ref: 'Rite'
+      }
+    ]
   });
 
   CellSchema.index({
@@ -74,42 +87,90 @@
     unique: true
   });
 
-  exports.CellModel = mongoose.model('Cell', CellSchema);
+  exports.Cell = mongoose.model('Cell', CellSchema);
 
-  exports.writeCellToDb = function(cellPoint, contents, worldId) {
-    return exports.CellModel.findOne({
+  exports.writeCellToDb = function(cellPoint, contents, worldId, ownerId) {
+    exports.Cell.findOne({
       world: worldId,
       x: cellPoint.x,
       y: cellPoint.y
-    }, function(err, cell) {
+    }).populate('current').run(function(err, cell) {
       var rite;
+      if (cell) console.log('BEFORE', cell.current);
+      if (err) console.log(err);
+      rite = new Rite({
+        contents: contents,
+        owner: ownerId
+      });
       if (!cell) {
-        cell = new exports.CellModel({
+        cell = new exports.Cell({
           x: cellPoint.x,
           y: cellPoint.y,
           contents: contents,
           world: worldId
         });
-        console.log('created  cell!!', cell.x, cell.y);
-        rite = new RiteModel({
-          contents: contents
-        });
-        cell.history.push(rite);
-        return cell.save(function(err) {
+      } else if (cell.current.contents === contents) {
+        console.log('its an echo! ', cell.current.contents, ' ', contents);
+        cell.current.echoes += 1;
+        cell.current.save(function(err) {
           if (err) return console.log(err);
         });
-      } else {
+        rite.isEcho = true;
+      }
+      cell.history.push(rite);
+      return rite.save(function(err) {
+        if (!rite.isEcho) cell.current = rite._id;
         cell.contents = contents;
-        rite = new RiteModel({
-          contents: contents
-        });
-        cell.history.push(rite);
         cell.save(function(err) {
           if (err) return console.log(err);
         });
-        return console.log('updated cell', cell.x, cell.y);
-      }
+        return console.log('AFTER', cell.current);
+      });
     });
+    return true;
   };
+
+  mongooseAuth = require('mongoose-auth');
+
+  UserSchema = new Schema({
+    totalRites: {
+      type: Number,
+      "default": 0
+    },
+    activeRites: {
+      type: Number,
+      "default": 0
+    },
+    totalEchoes: {
+      type: Number,
+      "default": 0
+    }
+  });
+
+  UserSchema.plugin(mongooseAuth, {
+    everymodule: {
+      everyauth: {
+        User: function() {
+          return exports.User;
+        }
+      }
+    },
+    password: {
+      everyauth: {
+        getLoginPath: '/login',
+        postLoginPath: '/login',
+        loginView: 'login.jade',
+        getRegisterPath: '/register',
+        postRegisterPath: '/register',
+        registerView: 'register.jade',
+        loginSuccessRedirect: '/',
+        registerSuccessRedirect: '/'
+      }
+    }
+  });
+
+  exports.User = mongoose.model('User', UserSchema);
+
+  exports.mongooseAuth = mongooseAuth;
 
 }).call(this);
