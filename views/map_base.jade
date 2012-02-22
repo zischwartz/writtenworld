@@ -24,8 +24,10 @@ html(lang="en")
     style(id="dynamicStyles")
 
 body
-  include include/header.html
+  include include/header.jade
+  div(id="interfaces") // we'll insert messages and modals here
   div(id="map")
   div(id="inputWrap")
     input(id="input", type="text")
  
+//include include/modals.html

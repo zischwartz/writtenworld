@@ -35,6 +35,7 @@
   window.state = {
     selectedCell: null,
     lastClickCell: null,
+    color: null,
     writeDirection: 'right',
     zoomDiff: function() {
       return config.maxZoom() - map.getZoom();
@@ -120,7 +121,7 @@
       return inputEl.focus();
     });
     inputEl.keypress(function(e) {
-      var c, cellPoint;
+      var c, cellPoint, userTotalRites;
       if (e.which === 13) {
         moveCursor('down', state.lastClickCell);
         panIfAppropriate('down');
@@ -129,6 +130,8 @@
         c = String.fromCharCode(e.which);
         dbg(c, 'PRESSED!!!!');
         state.selectedCell.write(c);
+        userTotalRites = parseInt($("#userTotalRites").text());
+        $("#userTotalRites").text(userTotalRites + 1);
         cellPoint = cellKeyToXY(state.selectedCell.key);
         now.writeCell(cellPoint, c);
         moveCursor(state.writeDirection);
@@ -200,6 +203,9 @@
       });
       initializeInterface();
       now.setBounds(domTiles.getTilePointAbsoluteBounds());
+      now.setClientState(function(s) {
+        if (s.color) return state.color = s.color;
+      });
       now.drawCursors = function(users) {
         var id, otherSelected, user, _results;
         $('.otherSelected').removeClass('otherSelected');
@@ -217,13 +223,33 @@
       };
       now.drawEdits = function(edits) {
         var c, edit, id, _results;
+        console.log(edits);
         _results = [];
         for (id in edits) {
           edit = edits[id];
           c = Cell.get(edit.cellPoint.x, edit.cellPoint.y);
-          _results.push(c.write(edit.content));
+          _results.push(c.update(edit.content, edit.props));
         }
         return _results;
+      };
+      $(".trigger").live('click', function() {
+        var action, payload, type;
+        action = $(this).data('action');
+        type = $(this).data('type');
+        payload = $(this).data('payload');
+        if (action === 'show') now.getModal(type);
+        if (action === 'set') {
+          console.log('setting');
+          state[type] = payload;
+          now.setUserOption(type, payload);
+        }
+        return false;
+      });
+      now.insertInterface = function(html) {
+        $("#interfaces").append(html);
+        return $(".modal").modal().on('hidden', function() {
+          return $(".modal").remove();
+        });
       };
       map.on('moveend', function() {
         return now.setBounds(domTiles.getTilePointAbsoluteBounds());
@@ -263,12 +289,12 @@
       return "c" + this.x + "x" + this.y;
     };
 
-    function Cell(row, col, tile, contents, properties, events) {
+    function Cell(row, col, tile, contents, props, events) {
       this.row = row;
       this.col = col;
       this.tile = tile;
       this.contents = contents != null ? contents : config.defaultChar();
-      this.properties = properties != null ? properties : null;
+      this.props = props != null ? props : {};
       this.events = events != null ? events : null;
       this.generateKey = __bind(this.generateKey, this);
       this.history = {};
@@ -279,11 +305,19 @@
       this.span.innerHTML = this.contents;
       this.span.id = this.key;
       this.span.className = 'cell';
+      if (this.props.color) this.span.className = 'cell ' + this.props.color;
     }
 
     Cell.prototype.write = function(c) {
       this.contents = c;
-      return this.span.innerHTML = c;
+      this.span.innerHTML = c;
+      if (state.color) return this.span.className = 'cell ' + state.color;
+    };
+
+    Cell.prototype.update = function(contents, props) {
+      this.contents = contents;
+      this.span.innerHTML = contents;
+      if (props.color) return this.span.className += ' ' + props.color;
     };
 
     Cell.prototype.kill = function() {
@@ -292,16 +326,17 @@
       return delete all[this.key];
     };
 
-    Cell.getOrCreate = function(row, col, tile, contents) {
+    Cell.getOrCreate = function(row, col, tile, contents, props) {
       var cell, x, y;
       if (contents == null) contents = null;
+      if (props == null) props = {};
       x = tile._tilePoint.x * Math.pow(2, state.zoomDiff()) + col;
       y = tile._tilePoint.y * Math.pow(2, state.zoomDiff()) + row;
       cell = Cell.get(x, y);
       if (cell) {
         return cell;
       } else {
-        cell = new Cell(row, col, tile, contents);
+        cell = new Cell(row, col, tile, contents, props);
         return cell;
       }
     };

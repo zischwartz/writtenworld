@@ -7,7 +7,7 @@ betterBuildTile= (tile, tileData, absTilePoint)->
       if cellData
         dbg 'cell loaded from server'
         dbg 'cellData', cellData.contents
-        cell=Cell.getOrCreate r, c, tile, cellData.contents
+        cell=Cell.getOrCreate r, c, tile, cellData.contents, cellData.props
       else
         cell= Cell.getOrCreate r,c, tile
         dbg 'cell created, but others in tile were from server'
@@ -82,6 +82,7 @@ L.TileLayer.Dom = L.TileLayer.extend
       layer.tileDrawn(tile)
     else
       now.getTile absTilePoint, state.numRows(), (tileData, atp)->
+        # console.log tileData
         frag=betterBuildTile(tile, tileData, atp)
         layer.drawTile(tile, tilePoint, zoom, frag)
         layer.tileDrawn(tile)

@@ -19,6 +19,7 @@ window.config = new Configuration
 window.state =
   selectedCell: null
   lastClickCell: null
+  color: null
   # canRead: true
   # canWrite: true
   # geoInitialPos: null
@@ -105,6 +106,9 @@ initializeInterface = ->
       c = String.fromCharCode e.which
       dbg  c,  'PRESSED!!!!'
       state.selectedCell.write( c)
+      
+      userTotalRites=parseInt($("#userTotalRites").text())
+      $("#userTotalRites").text(userTotalRites+1)
 
       cellPoint = cellKeyToXY state.selectedCell.key
       now.writeCell(cellPoint, c)
@@ -184,6 +188,9 @@ jQuery ->
     initializeInterface()
 
     now.setBounds domTiles.getTilePointAbsoluteBounds()
+    
+    now.setClientState (s)->
+      state.color = s.color if s.color
 
     now.drawCursors = (users) ->
       $('.otherSelected').removeClass('otherSelected') #this is a dumb way 
@@ -194,10 +201,27 @@ jQuery ->
           $(otherSelected.span).addClass('otherSelected')
     
     now.drawEdits = (edits) ->
-      # console.log edits
+      console.log edits
       for id, edit of  edits
         c=Cell.get(edit.cellPoint.x, edit.cellPoint.y)
-        c.write(edit.content)
+        c.update(edit.content, edit.props)
+    
+    $(".trigger").live 'click', ->
+      action= $(this).data('action')
+      type= $(this).data('type')
+      payload= $(this).data('payload')
+      if action == 'show'
+        now.getModal(type)
+      if action == 'set'
+        console.log 'setting'
+        state[type]=payload
+        now.setUserOption(type, payload)
+      return false
+
+    now.insertInterface = (html) ->
+      $("#interfaces").append(html)
+      $(".modal").modal().on 'hidden', ->
+        $(".modal").remove()
 
     map.on 'moveend', ->
       now.setBounds domTiles.getTilePointAbsoluteBounds()
@@ -227,7 +251,7 @@ window.Cell = class Cell
     @y = @tile._tilePoint.y * Math.pow(2, state.zoomDiff())+@row
     return "c#{@x}x#{@y}"
 
-  constructor: (@row, @col, @tile, @contents = config.defaultChar(), @properties=null, @events=null) ->
+  constructor: (@row, @col, @tile, @contents = config.defaultChar(), @props={}, @events=null) ->
     @history = {}
     @timestamp = null #just use servertime
     @key = this.generateKey()
@@ -236,10 +260,19 @@ window.Cell = class Cell
     @span.innerHTML= @contents
     @span.id= @key
     @span.className= 'cell'
+    if @props.color
+      @span.className='cell '+ @props.color
 
   write: (c) ->
     @contents= c
     @span.innerHTML = c
+    @span.className = 'cell '+ state.color if state.color
+
+  #for updating from other users, above is for local user
+  update: (contents, props)->
+    @contents= contents
+    @span.innerHTML = contents
+    @span.className += ' '+ props.color if props.color
 
   kill: ->
     dbg 'killing a cell'#, @key
@@ -247,14 +280,14 @@ window.Cell = class Cell
     delete all[@key]
 
 
-  @getOrCreate:(row, col, tile, contents=null) ->
+  @getOrCreate:(row, col, tile, contents=null, props={}) ->
     x=tile._tilePoint.x * Math.pow(2, state.zoomDiff())+col
     y=tile._tilePoint.y * Math.pow(2, state.zoomDiff())+row
     cell=Cell.get(x,y)
     if cell
       return cell
     else
-      cell = new Cell row, col, tile, contents
+      cell = new Cell row, col, tile, contents, props
       return cell
 
     

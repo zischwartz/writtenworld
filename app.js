@@ -1,5 +1,5 @@
 (function() {
-  var app, cUsers, config, connect, everyone, express, getWhoCanSee, leaflet, models, mongoose, nowjs, sessionStore;
+  var SessionModel, app, cUsers, config, connect, everyone, express, fs, getWhoCanSee, jade, leaflet, mainWorldId, modalFile, modalTemplate, models, mongoose, nowjs, sessionStore, _ref;
 
   express = require('express');
 
@@ -13,9 +13,13 @@
 
   mongoose.connect('mongodb://localhost/mapist');
 
+  jade = require('jade');
+
+  fs = require('fs');
+
   models = require('./models.js');
 
-  sessionStore = require("connect-mongoose")(connect);
+  _ref = require("./mongoose-session.js")(connect), sessionStore = _ref[0], SessionModel = _ref[1];
 
   app = express.createServer();
 
@@ -27,23 +31,25 @@
       store: new sessionStore()
     }));
     app.use(express.favicon(__dirname + '/public/favicon.ico'));
-    app.use(express.compiler({
-      src: __dirname + '/public',
-      enable: ['less', 'coffeescript']
-    }));
-    return app.use(app.router);
+    return app.use(models.mongooseAuth.middleware());
   });
 
   app.configure('development', function() {
     app.use(express.static(__dirname + '/public'));
+    app.set('view engine', 'jade');
     app.use(express.logger({
       format: ':method :url'
     }));
+    app.set('view options', {
+      layout: false
+    });
     return app.use(express.errorHandler({
       dumpExceptions: true,
       showStack: true
     }));
   });
+
+  mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001");
 
   everyone = nowjs.initialize(app);
 
@@ -55,11 +61,15 @@
 
   nowjs.on('connect', function() {
     var sid;
-    sid = this.user.cookie['connect.sid'];
+    console.log('this.now=', this.now);
+    console.log(this.user);
+    sid = decodeURIComponent(this.user.cookie['connect.sid']);
     cUsers[this.user.clientId] = {
       sid: sid
     };
-    return console.log(this.user.clientId, 'connected');
+    console.log(this.user.clientId, 'connected');
+    console.log('connected sid: ', sid);
+    return true;
   });
 
   nowjs.on('disconnect', function() {
@@ -71,6 +81,10 @@
     var b;
     b = new leaflet.L.Bounds(bounds.max, bounds.min);
     return cUsers[this.user.clientId].bounds = b;
+  };
+
+  everyone.now.setClientState = function(callback) {
+    if (this.user.session) return callback(this.user.session);
   };
 
   everyone.now.setSelectedCell = function(cellPoint) {
@@ -95,18 +109,39 @@
   };
 
   everyone.now.writeCell = function(cellPoint, content) {
-    var cid, edits, i, toUpdate;
-    console.log(this.user);
+    var cid, edits, i, isOwnerAuth, ownerId, props, sid, toUpdate;
     cid = this.user.clientId;
+    sid = decodeURIComponent(this.user.cookie['connect.sid']);
+    props = {};
+    isOwnerAuth = false;
+    if (this.user.session.auth) {
+      isOwnerAuth = true;
+      ownerId = this.user.session.auth.userId;
+      props.color = this.user.session.color;
+      models.writeCellToDb(cellPoint, content, mainWorldId, ownerId, isOwnerAuth, props);
+      models.User.findById(ownerId, function(err, user) {
+        return models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, props);
+      });
+    } else {
+      SessionModel.findOne({
+        'sid': sid
+      }, function(err, doc) {
+        var data;
+        data = JSON.parse(doc.data);
+        ownerId = doc._id;
+        props.color = data.color;
+        return models.writeCellToDb(cellPoint, content, mainWorldId, ownerId, isOwnerAuth, props);
+      });
+    }
+    if (this.user.session.color != null) props.color = this.user.session.color;
     toUpdate = getWhoCanSee(cellPoint);
-    console.log(cellPoint, content);
     edits = {};
-    models.writeCellToDb(cellPoint, content, worldId);
     for (i in toUpdate) {
       if (i !== cid) {
         edits[cid] = {
           cellPoint: cellPoint,
-          content: content
+          content: content,
+          props: props
         };
         nowjs.getClient(i, function() {
           return this.now.drawEdits(edits);
@@ -118,13 +153,19 @@
 
   everyone.now.getTile = function(absTilePoint, numRows, callback) {
     var _this = this;
-    return models.CellModel.where('world', models.mainWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).run(function(err, docs) {
-      var c, results, _i, _len;
+    return models.Cell.where('world', mainWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
+      var c, pCell, results, _i, _len;
       results = {};
       if (docs.length) {
         for (_i = 0, _len = docs.length; _i < _len; _i++) {
           c = docs[_i];
-          results["" + c.x + "x" + c.y] = c;
+          pCell = {
+            x: c.y,
+            y: c.y,
+            contents: c.current.contents,
+            props: c.current.props
+          };
+          results["" + c.x + "x" + c.y] = pCell;
         }
         return callback(results, absTilePoint);
       } else {
@@ -141,6 +182,57 @@
     }
     return toUpdate;
   };
+
+  app.get('/home', function(req, res) {
+    return res.render('home.jade', {
+      title: 'My Site'
+    });
+  });
+
+  app.get('/', function(req, res) {
+    return res.render('map_base.jade', {
+      title: 'My Site'
+    });
+  });
+
+  modalFile = fs.readFileSync('views/include/modal.jade');
+
+  modalTemplate = jade.compile(modalFile.toString('utf8'));
+
+  everyone.now.getModal = function(type) {
+    var html, modalContent;
+    if (type === 'colorModal') {
+      modalContent = {
+        title: "Pick A Color",
+        body: ["Any color. Well, any of these colors. To get custom colors, you need to get echoes."],
+        htmlbody: "<div class='c1 trigger' data-payload='c1' data-action='set' data-type='color'>Color 1 </div> <div class='c2 trigger' data-payload='c2' data-action='set' data-type='color'>Color 2 </div>",
+        apply: "OK, OK!"
+      };
+      html = modalTemplate(modalContent);
+      console.log(html);
+      this.now.insertInterface(html);
+    }
+  };
+
+  everyone.now.setUserOption = function(type, payload) {
+    var userId;
+    console.log('setUserOption', type, payload);
+    if (type = 'color') {
+      this.user.session.color = payload;
+      this.user.session.save();
+    }
+    if (this.user.session.auth) {
+      userId = this.user.session.auth.userId;
+      return models.User.findById(userId, function(err, doc) {
+        if (err) console.log(err);
+        doc.color = payload;
+        doc.save();
+        return console.log('USER COLORCHANGE', doc);
+      });
+    }
+  };
+
+  models.mongooseAuth.helpExpress(app);
 
   app.listen(3000);
 

@@ -39,14 +39,11 @@
       type: Number,
       "default": 0
     },
-    color: {
-      type: String,
-      "default": ' '
-    },
     isEcho: {
       type: Boolean,
       "default": false
-    }
+    },
+    props: {}
   });
 
   Rite = mongoose.model('Rite', RiteSchema);
@@ -89,18 +86,20 @@
 
   exports.Cell = mongoose.model('Cell', CellSchema);
 
-  exports.writeCellToDb = function(cellPoint, contents, worldId, ownerId) {
+  exports.writeCellToDb = function(cellPoint, contents, worldId, ownerId, isOwnerAuth, props) {
+    if (props == null) props = {};
+    console.log('writing cell with ', contents);
     exports.Cell.findOne({
       world: worldId,
       x: cellPoint.x,
       y: cellPoint.y
     }).populate('current').run(function(err, cell) {
       var rite;
-      if (cell) console.log('BEFORE', cell.current);
       if (err) console.log(err);
       rite = new Rite({
         contents: contents,
-        owner: ownerId
+        owner: ownerId,
+        props: props
       });
       if (!cell) {
         cell = new exports.Cell({
@@ -109,8 +108,8 @@
           contents: contents,
           world: worldId
         });
-      } else if (cell.current.contents === contents) {
-        console.log('its an echo! ', cell.current.contents, ' ', contents);
+      } else if ((cell.current.contents === contents) && (cell.current.owner.toString() !== ownerId) && isOwnerAuth) {
+        console.log('is echo!');
         cell.current.echoes += 1;
         cell.current.save(function(err) {
           if (err) return console.log(err);
@@ -118,14 +117,27 @@
         rite.isEcho = true;
       }
       cell.history.push(rite);
-      return rite.save(function(err) {
+      rite.save(function(err) {
         if (!rite.isEcho) cell.current = rite._id;
         cell.contents = contents;
-        cell.save(function(err) {
+        return cell.save(function(err) {
           if (err) return console.log(err);
         });
-        return console.log('AFTER', cell.current);
       });
+      exports.User.findById(ownerId, function(err, user) {
+        if (user) {
+          user.totalRites += 1;
+          return user.save();
+        }
+      });
+      if (rite.isEcho) {
+        return exports.User.findById(cell.current.owner, function(err, user) {
+          if (user) {
+            user.totalEchoes += 1;
+            return user.save();
+          }
+        });
+      }
     });
     return true;
   };
@@ -144,7 +156,12 @@
     totalEchoes: {
       type: Number,
       "default": 0
-    }
+    },
+    color: {
+      type: String,
+      "default": ''
+    },
+    personalWorld: ObjectId
   });
 
   UserSchema.plugin(mongooseAuth, {
@@ -164,7 +181,31 @@
         postRegisterPath: '/register',
         registerView: 'register.jade',
         loginSuccessRedirect: '/',
-        registerSuccessRedirect: '/'
+        registerSuccessRedirect: '/',
+        respondToRegistrationSucceed: function(res, user, data) {
+          var personal;
+          console.log('SSSSSSSSUCESSSSSSSS---------');
+          personal = new exports.World({
+            personal: true,
+            owner: user._id,
+            name: "" + user.login + "'s History"
+          });
+          personal.save(function(err, doc) {
+            user.personalWorld = personal._id;
+            return user.save();
+          });
+          if (data.session.redirectTo) {
+            res.writeHead(303, {
+              'Location': data.session.redirectTo
+            });
+          } else {
+            res.writeHead(303, {
+              'Location': '/'
+            });
+          }
+          res.end();
+          return true;
+        }
       }
     }
   });

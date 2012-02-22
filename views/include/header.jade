@@ -1,0 +1,40 @@
+.navbar.navbar-fixed-top
+    .navbar-inner
+        .container-fluid
+          a.btn.btn-navbar(data-toggle='collapse', data-target='.nav-collapse')
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+          a.brand(href='#') Mapi.st
+          .nav-collapse
+            ul.nav
+              li.dropdown
+                a.dropdown-toggle(href='#', data-toggle='dropdown')
+                  | Main World
+                  b.caret
+                ul.dropdown-menu
+                  li
+                    a(href='#') Action
+                  li
+                    a(href='#') Another action
+                  li
+                    a(href='#') Something else here
+                  li.divider
+                  li
+                    a(href='#') Separated link
+              li
+                a.trigger(href='#about', data-action='show', data-type="colorModal") Options
+            - if (!everyauth.loggedIn)
+              p.navbar-text.pull-right
+                a(href="#login") Login 
+                | or 
+                a(href="#register") Register
+            - else
+              p.navbar-text.pull-right
+                a#username(href='#') #{user.login}
+                | : #{user.totalEchoes} echos. 
+                span#userTotalRites #{user.totalRites} 
+                |  rites.
+                //i.icon-white.icon-envelope
+                //a(href='/logout') Logout
+

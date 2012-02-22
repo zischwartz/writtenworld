@@ -11,7 +11,7 @@
         if (cellData) {
           dbg('cell loaded from server');
           dbg('cellData', cellData.contents);
-          cell = Cell.getOrCreate(r, c, tile, cellData.contents);
+          cell = Cell.getOrCreate(r, c, tile, cellData.contents, cellData.props);
         } else {
           cell = Cell.getOrCreate(r, c, tile);
           dbg('cell created, but others in tile were from server');

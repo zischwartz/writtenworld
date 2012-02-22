@@ -1,0 +1,16 @@
+- if (typeof(specialClass) != 'undefined')
+ .modal.fade(class=specialClass)
+- else
+  .modal.fade
+    .modal-header
+        a.close(data-dismiss='modal') ×
+        h3 #{title}
+      .modal-body
+        for para in body
+          p=para
+        - if (typeof(htmlbody) != 'undefined')
+          div!= htmlbody
+      .modal-footer
+        a.btn.btn-primary(href='#') #{apply}
+        a.btn(href='#', data-dismiss='modal') Close
+
