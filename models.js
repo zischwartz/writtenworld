@@ -1,5 +1,5 @@
 (function() {
-  var CellSchema, ObjectId, Rite, RiteSchema, Schema, UserSchema, WorldSchema, mongoose, mongooseAuth;
+  var CellSchema, ObjectId, Rite, RiteSchema, Schema, UserSchema, WorldSchema, mongoose, mongooseAuth, slugGenerator;
 
   mongoose = require('mongoose');
 
@@ -20,8 +20,27 @@
     personal: {
       type: Boolean,
       "default": true
+    },
+    slug: {
+      type: String,
+      lowercase: true,
+      trim: true
     }
   });
+
+  slugGenerator = function(options) {
+    var key;
+    options = options || {};
+    key = options.key || 'name';
+    return slugGenerator = function(schema) {
+      return schema.path(key).set(function(v) {
+        this.slug = v.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/-+/g, '');
+        return v;
+      });
+    };
+  };
+
+  WorldSchema.plugin(slugGenerator());
 
   exports.World = mongoose.model('World', WorldSchema);
 

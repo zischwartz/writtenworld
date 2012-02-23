@@ -10,6 +10,17 @@ WorldSchema = new Schema
   name: {type: String, unique: true,}
   created: { type: Date, default: Date.now }
   personal: {type: Boolean, default: true}
+  slug: { type: String, lowercase: true, trim: true }
+
+slugGenerator= (options) ->
+  options = options || {}
+  key = options.key || 'name'
+  return slugGenerator= (schema)->
+    schema.path(key).set (v) ->
+      this.slug = v.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/-+/g, '')
+      return v
+    
+WorldSchema.plugin slugGenerator()
 
 exports.World = mongoose.model('World', WorldSchema)
 

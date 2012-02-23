@@ -1,6 +1,5 @@
 (function() {
   var Cell, Configuration, cellKeyToXY, filter, getNodeIndex, initializeInterface, moveCursor, pan, panIfAppropriate, setTileStyle,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __slice = Array.prototype.slice;
 
   window.DEBUG = false;
@@ -96,6 +95,7 @@
     }
     key = "c" + target.x + "x" + target.y;
     targetCell = Cell.all()[key];
+    if (!targetCell) throw 'cell does not exist';
     setSelected(targetCell);
     return true;
   };
@@ -166,14 +166,19 @@
   panIfAppropriate = function(direction) {
     var panByDist, panOnDist, selectedPP;
     selectedPP = $(state.selectedEl).offset();
+    console.log('selectedPP', selectedPP);
     panOnDist = 200;
     panByDist = state.cellHeight();
     if (direction === 'up') if (selectedPP.top < panOnDist) pan(0, 0 - panByDist);
     if (direction === 'down') {
-      if (selectedPP.top > document.height - panOnDist * 1.5) pan(0, panByDist);
+      if (selectedPP.top > document.body.clientHeight - panOnDist * 1.5) {
+        pan(0, panByDist);
+      }
     }
     if (direction === 'right') {
-      if (selectedPP.left > document.width - panOnDist) pan(panByDist, 0);
+      if (selectedPP.left > document.body.clientWidth - panOnDist) {
+        pan(panByDist, 0);
+      }
     }
     if (direction === 'left') {
       if (selectedPP.left < panOnDist) return pan(0 - panByDist, 0);
@@ -245,10 +250,12 @@
         }
         return false;
       });
-      now.insertInterface = function(html) {
-        $("#interfaces").append(html);
-        return $(".modal").modal().on('hidden', function() {
-          return $(".modal").remove();
+      $().alert();
+      now.insertMessage = function(html) {
+        return $("#messages").append(html).children().doTimeout(100, 'addClass', 'in').doTimeout(5000, function() {
+          return $(this).removeClass('in').doTimeout(300, function() {
+            return $(this).alert('close');
+          });
         });
       };
       map.on('moveend', function() {
@@ -296,7 +303,6 @@
       this.contents = contents != null ? contents : config.defaultChar();
       this.props = props != null ? props : {};
       this.events = events != null ? events : null;
-      this.generateKey = __bind(this.generateKey, this);
       this.history = {};
       this.timestamp = null;
       this.key = this.generateKey();

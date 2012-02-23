@@ -130,27 +130,34 @@ app.get '/home', (req, res) ->
     res.render 'home.jade', { title: 'My Site' }
 
 app.get '/', (req, res) ->
-    # console.log  req
-    res.render 'map_base.jade', { title: 'My Site' }
+    res.render 'map_base.jade', { title: 'Mapist' }
+# 
+# app.get '/', (req, res) ->
+#     res.render 'map_base.jade', { title: 'Mapist' }
 
+app.get '/modals', (req, res) ->
+  res.render 'modals.html'
 
-modalFile = fs.readFileSync('views/include/modal.jade')
-modalTemplate = jade.compile(modalFile.toString('utf8'))
+# modalFile = fs.readFileSync('views/include/modal.jade')
+# modalTemplate = jade.compile(modalFile.toString('utf8'))
 
-# should just do the modals and include them with jade,
-# this is silly. but good for messages
-everyone.now.getModal= (type) ->
-  if type=='colorModal'
-    modalContent=
-      title: "Pick A Color"
-      body: ["Any color. Well, any of these colors. To get custom colors, you need to get echoes."]
-      htmlbody: "<div class='c1 trigger' data-payload='c1' data-action='set' data-type='color'>Color 1 </div> <div class='c2 trigger' data-payload='c2' data-action='set' data-type='color'>Color 2 </div>"
-      apply: "OK, OK!"
-    html= modalTemplate modalContent
-    console.log html
-    this.now.insertInterface(html)
-  return
+# everyone.now.getModal= (type) ->
+#   if type=='colorModal'
+#     modalContent=
+#       title: "Pick A Color"
+#       body: ["Any color. Well, any of these colors. To get custom colors, you need to get echoes."]
+#       htmlbody: "<div class='c1 trigger' data-payload='c1' data-action='set' data-type='color'>Color 1 </div> <div class='c2 trigger' data-payload='c2' data-action='set' data-type='color'>Color 2 </div>"
+#       apply: "OK, OK!"
+#     html= modalTemplate modalContent
+#     console.log html
+#     this.now.insertInterface(html)
+#   return
 
+everyone.now.sendMessage = (heading, message, cssclass="" )->
+  html = "<div class='alert fade  #{cssclass} '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>#{heading}</h4>#{message}</div>"
+  this.now.insertMessage(html)
+  
+  
 everyone.now.setUserOption = (type, payload) ->
   console.log 'setUserOption', type, payload
   if type = 'color'

@@ -39,8 +39,10 @@ body, html
 div.leaflet-tile
 		{
       color: white;
-      background: rgba(0, 0, 0, 0.5);
-      /* background: rgba(0,250, 0, 0.3); */
+      background-color: #777777;
+      // background: rgba(0, 0, 0, 0.5);
+
+       //background: rgba(0,250, 0, 0.3); 
 			/*border-right: 1px solid red;*/
 			/* overflow: hidden; */
 		}
@@ -76,6 +78,15 @@ div.leaflet-tile
   position: fixed !important;
 }
 
+#messages
+{
+  position: absolute;
+  margin-top: @navbarHeight;
+  width: 86%;
+  left: 7%;
+  padding-top: 10px; 
+  z-index: 10;
+}
 
 //for the zoom controls, hacky
 .leaflet-top.leaflet-left

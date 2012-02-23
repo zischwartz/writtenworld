@@ -75,6 +75,8 @@ moveCursor = (direction, from = state.selectedCell) ->
   
   key = "c#{target.x}x#{target.y}"
   targetCell=Cell.all()[key]
+  if not targetCell
+     throw 'cell does not exist'
   setSelected(targetCell)
   true
 
@@ -148,16 +150,17 @@ initializeInterface = ->
 
 panIfAppropriate = (direction)->
   selectedPP= $(state.selectedEl).offset()
+  console.log 'selectedPP', selectedPP
   panOnDist = 200
   panByDist = state.cellHeight()
   if direction == 'up'
     if selectedPP.top < panOnDist
       pan(0, 0-panByDist)
   if direction == 'down'
-    if selectedPP.top > document.height-panOnDist*1.5 #need to include size of a cell in state
+    if selectedPP.top > document.body.clientHeight-panOnDist*1.5 #need to include size of a cell in state
       pan(0,panByDist)
   if direction == 'right'
-      if selectedPP.left > document.width-panOnDist
+      if selectedPP.left > document.body.clientWidth-panOnDist
         pan(panByDist, 0)
   if direction == 'left'
       if selectedPP.left < panOnDist
@@ -169,7 +172,7 @@ jQuery ->
   tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png'
   tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
   centerPoint= new L.LatLng(40.714269, -74.005972)
-  window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false})#.addLayer(tileServeLayer)
+  window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}) #.addLayer(tileServeLayer)
   # initializeGeo()
   window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
  
@@ -218,10 +221,11 @@ jQuery ->
         now.setUserOption(type, payload)
       return false
 
-    now.insertInterface = (html) ->
-      $("#interfaces").append(html)
-      $(".modal").modal().on 'hidden', ->
-        $(".modal").remove()
+    $().alert() #applies close functionality to all
+    now.insertMessage = (html) ->
+      $("#messages").append(html).children().doTimeout(100, 'addClass', 'in') #.addClass('in')
+      .doTimeout 5000, ->
+        $(this).removeClass('in').doTimeout 300, ->$(this).alert('close')
 
     map.on 'moveend', ->
       now.setBounds domTiles.getTilePointAbsoluteBounds()
@@ -246,7 +250,7 @@ window.Cell = class Cell
       i++
     return  i
 
-  generateKey: =>
+  generateKey: ->
     @x = @tile._tilePoint.x * Math.pow(2, state.zoomDiff())+@col
     @y = @tile._tilePoint.y * Math.pow(2, state.zoomDiff())+@row
     return "c#{@x}x#{@y}"

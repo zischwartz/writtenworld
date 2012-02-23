@@ -1,3 +1,13 @@
+# For testing it with a lighter weight object but still DOM elements
+# Cell = {}
+# Cell.getOrCreate= (a) ->
+#   c = {}
+#   c.span = document.createElement('span')
+#   return c
+# 
+# Cell.get = -> null
+
+
 betterBuildTile= (tile, tileData, absTilePoint)->
   tile._cells = [] #this would be good to use for removing old cells
   frag = document.createDocumentFragment()
@@ -16,7 +26,6 @@ betterBuildTile= (tile, tileData, absTilePoint)->
   return frag
 
 getTileLocally =(absTilePoint, tile) ->
-  console.log 'getting locally'
   tile._cells = []
   frag = document.createDocumentFragment()
   cellsNeeded = state.numRows()*state.numCols() #cellsNeeded to have a full tile
@@ -63,7 +72,7 @@ L.TileLayer.Dom = L.TileLayer.extend
     return tile
 
   _loadTile: (tile, tilePoint, zoom) ->
-    dbg '_loadTile called'
+    # console.log '_loadTile for: ', tilePoint.x, tilePoint.y
     tile._layer = this
     tile._tilePoint = tilePoint
     tile._zoom = zoom
@@ -71,7 +80,7 @@ L.TileLayer.Dom = L.TileLayer.extend
     tile.onerror= this._tileOnError
     if DEBUG
       d= document.createElement 'div'; d.className= 'debug'; d.innerHTML= tilePoint + ' '+ zoom; tile.appendChild d; $(tile).addClass 'debugTile'
-    # console.log 'this._layer:', this
+      # console.log 'this._layer:', this
     layer =this
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
     
@@ -86,11 +95,13 @@ L.TileLayer.Dom = L.TileLayer.extend
         frag=betterBuildTile(tile, tileData, atp)
         layer.drawTile(tile, tilePoint, zoom, frag)
         layer.tileDrawn(tile)
+        # console.log 'end of loadtile  for: ', tilePoint.x, tilePoint.y
     true
 
   drawTile: (tile, tilePoint, zoom, frag)->
     tile.appendChild(frag) # tile.appendChild(content.cloneNode(true))
-    # console.log 'drawtile', tile
+    # tile.innerHTML= 'hi'
+    # console.log 'drawtile for: ', tilePoint.x, tilePoint.y
     true
 
   _getTile: ->
@@ -120,8 +131,7 @@ L.TileLayer.Dom = L.TileLayer.extend
         c.kill()
       # e.tile = null #maybe dont' need to do this
     else if e.tile._zoom < map.getZoom()
-      dbg 'zoom in'
-      console.log 'unload due to zoom, less easy'
+      dbg 'unload due to zoom, less easy'
     else if e.tile._zoom > map.getZoom()
       dbg 'zoom out' # this case requires nothing, every cell will still be there
       #on zoom out, we don't need to do anything

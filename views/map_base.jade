@@ -1,7 +1,7 @@
 !!! 5
 html(lang="en")
   head
-  title = title
+    title= title 
     link(rel="stylesheet", href="css/leaflet.css")
     //link(rel="stylesheet", href="css/mobile.css")
     //link(rel="stylesheet", href="css/world-style.css")
@@ -13,6 +13,8 @@ html(lang="en")
     script(src="js/libs/bootstrap-dropdown.js")
     script(src="js/libs/bootstrap-collapse.js")
     script(src="js/libs/bootstrap-modal.js")
+    script(src="js/libs/bootstrap-alert.js")
+    script(src="js/libs/dotimeout.js")
     script(src="js/leaflet-src.js")
     script(src="js/layer.js")
     script(src="js/world.js")
@@ -25,7 +27,7 @@ html(lang="en")
 
 body
   include include/header.jade
-  div(id="interfaces") // we'll insert messages and modals here
+  div(id="messages") 
   div(id="map")
   div(id="inputWrap")
     input(id="input", type="text")

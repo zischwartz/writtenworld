@@ -1,5 +1,5 @@
 (function() {
-  var SessionModel, app, cUsers, config, connect, everyone, express, fs, getWhoCanSee, jade, leaflet, mainWorldId, modalFile, modalTemplate, models, mongoose, nowjs, sessionStore, _ref;
+  var SessionModel, app, cUsers, config, connect, everyone, express, fs, getWhoCanSee, jade, leaflet, mainWorldId, models, mongoose, nowjs, sessionStore, _ref;
 
   express = require('express');
 
@@ -191,27 +191,19 @@
 
   app.get('/', function(req, res) {
     return res.render('map_base.jade', {
-      title: 'My Site'
+      title: 'Mapist'
     });
   });
 
-  modalFile = fs.readFileSync('views/include/modal.jade');
+  app.get('/modals', function(req, res) {
+    return res.render('modals.html');
+  });
 
-  modalTemplate = jade.compile(modalFile.toString('utf8'));
-
-  everyone.now.getModal = function(type) {
-    var html, modalContent;
-    if (type === 'colorModal') {
-      modalContent = {
-        title: "Pick A Color",
-        body: ["Any color. Well, any of these colors. To get custom colors, you need to get echoes."],
-        htmlbody: "<div class='c1 trigger' data-payload='c1' data-action='set' data-type='color'>Color 1 </div> <div class='c2 trigger' data-payload='c2' data-action='set' data-type='color'>Color 2 </div>",
-        apply: "OK, OK!"
-      };
-      html = modalTemplate(modalContent);
-      console.log(html);
-      this.now.insertInterface(html);
-    }
+  everyone.now.sendMessage = function(heading, message, cssclass) {
+    var html;
+    if (cssclass == null) cssclass = "";
+    html = "<div class='alert fade  " + cssclass + " '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>" + heading + "</h4>" + message + "</div>";
+    return this.now.insertMessage(html);
   };
 
   everyone.now.setUserOption = function(type, payload) {

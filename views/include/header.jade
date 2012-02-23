@@ -24,6 +24,10 @@
                     a(href='#') Separated link
               li
                 a.trigger(href='#about', data-action='show', data-type="colorModal") Options
+              //li 
+                //a.search Search
+              form.navbar-search
+                input#locationSearch.search-query(type="text", placeholder="Go to...")
             - if (!everyauth.loggedIn)
               p.navbar-text.pull-right
                 a(href="#login") Login 

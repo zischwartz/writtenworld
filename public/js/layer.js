@@ -25,7 +25,6 @@
 
   getTileLocally = function(absTilePoint, tile) {
     var c, cell, cellsNeeded, frag, r, _ref, _ref2;
-    console.log('getting locally');
     tile._cells = [];
     frag = document.createDocumentFragment();
     cellsNeeded = state.numRows() * state.numCols();
@@ -79,7 +78,6 @@
     },
     _loadTile: function(tile, tilePoint, zoom) {
       var absTilePoint, d, frag, layer;
-      dbg('_loadTile called');
       tile._layer = this;
       tile._tilePoint = tilePoint;
       tile._zoom = zoom;
@@ -148,8 +146,7 @@
         }
         return _results;
       } else if (e.tile._zoom < map.getZoom()) {
-        dbg('zoom in');
-        return console.log('unload due to zoom, less easy');
+        return dbg('unload due to zoom, less easy');
       } else if (e.tile._zoom > map.getZoom()) {
         return dbg('zoom out');
       }
