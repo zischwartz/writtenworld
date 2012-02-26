@@ -61,13 +61,11 @@
 
   nowjs.on('connect', function() {
     var sid;
-    console.log('this.now=', this.now);
-    console.log(this.user);
     sid = decodeURIComponent(this.user.cookie['connect.sid']);
     cUsers[this.user.clientId] = {
       sid: sid
     };
-    console.log(this.user.clientId, 'connected');
+    console.log(this.user.clientId, 'connected clientId: ');
     console.log('connected sid: ', sid);
     return true;
   });
@@ -196,7 +194,7 @@
   });
 
   app.get('/modals', function(req, res) {
-    return res.render('modals.html');
+    return res.render('include/modals.jade');
   });
 
   everyone.now.sendMessage = function(heading, message, cssclass) {

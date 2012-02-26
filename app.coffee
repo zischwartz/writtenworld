@@ -21,7 +21,7 @@ app.configure ->
   app.use express.favicon(__dirname + '/public/favicon.ico')
   # app.use express.compiler { src: __dirname + '/public', enable: ['less', 'coffeescript'] }
   app.use models.mongooseAuth.middleware()
-  # app.use app.router #the above says not to use this.
+  # app.use app.router #mongooseAuth says not to use this.
 
 app.configure 'development', ->
   app.use express.static __dirname+'/public'
@@ -39,12 +39,10 @@ config = {maxZoom: 18}
 cUsers = {} #all of the connected users
 
 nowjs.on 'connect', ->
-  console.log 'this.now=', this.now
-  console.log this.user
   # console.log everyauth.user
   sid=decodeURIComponent(this.user.cookie['connect.sid'])
   cUsers[this.user.clientId]={sid:sid}
-  console.log this.user.clientId, 'connected'
+  console.log this.user.clientId, 'connected clientId: '
   console.log 'connected sid: ', sid
   true
 
@@ -54,7 +52,6 @@ nowjs.on 'disconnect', ->
 
 everyone.now.setBounds = (bounds) ->
   b = new leaflet.L.Bounds bounds.max, bounds.min
-  # console.log b
   cUsers[this.user.clientId].bounds = b
 
 everyone.now.setClientState = (callback) ->
@@ -67,7 +64,7 @@ everyone.now.setSelectedCell = (cellPoint) ->
   toUpdate = getWhoCanSee(cellPoint)
   for i of toUpdate
     if i != cid
-      updates = {cid:cUsers[cid]} #client side is set up to recieve a number of updates, hence this
+      updates = {cid:cUsers[cid]} #client side is set up to recieve a number of updates, hence this being a list
       nowjs.getClient i, -> this.now.drawCursors(updates)
 
 everyone.now.writeCell = (cellPoint, content) ->
@@ -94,7 +91,6 @@ everyone.now.writeCell = (cellPoint, content) ->
     props.color= this.user.session.color
 
   toUpdate = getWhoCanSee(cellPoint)
-  # console.log cellPoint, content
   edits = {}
   for i of toUpdate
     if i !=cid
@@ -131,12 +127,9 @@ app.get '/home', (req, res) ->
 
 app.get '/', (req, res) ->
     res.render 'map_base.jade', { title: 'Mapist' }
-# 
-# app.get '/', (req, res) ->
-#     res.render 'map_base.jade', { title: 'Mapist' }
 
 app.get '/modals', (req, res) ->
-  res.render 'modals.html'
+  res.render 'include/modals.jade'
 
 # modalFile = fs.readFileSync('views/include/modal.jade')
 # modalTemplate = jade.compile(modalFile.toString('utf8'))

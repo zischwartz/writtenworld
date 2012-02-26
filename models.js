@@ -180,7 +180,8 @@
       type: String,
       "default": ''
     },
-    personalWorld: ObjectId
+    personalWorld: ObjectId,
+    email: String
   });
 
   UserSchema.plugin(mongooseAuth, {
@@ -192,6 +193,9 @@
       }
     },
     password: {
+      extraParams: {
+        email: String
+      },
       everyauth: {
         getLoginPath: '/login',
         postLoginPath: '/login',

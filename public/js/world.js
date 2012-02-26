@@ -166,7 +166,7 @@
   panIfAppropriate = function(direction) {
     var panByDist, panOnDist, selectedPP;
     selectedPP = $(state.selectedEl).offset();
-    console.log('selectedPP', selectedPP);
+    dbg('selectedPP', selectedPP);
     panOnDist = 200;
     panByDist = state.cellHeight();
     if (direction === 'up') if (selectedPP.top < panOnDist) pan(0, 0 - panByDist);
@@ -242,15 +242,13 @@
         action = $(this).data('action');
         type = $(this).data('type');
         payload = $(this).data('payload');
-        if (action === 'show') now.getModal(type);
         if (action === 'set') {
           console.log('setting');
           state[type] = payload;
           now.setUserOption(type, payload);
         }
-        return false;
+        return true;
       });
-      $().alert();
       now.insertMessage = function(html) {
         return $("#messages").append(html).children().doTimeout(100, 'addClass', 'in').doTimeout(5000, function() {
           return $(this).removeClass('in').doTimeout(300, function() {
@@ -258,6 +256,7 @@
           });
         });
       };
+      $().alert();
       map.on('moveend', function() {
         return now.setBounds(domTiles.getTilePointAbsoluteBounds());
       });

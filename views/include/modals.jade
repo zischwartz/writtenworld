@@ -1,0 +1,61 @@
+- var colors = {white:'c0', green: 'c1', yellow: 'c2', red: 'c3', blue: 'c4'}
+
+link(rel='stylesheet', href="/css/bootstrap.css")
+
+.modal.fade#colorModal
+  .modal-header
+      a.close(data-dismiss='modal') ×
+      h3 Pick A Color 
+    .modal-body
+      p Any color. As long as it's one of these. Want more options? Get some echoes.
+      each val, key in colors
+        a.colorOptions.trigger(class=val, data-payload=val, data-type='color', data-action='set', data-dismiss='modal') #{key} 
+    .modal-footer
+      a.btn(href='#', data-dismiss='modal') Close
+
+form.modal.fade#registerModal(action="/register", method="POST")
+  .modal-header
+      a.close(data-dismiss='modal') ×
+      h3 Get an Account 
+    .modal-body
+      p Sign up and get: echoes, a private world + history, more color options, notifications, and more crap like that.
+      .well 
+        label User name
+        input.span4(type='text', name='login')
+        span.help-inline Your public name on Mapist
+        label Password 
+        input.span4(type='password', name='password') 
+        span.help-inline Shhhh, it's a secret
+        label Email 
+         i (Optional) 
+        input.span4(type='email', name='email') 
+        span.help-inline Optional. We hate spam too. 
+    .modal-footer
+      button.btn.btn-primary(type="submit") Sign up!
+      a.btn(href='#', data-dismiss='modal') Nevermind 
+
+form.modal.fade#locationSearch
+  .modal-header
+      a.close(data-dismiss='modal') ×
+      h3 Find a Place 
+    .modal-body
+      p Where would you like to go?
+      .well 
+        input.span5
+    .modal-footer
+      button.btn.btn-primary(type="submit") Go!
+      a.btn(href='#', data-dismiss='modal') Nevermind 
+
+form.modal.fade#loginModal(action="/login", method="POST")
+  .modal-header
+      a.close(data-dismiss='modal') ×
+      h3 Log In
+    .modal-body
+      .well 
+        label User name
+        input.span4(type='text', name='login')
+        label Password 
+        input.span4(type='password', name='password') 
+    .modal-footer
+      button.btn.btn-primary(type="submit") Sign in!
+      a.btn(href='#', data-dismiss='modal') Nevermind 

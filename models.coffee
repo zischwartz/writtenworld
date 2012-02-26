@@ -91,13 +91,16 @@ UserSchema = new Schema
   totalEchoes: {type: Number, default:0}
   color: {type: String, default: ''}
   personalWorld: ObjectId
+  email: String
 
 UserSchema.plugin mongooseAuth,
     everymodule:
       everyauth:
         User: -> exports.User
     password:
-      # loginWith: 'email'
+      # loginWith: 'email',
+      extraParams:
+         email: String
       everyauth:
         getLoginPath: '/login'
         postLoginPath: '/login'

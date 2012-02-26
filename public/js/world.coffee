@@ -145,12 +145,11 @@ initializeInterface = ->
         panIfAppropriate('left')
         state.selectedCell.write(' ')
 
-
-#end interface initi
+#end interface init
 
 panIfAppropriate = (direction)->
   selectedPP= $(state.selectedEl).offset()
-  console.log 'selectedPP', selectedPP
+  dbg 'selectedPP', selectedPP
   panOnDist = 200
   panByDist = state.cellHeight()
   if direction == 'up'
@@ -213,19 +212,20 @@ jQuery ->
       action= $(this).data('action')
       type= $(this).data('type')
       payload= $(this).data('payload')
-      if action == 'show'
-        now.getModal(type)
+    
       if action == 'set'
         console.log 'setting'
         state[type]=payload
         now.setUserOption(type, payload)
-      return false
+      # return false
+      return true
 
-    $().alert() #applies close functionality to all
     now.insertMessage = (html) ->
       $("#messages").append(html).children().doTimeout(100, 'addClass', 'in') #.addClass('in')
       .doTimeout 5000, ->
         $(this).removeClass('in').doTimeout 300, ->$(this).alert('close')
+
+    $().alert() #applies close functionality to all alerts
 
     map.on 'moveend', ->
       now.setBounds domTiles.getTilePointAbsoluteBounds()

@@ -78,6 +78,22 @@ div.leaflet-tile
   position: fixed !important;
 }
 
+a i.icon-search
+{
+  .opacity(50); 
+}
+
+a:hover i.icon-search
+{
+  .opacity(100) !important;
+} 
+
+#username
+{
+  text-transform: capitalize;
+  color: @linkColor !important;
+}
+
 #messages
 {
   position: absolute;
@@ -94,9 +110,36 @@ div.leaflet-tile
   margin-top: @navbarHeight;
 }
 
-.c1
-{ color: yellow;}
+//signup modal
+.modal-body .help-inline
+{
+  color: @grayLight;
+}
 
-.c2 
-{color: green;}
+.c0 { color: white !important;}
 
+.c1 { color: green !important;}
+
+.c2 { color: yellow !important;} 
+
+.c3 { color: red !important;}
+
+.c4 { color: blue !important;}
+
+
+a.colorOptions
+{
+  text-transform: capitalize;
+  .btn;
+  .btn-large;
+  .gradientBar(@grayLighter, @grayLight);
+  margin-right: 1em;
+  width: 10%;
+  font-weight: bold;
+  
+  &.c2 , &.c0
+  {
+    text-shadow: 0px 1px 3px  rgba(0, 0 ,0, .8);
+  }
+
+}

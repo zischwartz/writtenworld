@@ -10,35 +10,47 @@
             ul.nav
               li.dropdown
                 a.dropdown-toggle(href='#', data-toggle='dropdown')
-                  | Main World
+                  | World
                   b.caret
                 ul.dropdown-menu
+                  li.active
+                    a(href="#") Main World
                   li
-                    a(href='#') Action
+                    a(href='#') Your World 
                   li
-                    a(href='#') Another action
+                    a(href='#') Pics
                   li
-                    a(href='#') Something else here
+                    a(href='#') Links &amp; Files
                   li.divider
                   li
-                    a(href='#') Separated link
+                    a(href='#') More Worlds...
               li
-                a.trigger(href='#about', data-action='show', data-type="colorModal") Options
-              //li 
-                //a.search Search
-              form.navbar-search
-                input#locationSearch.search-query(type="text", placeholder="Go to...")
+                a(href='#colorModal', data-toggle="modal") Colors
+              li
+                a(href='#locationSearch', data-toggle="modal") 
+                  i.icon-search.icon-white 
+
             - if (!everyauth.loggedIn)
               p.navbar-text.pull-right
-                a(href="#login") Login 
+                a(href="#loginModal", data-toggle="modal") Login 
                 | or 
-                a(href="#register") Register
+                a(href="#registerModal", data-toggle="modal") Register
             - else
-              p.navbar-text.pull-right
-                a#username(href='#') #{user.login}
-                | : #{user.totalEchoes} echos. 
-                span#userTotalRites #{user.totalRites} 
-                |  rites.
-                //i.icon-white.icon-envelope
-                //a(href='/logout') Logout
-
+              ul.nav.pull-right
+                li.dropdown
+                  a.dropdown-toggle(href='#', data-toggle='dropdown')
+                    span#username(href='#') #{user.login} 
+                      b.caret 
+                  ul.dropdown-menu
+                    li
+                      a(href='#') Your World 
+                    li
+                      a(href='#') Account Preferences
+                    li.divider
+                    li
+                      a(href="/logout") Log out
+                li
+                  p.navbar-text
+                    | #{user.totalEchoes} echos, 
+                    span#userTotalRites #{user.totalRites} 
+                    |  rites
