@@ -283,7 +283,7 @@
         html = "<div class='alert fade  " + cssclass + " '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>" + heading + "</h4>" + message + "</div>";
         return $("#messages").append(html).children().doTimeout(100, 'addClass', 'in').doTimeout(5000, function() {
           return $(this).removeClass('in').doTimeout(300, function() {
-            return $(this).alert('close');
+            return $(this).alert('close').remove();
           });
         });
       };

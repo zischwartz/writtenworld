@@ -34,7 +34,13 @@ RiteSchema = new Schema
   # isEcho: {type: Boolean, default: false}
   props: {type:Schema.Types.Mixed, default:{} } # This default is failing.
 
+RiteSchema.methods.getOwner= (cb)->
+  return this.db.model('User').findById(this.owner).run(cb)
+
 Rite = mongoose.model('Rite', RiteSchema)
+
+
+
 
 CellSchema = new Schema
   world: ObjectId
@@ -57,44 +63,35 @@ exports.writeCellToDb = (cellPoint, contents, worldId, ownerId, isOwnerAuth, pro
   .run (err, cell) ->
       console.log err if err
       rite = new Rite({contents: contents, owner:ownerId, props:props })
-      # console.log 'new rite: ' , rite
-      # console.log 'cell: ', cell
       if not cell
-          # console.log 'no cell, creating one'
           cell = new exports.Cell {x:cellPoint.x, y:cellPoint.y, contents: contents, world:worldId}
       else if (cell.current.contents == contents) and (cell.current.owner.toString() != ownerId) and isOwnerAuth
-          # console.log 'is echo! cell.current:  ', cell.current
-          # cell.current.echoes+=1
           if not cell.current.props.echoes
             cell.current.props.echoes = 0
           cell.current.props.echoes+=1
           cell.current.markModified('props')
           cell.current.save (err) -> console.log err if err
-          # rite.isEcho = true
           rite.props.isEcho = true
           rite.markModified('props')
-          # console.log 'cell.current= ', cell.current
       cell.history.push(rite)
       rite.save (err) ->
-        # cell.current = rite._id if not rite.isEcho
         cell.current = rite._id if not rite.props.isEcho
-        # cell.contents = contents
         cell.save (err) ->console.log err if err
       
       exports.User.findById ownerId, (err, user)->
         if user
           user.totalRites+=1
           user.save (err) -> console.log err if err
-
-      if rite.props.isEcho
+     
+      if cell.current
         exports.User.findById cell.current.owner, (err, user) ->
           if user
-            user.totalEchoes+=1
-            user.save (err)-> console.log err if err
-            user.emit('receivedEcho', rite)
-            #put a notify event here
-            # console.log 'INSPECT'
-            # console.log util.inspect user, true, 2, true
+            if rite.props.isEcho
+              user.totalEchoes+=1
+              user.save (err)-> console.log err if err
+              user.emit('receivedEcho', rite)
+            else if user._id.toString() != ownerId and isOwnerAuth
+              user.emit('receivedOverRite', rite)
   true
 
 
@@ -142,12 +139,12 @@ UserSchema.plugin mongooseAuth,
 
 exports.User= mongoose.model('User', UserSchema)
 
-
-exports.User.prototype.on 'receivedEcho', (details) ->
-  console.log 'GOT AN ECHO EVENT !!!!!!!!!!!!!!!!!!!!!!!!!!!ADSFADSFASDFASDFADF'
-  console.log 'this: ', this
-  console.log details
-  return true
+# 
+# exports.User.prototype.on 'receivedEcho', (rite) ->
+#   console.log 'GOT AN ECHO EVENT !!!!!!!!!!!!!!!!!!!!!!!!!!!ADSFADSFASDFASDFADF'
+#   console.log 'this: ', this
+#   console.log details
+#   return true
 
 
 # rite = new Rite({contents: contents, owner:ownerId, props:props })

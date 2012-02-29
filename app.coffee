@@ -39,18 +39,26 @@ everyone = nowjs.initialize app
 
 config = {maxZoom: 18}
 
-cUsers = {} #all of the connected users
+cUsers = {} #all of the connected users, by clientId (nowjs)
+aUsers = {} #all connected and auth'd users, by actual userId (mongoose _id)
 
 nowjs.on 'connect', ->
-  # console.log everyauth.user
+  # console.log this.user
   sid=decodeURIComponent(this.user.cookie['connect.sid'])
-  cUsers[this.user.clientId]={sid:sid}
+  if this.user.session?.auth
+    cUsers[this.user.clientId]={sid:sid, userId: this.user.session.auth.userId }
+    aUsers[this.user.session.auth.userId]={sid:sid,cid: this.user.clientId}
+  else
+    cUsers[this.user.clientId]={sid:sid}
   console.log this.user.clientId, 'connected clientId: '
-  console.log 'connected sid: ', sid
+  # console.log 'connected sid: ', sid
   true
 
 nowjs.on 'disconnect', ->
   delete cUsers[this.user.clientId]
+  if this.user.session?.auth
+    delete aUsers[this.user.session.auth.userId]
+    console.log 'removing authd disconnected user'
   console.log 'removing disconnected user'
 
 everyone.now.setBounds = (bounds) ->
@@ -153,6 +161,37 @@ everyone.now.setUserOption = (type, payload) ->
         doc.save()
         console.log 'USER COLORCHANGE', doc
         this.now.insertMessage('hi', 'nice color')
+
+
+
+#Moved this here so it can take advantage of nowjs 
+models.User.prototype.on 'receivedEcho', (rite) ->
+  if aUsers[this._id]
+    userId= this._id
+    rite.getOwner (err,u)->
+      console.log err if err
+      nowjs.getClient aUsers[userId].cid, ->
+        if u
+          this.now.insertMessage 'Echoed!', "#{u.login} echoed what you said!"
+        else
+          this.now.insertMessage 'Echoed!', "Someone echoed what you said!"
+  return true
+
+
+models.User.prototype.on 'receivedOverRite', (rite) ->
+  # console.log 'this: ', this
+  if aUsers[this._id]
+    userId= this._id
+    rite.getOwner (err,u)->
+      console.log err if err
+      nowjs.getClient aUsers[userId].cid, ->
+        if u
+          this.now.insertMessage 'Over Written', "Someone called #{u.login} is writing over your cells. Click for more info"
+        else
+          this.now.insertMessage 'Over Written', "Someone is writing over your cells. Click for more info"
+  # else if 
+  # console.log rite
+  return true
 
 models.mongooseAuth.helpExpress(app)
 

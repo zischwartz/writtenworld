@@ -64,6 +64,10 @@
     }
   });
 
+  RiteSchema.methods.getOwner = function(cb) {
+    return this.db.model('User').findById(this.owner).run(cb);
+  };
+
   Rite = mongoose.model('Rite', RiteSchema);
 
   CellSchema = new Schema({
@@ -150,14 +154,18 @@
           });
         }
       });
-      if (rite.props.isEcho) {
+      if (cell.current) {
         return exports.User.findById(cell.current.owner, function(err, user) {
           if (user) {
-            user.totalEchoes += 1;
-            user.save(function(err) {
-              if (err) return console.log(err);
-            });
-            return user.emit('receivedEcho', rite);
+            if (rite.props.isEcho) {
+              user.totalEchoes += 1;
+              user.save(function(err) {
+                if (err) return console.log(err);
+              });
+              return user.emit('receivedEcho', rite);
+            } else if (user._id.toString() !== ownerId && isOwnerAuth) {
+              return user.emit('receivedOverRite', rite);
+            }
           }
         });
       }
@@ -239,15 +247,6 @@
   });
 
   exports.User = mongoose.model('User', UserSchema);
-
-  exports.User.prototype.on('receivedEcho', function(details) {
-    console.log('GOT AN ECHO EVENT !!!!!!!!!!!!!!!!!!!!!!!!!!!ADSFADSFASDFASDFADF');
-    console.log('this: ', this);
-    console.log(details);
-    return true;
-  });
-
-  console.log(util.inspect(exports.User, true, 2, true));
 
   exports.mongooseAuth = mongooseAuth;
 

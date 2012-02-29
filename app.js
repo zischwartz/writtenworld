@@ -1,5 +1,5 @@
 (function() {
-  var SessionModel, app, cUsers, config, connect, events, everyone, express, fs, getWhoCanSee, jade, leaflet, mainWorldId, models, mongoose, nowjs, sessionStore, util, _ref;
+  var SessionModel, aUsers, app, cUsers, config, connect, events, everyone, express, fs, getWhoCanSee, jade, leaflet, mainWorldId, models, mongoose, nowjs, sessionStore, util, _ref;
 
   express = require('express');
 
@@ -63,19 +63,36 @@
 
   cUsers = {};
 
+  aUsers = {};
+
   nowjs.on('connect', function() {
-    var sid;
+    var sid, _ref2;
     sid = decodeURIComponent(this.user.cookie['connect.sid']);
-    cUsers[this.user.clientId] = {
-      sid: sid
-    };
+    if ((_ref2 = this.user.session) != null ? _ref2.auth : void 0) {
+      cUsers[this.user.clientId] = {
+        sid: sid,
+        userId: this.user.session.auth.userId
+      };
+      aUsers[this.user.session.auth.userId] = {
+        sid: sid,
+        cid: this.user.clientId
+      };
+    } else {
+      cUsers[this.user.clientId] = {
+        sid: sid
+      };
+    }
     console.log(this.user.clientId, 'connected clientId: ');
-    console.log('connected sid: ', sid);
     return true;
   });
 
   nowjs.on('disconnect', function() {
+    var _ref2;
     delete cUsers[this.user.clientId];
+    if ((_ref2 = this.user.session) != null ? _ref2.auth : void 0) {
+      delete aUsers[this.user.session.auth.userId];
+      console.log('removing authd disconnected user');
+    }
     return console.log('removing disconnected user');
   });
 
@@ -213,6 +230,42 @@
       }
     }
   };
+
+  models.User.prototype.on('receivedEcho', function(rite) {
+    var userId;
+    if (aUsers[this._id]) {
+      userId = this._id;
+      rite.getOwner(function(err, u) {
+        if (err) console.log(err);
+        return nowjs.getClient(aUsers[userId].cid, function() {
+          if (u) {
+            return this.now.insertMessage('Echoed!', "" + u.login + " echoed what you said!");
+          } else {
+            return this.now.insertMessage('Echoed!', "Someone echoed what you said!");
+          }
+        });
+      });
+    }
+    return true;
+  });
+
+  models.User.prototype.on('receivedOverRite', function(rite) {
+    var userId;
+    if (aUsers[this._id]) {
+      userId = this._id;
+      rite.getOwner(function(err, u) {
+        if (err) console.log(err);
+        return nowjs.getClient(aUsers[userId].cid, function() {
+          if (u) {
+            return this.now.insertMessage('Over Written', "Someone called " + u.login + " is writing over your cells. Click for more info");
+          } else {
+            return this.now.insertMessage('Over Written', "Someone is writing over your cells. Click for more info");
+          }
+        });
+      });
+    }
+    return true;
+  });
 
   models.mongooseAuth.helpExpress(app);
 

@@ -241,7 +241,7 @@ jQuery ->
       html = "<div class='alert fade  #{cssclass} '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>#{heading}</h4>#{message}</div>"
       $("#messages").append(html).children().doTimeout(100, 'addClass', 'in') #.addClass('in')
       .doTimeout 5000, ->
-        $(this).removeClass('in').doTimeout 300, ->$(this).alert('close')
+        $(this).removeClass('in').doTimeout 300, ->$(this).alert('close').remove()
 
     $().alert() #applies close functionality to all alerts
 
