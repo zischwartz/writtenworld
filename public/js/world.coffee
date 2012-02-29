@@ -8,7 +8,7 @@ window.Configuration = class Configuration
     # @tileSize = -> spec.tileSize ? {x: 128, y: 160} #this one is good, but 160 isn't a power of 2
     @tileSize = -> spec.tileSize ? {x: 192, y: 256} #been using THIS one
     # @tileSize = -> spec.tileSize ? {x: 256, y: 256}
-    # @tileSize = -> spec.tileSize ? {x: 192, y: 224}
+    # @tileSize = -> spec.tileSize ? {x: 192, y: 224} #liking this one
     @maxZoom = -> spec.maxZoom ? 20 # was 18, current image tiles are only 18
     @defaultChar = -> spec.defaultChar ? " "
 
@@ -80,7 +80,7 @@ moveCursor = (direction, from = state.selectedCell) ->
   setSelected(targetCell)
   true
 
-#INITIALIZER 
+#INTERFACE INITIALIZER 
 initializeInterface = ->
   dbg 'initializing interface'
   $("#map").click (e) ->
@@ -145,7 +145,21 @@ initializeInterface = ->
         panIfAppropriate('left')
         state.selectedCell.write(' ')
 
-#end interface init
+  $("#locationSearch").submit ->
+    locationString= $("#locationSearchInput").val()
+    $.ajax
+      url: "http://where.yahooapis.com/geocode?location=#{locationString}&flags=JC&appid=a6mq7d30"
+      success: (data)->
+        result =  data['ResultSet']['Results'][0]
+        latlng = new L.LatLng parseFloat(result.latitude), parseFloat(result.longitude)
+        dbg 'go to, ',  latlng
+        map.panTo(latlng)
+        $('#locationSearch').modal('hide')
+    return false
+
+  $(".modal").on 'shown', ->
+    $(this).find('input')[0]?.focus()
+    #end interface init
 
 panIfAppropriate = (direction)->
   selectedPP= $(state.selectedEl).offset()
@@ -171,7 +185,10 @@ jQuery ->
   tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png'
   tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
   centerPoint= new L.LatLng(40.714269, -74.005972)
-  window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}) #.addLayer(tileServeLayer)
+  if DEBUG
+    window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}) #.addLayer(tileServeLayer)
+  else
+    window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}).addLayer(tileServeLayer)
   # initializeGeo()
   window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
  
@@ -220,7 +237,8 @@ jQuery ->
       # return false
       return true
 
-    now.insertMessage = (html) ->
+    now.insertMessage = (heading, message, cssclass="") ->
+      html = "<div class='alert fade  #{cssclass} '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>#{heading}</h4>#{message}</div>"
       $("#messages").append(html).children().doTimeout(100, 'addClass', 'in') #.addClass('in')
       .doTimeout 5000, ->
         $(this).removeClass('in').doTimeout 300, ->$(this).alert('close')
@@ -266,7 +284,8 @@ window.Cell = class Cell
     @span.className= 'cell'
     if @props.color
       @span.className='cell '+ @props.color
-
+    if @props.echoes
+      @span.className+= " e#{props.echoes}"
   write: (c) ->
     @contents= c
     @span.innerHTML = c
@@ -276,6 +295,7 @@ window.Cell = class Cell
   update: (contents, props)->
     @contents= contents
     @span.innerHTML = contents
+    @span.className= 'cell'
     @span.className += ' '+ props.color if props.color
 
   kill: ->

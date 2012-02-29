@@ -138,7 +138,7 @@
         return panIfAppropriate(state.writeDirection);
       }
     });
-    return inputEl.keydown(function(e) {
+    inputEl.keydown(function(e) {
       switch (e.which) {
         case 9:
           e.preventDefault();
@@ -160,6 +160,26 @@
           panIfAppropriate('left');
           return state.selectedCell.write(' ');
       }
+    });
+    $("#locationSearch").submit(function() {
+      var locationString;
+      locationString = $("#locationSearchInput").val();
+      $.ajax({
+        url: "http://where.yahooapis.com/geocode?location=" + locationString + "&flags=JC&appid=a6mq7d30",
+        success: function(data) {
+          var latlng, result;
+          result = data['ResultSet']['Results'][0];
+          latlng = new L.LatLng(parseFloat(result.latitude), parseFloat(result.longitude));
+          dbg('go to, ', latlng);
+          map.panTo(latlng);
+          return $('#locationSearch').modal('hide');
+        }
+      });
+      return false;
+    });
+    return $(".modal").on('shown', function() {
+      var _ref;
+      return (_ref = $(this).find('input')[0]) != null ? _ref.focus() : void 0;
     });
   };
 
@@ -192,11 +212,19 @@
       maxZoom: config.maxZoom()
     });
     centerPoint = new L.LatLng(40.714269, -74.005972);
-    window.map = new L.Map('map', {
-      center: centerPoint,
-      zoom: 17,
-      scrollWheelZoom: false
-    });
+    if (DEBUG) {
+      window.map = new L.Map('map', {
+        center: centerPoint,
+        zoom: 17,
+        scrollWheelZoom: false
+      });
+    } else {
+      window.map = new L.Map('map', {
+        center: centerPoint,
+        zoom: 17,
+        scrollWheelZoom: false
+      }).addLayer(tileServeLayer);
+    }
     window.domTiles = new L.TileLayer.Dom({
       tileSize: config.tileSize()
     });
@@ -249,7 +277,10 @@
         }
         return true;
       });
-      now.insertMessage = function(html) {
+      now.insertMessage = function(heading, message, cssclass) {
+        var html;
+        if (cssclass == null) cssclass = "";
+        html = "<div class='alert fade  " + cssclass + " '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>" + heading + "</h4>" + message + "</div>";
         return $("#messages").append(html).children().doTimeout(100, 'addClass', 'in').doTimeout(5000, function() {
           return $(this).removeClass('in').doTimeout(300, function() {
             return $(this).alert('close');
@@ -311,6 +342,7 @@
       this.span.id = this.key;
       this.span.className = 'cell';
       if (this.props.color) this.span.className = 'cell ' + this.props.color;
+      if (this.props.echoes) this.span.className += " e" + props.echoes;
     }
 
     Cell.prototype.write = function(c) {
@@ -322,6 +354,7 @@
     Cell.prototype.update = function(contents, props) {
       this.contents = contents;
       this.span.innerHTML = contents;
+      this.span.className = 'cell';
       if (props.color) return this.span.className += ' ' + props.color;
     };
 

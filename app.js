@@ -1,11 +1,9 @@
 (function() {
-  var SessionModel, app, cUsers, config, connect, everyone, express, fs, getWhoCanSee, jade, leaflet, mainWorldId, models, mongoose, nowjs, sessionStore, _ref;
+  var SessionModel, app, cUsers, config, connect, events, everyone, express, fs, getWhoCanSee, jade, leaflet, mainWorldId, models, mongoose, nowjs, sessionStore, util, _ref;
 
   express = require('express');
 
   nowjs = require('now');
-
-  leaflet = require('./leaflet-custom-src.js');
 
   mongoose = require('mongoose');
 
@@ -16,6 +14,12 @@
   jade = require('jade');
 
   fs = require('fs');
+
+  events = require('events');
+
+  util = require('util');
+
+  leaflet = require('./leaflet-custom-src.js');
 
   models = require('./models.js');
 
@@ -117,9 +121,6 @@
       ownerId = this.user.session.auth.userId;
       props.color = this.user.session.color;
       models.writeCellToDb(cellPoint, content, mainWorldId, ownerId, isOwnerAuth, props);
-      models.User.findById(ownerId, function(err, user) {
-        return models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, props);
-      });
     } else {
       SessionModel.findOne({
         'sid': sid
@@ -193,32 +194,23 @@
     });
   });
 
-  app.get('/modals', function(req, res) {
-    return res.render('include/modals.jade');
-  });
-
-  everyone.now.sendMessage = function(heading, message, cssclass) {
-    var html;
-    if (cssclass == null) cssclass = "";
-    html = "<div class='alert fade  " + cssclass + " '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>" + heading + "</h4>" + message + "</div>";
-    return this.now.insertMessage(html);
-  };
-
   everyone.now.setUserOption = function(type, payload) {
-    var userId;
+    var userId,
+      _this = this;
     console.log('setUserOption', type, payload);
     if (type = 'color') {
       this.user.session.color = payload;
       this.user.session.save();
-    }
-    if (this.user.session.auth) {
-      userId = this.user.session.auth.userId;
-      return models.User.findById(userId, function(err, doc) {
-        if (err) console.log(err);
-        doc.color = payload;
-        doc.save();
-        return console.log('USER COLORCHANGE', doc);
-      });
+      if (this.user.session.auth) {
+        userId = this.user.session.auth.userId;
+        return models.User.findById(userId, function(err, doc) {
+          if (err) console.log(err);
+          doc.color = payload;
+          doc.save();
+          console.log('USER COLORCHANGE', doc);
+          return _this.now.insertMessage('hi', 'nice color');
+        });
+      }
     }
   };
 

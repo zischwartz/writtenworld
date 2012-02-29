@@ -3395,7 +3395,6 @@ body, html {
 }
 div.leaflet-tile {
   color: white;
-  background-color: #777777;
   /*border-right: 1px solid red;*/
 
   /* overflow: hidden; */
@@ -3468,6 +3467,9 @@ a:hover i.icon-search {
 }
 .c4 {
   color: blue !important;
+}
+.e1, .e2, .e3 {
+  font-weight: bold !important;
 }
 a.colorOptions {
   text-transform: capitalize;
