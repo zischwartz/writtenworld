@@ -256,7 +256,6 @@
       };
       now.drawEdits = function(edits) {
         var c, edit, id, _results;
-        console.log(edits);
         _results = [];
         for (id in edits) {
           edit = edits[id];

@@ -1,15 +1,19 @@
 (function() {
   var CellSchema, ObjectId, Rite, RiteSchema, Schema, UserSchema, WorldSchema, events, mongoose, mongooseAuth, slugGenerator, util;
 
-  mongoose = require('mongoose');
-
   util = require('util');
 
   events = require('events');
 
+  mongoose = require('mongoose');
+
+  mongoose.connect('mongodb://localhost/mapist');
+
   Schema = mongoose.Schema;
 
   ObjectId = Schema.ObjectId;
+
+  exports.mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001");
 
   WorldSchema = new Schema({
     owner: ObjectId,

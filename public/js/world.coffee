@@ -220,7 +220,7 @@ jQuery ->
           $(otherSelected.span).addClass('otherSelected')
     
     now.drawEdits = (edits) ->
-      console.log edits
+      # console.log edits
       for id, edit of  edits
         c=Cell.get(edit.cellPoint.x, edit.cellPoint.y)
         c.update(edit.content, edit.props)

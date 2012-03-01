@@ -1,25 +1,21 @@
 (function() {
-  var SessionModel, aUsers, app, cUsers, connect, events, everyone, express, fs, getWhoCanSee, jade, leaflet, mainWorldId, models, mongoose, nowjs, sessionStore, util, _ref;
+  var SessionModel, app, connect, events, express, jade, models, mongoose, nowjs, nownow, sessionStore, util, _ref;
 
   express = require('express');
 
   nowjs = require('now');
 
-  mongoose = require('mongoose');
-
   connect = require('connect');
+
+  mongoose = require('mongoose');
 
   mongoose.connect('mongodb://localhost/mapist');
 
   jade = require('jade');
 
-  fs = require('fs');
-
   events = require('events');
 
   util = require('util');
-
-  leaflet = require('./leaflet-custom-src.js');
 
   models = require('./models.js');
 
@@ -53,156 +49,7 @@
     }));
   });
 
-  mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001");
-
-  everyone = nowjs.initialize(app);
-
-  cUsers = {};
-
-  aUsers = {};
-
-  nowjs.on('connect', function() {
-    var sid, _ref2;
-    sid = decodeURIComponent(this.user.cookie['connect.sid']);
-    if ((_ref2 = this.user.session) != null ? _ref2.auth : void 0) {
-      cUsers[this.user.clientId] = {
-        sid: sid,
-        userId: this.user.session.auth.userId
-      };
-      aUsers[this.user.session.auth.userId] = {
-        sid: sid,
-        cid: this.user.clientId
-      };
-    } else {
-      cUsers[this.user.clientId] = {
-        sid: sid
-      };
-    }
-    console.log(this.user.clientId, 'connected clientId: ');
-    return true;
-  });
-
-  nowjs.on('disconnect', function() {
-    var _ref2;
-    delete cUsers[this.user.clientId];
-    if ((_ref2 = this.user.session) != null ? _ref2.auth : void 0) {
-      delete aUsers[this.user.session.auth.userId];
-      console.log('removing authd disconnected user');
-    }
-    return console.log('removing disconnected user');
-  });
-
-  everyone.now.setBounds = function(bounds) {
-    var b;
-    b = new leaflet.L.Bounds(bounds.max, bounds.min);
-    return cUsers[this.user.clientId].bounds = b;
-  };
-
-  everyone.now.setClientState = function(callback) {
-    if (this.user.session) return callback(this.user.session);
-  };
-
-  everyone.now.setSelectedCell = function(cellPoint) {
-    var cid, i, toUpdate, updates, _results;
-    cid = this.user.clientId;
-    cUsers[cid].selected = cellPoint;
-    toUpdate = getWhoCanSee(cellPoint);
-    _results = [];
-    for (i in toUpdate) {
-      if (i !== cid) {
-        updates = {
-          cid: cUsers[cid]
-        };
-        _results.push(nowjs.getClient(i, function() {
-          return this.now.drawCursors(updates);
-        }));
-      } else {
-        _results.push(void 0);
-      }
-    }
-    return _results;
-  };
-
-  everyone.now.writeCell = function(cellPoint, content) {
-    var cid, edits, i, isOwnerAuth, ownerId, props, sid, toUpdate;
-    cid = this.user.clientId;
-    sid = decodeURIComponent(this.user.cookie['connect.sid']);
-    props = {};
-    isOwnerAuth = false;
-    if (this.user.session.auth) {
-      isOwnerAuth = true;
-      ownerId = this.user.session.auth.userId;
-      props.color = this.user.session.color;
-      models.writeCellToDb(cellPoint, content, mainWorldId, ownerId, isOwnerAuth, props);
-      models.User.findById(ownerId, function(err, user) {
-        return models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, props);
-      });
-    } else {
-      SessionModel.findOne({
-        'sid': sid
-      }, function(err, doc) {
-        var data;
-        data = JSON.parse(doc.data);
-        ownerId = doc._id;
-        props.color = data.color;
-        return models.writeCellToDb(cellPoint, content, mainWorldId, ownerId, isOwnerAuth, props);
-      });
-    }
-    if (this.user.session.color != null) props.color = this.user.session.color;
-    toUpdate = getWhoCanSee(cellPoint);
-    edits = {};
-    for (i in toUpdate) {
-      if (i !== cid) {
-        edits[cid] = {
-          cellPoint: cellPoint,
-          content: content,
-          props: props
-        };
-        nowjs.getClient(i, function() {
-          return this.now.drawEdits(edits);
-        });
-      }
-    }
-    return true;
-  };
-
-  everyone.now.getTile = function(absTilePoint, numRows, callback) {
-    var _this = this;
-    return models.Cell.where('world', mainWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
-      var c, pCell, results, _i, _len;
-      results = {};
-      if (docs.length) {
-        for (_i = 0, _len = docs.length; _i < _len; _i++) {
-          c = docs[_i];
-          pCell = {
-            x: c.y,
-            y: c.y,
-            contents: c.current.contents,
-            props: c.current.props
-          };
-          results["" + c.x + "x" + c.y] = pCell;
-        }
-        return callback(results, absTilePoint);
-      } else {
-        return callback(results, absTilePoint);
-      }
-    });
-  };
-
-  getWhoCanSee = function(cellPoint) {
-    var i, toUpdate;
-    toUpdate = {};
-    for (i in cUsers) {
-      if (cUsers[i].bounds.contains(cellPoint)) toUpdate[i] = cUsers[i];
-    }
-    return toUpdate;
-  };
-
-  app.get('/home', function(req, res) {
-    return res.render('home.jade', {
-      title: 'My Site'
-    });
-  });
+  nownow = require('./nownow.js')(app, SessionModel);
 
   app.get('/', function(req, res) {
     return res.render('map_base.jade', {
@@ -210,69 +57,49 @@
     });
   });
 
-  app.get('/uw/:login', function(req, res) {
-    var login;
-    login = req.params.login;
-    console.log("login " + login);
-    return res.render('map_base.jade', {
-      title: login
-    });
-  });
-
-  everyone.now.setUserOption = function(type, payload) {
-    var userId,
-      _this = this;
-    console.log('setUserOption', type, payload);
-    if (type = 'color') {
-      this.user.session.color = payload;
-      this.user.session.save();
-      if (this.user.session.auth) {
-        userId = this.user.session.auth.userId;
-        return models.User.findById(userId, function(err, doc) {
-          if (err) console.log(err);
-          doc.color = payload;
-          doc.save();
-          console.log('USER COLORCHANGE', doc);
-          return _this.now.insertMessage('hi', 'nice color');
-        });
-      }
-    }
-  };
-
-  models.User.prototype.on('receivedEcho', function(rite) {
-    var userId;
-    if (aUsers[this._id]) {
-      userId = this._id;
-      rite.getOwner(function(err, u) {
-        if (err) console.log(err);
-        return nowjs.getClient(aUsers[userId].cid, function() {
-          if (u) {
-            return this.now.insertMessage('Echoed!', "" + u.login + " echoed what you said!");
-          } else {
-            return this.now.insertMessage('Echoed!', "Someone echoed what you said!");
-          }
+  app.get('/home', function(req, res) {
+    var personalWorldId, worlds;
+    if (req.loggedIn) {
+      personalWorldId = req.user.personalWorld;
+      worlds = [];
+      return models.World.findById(personalWorldId, function(err, world) {
+        worlds.push(world);
+        return res.render('home.jade', {
+          title: 'Home',
+          worlds: worlds
         });
       });
-    }
-    return true;
-  });
-
-  models.User.prototype.on('receivedOverRite', function(rite) {
-    var userId;
-    if (aUsers[this._id]) {
-      userId = this._id;
-      rite.getOwner(function(err, u) {
-        if (err) console.log(err);
-        return nowjs.getClient(aUsers[userId].cid, function() {
-          if (u) {
-            return this.now.insertMessage('Over Written', "Someone called " + u.login + " is writing over your cells. Click for more info");
-          } else {
-            return this.now.insertMessage('Over Written', "Someone is writing over your cells. Click for more info");
-          }
-        });
+    } else {
+      return res.render('home.jade', {
+        title: 'Home',
+        worlds: worlds
       });
     }
-    return true;
+  });
+
+  app.get('/uw/:slug', function(req, res) {
+    if (req.loggedIn) {
+      return models.World.findOne({
+        slug: req.params.slug
+      }, function(err, world) {
+        if (world.personal) {
+          if (world.owner.toString() === req.user._id.toString()) {
+            return res.render('map_base.jade', {
+              title: world.name
+            });
+          } else {
+            res.write('error');
+            return res.end();
+          }
+        } else {
+          return res.render('map_base.jade', {
+            title: world.name
+          });
+        }
+      });
+    } else {
+      return res.redirect('/login');
+    }
   });
 
   models.mongooseAuth.helpExpress(app);

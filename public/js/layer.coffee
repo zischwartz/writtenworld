@@ -88,7 +88,7 @@ L.TileLayer.Dom = L.TileLayer.extend
 
   # _trueLoadTile: (tile, tilePoint, zoom) ->
   _loadTile: (tile, tilePoint, zoom) ->
-    console.log  '_loadTile for: ', tilePoint.x, tilePoint.y
+    # console.log  '_loadTile for: ', tilePoint.x, tilePoint.y
     tile._layer = this
     tile._tilePoint = tilePoint
     tile._zoom = zoom
