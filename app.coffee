@@ -37,8 +37,10 @@ mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")
 
 everyone = nowjs.initialize app
 
-config = {maxZoom: 18}
+# config = {maxZoom: 18}
 
+# hmm these are for the main world..., how to generalize?
+ 
 cUsers = {} #all of the connected users, by clientId (nowjs)
 aUsers = {} #all connected and auth'd users, by actual userId (mongoose _id)
 
@@ -90,10 +92,9 @@ everyone.now.writeCell = (cellPoint, content) ->
     props.color = this.user.session.color
     models.writeCellToDb(cellPoint, content, mainWorldId, ownerId, isOwnerAuth,  props)
 
-    # Disabled for testing-
-    # this writes to your personal world.
-    # models.User.findById ownerId, (err, user) ->
-      # models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth,  props)
+    # Disabled for testing-  this writes to your personal world.
+    models.User.findById ownerId, (err, user) ->
+      models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth,  props)
   else
     SessionModel.findOne {'sid': sid } , (err, doc) ->
       data = JSON.parse(doc.data)
@@ -136,18 +137,39 @@ getWhoCanSee = (cellPoint) ->
       toUpdate[i] = cUsers[i]
   return toUpdate
 
-app.get '/home', (req, res) ->
-    res.render 'home.jade', { title: 'My Site' }
+
+# ROUTES
 
 app.get '/', (req, res) ->
-    res.render 'map_base.jade', { title: 'Mapist' }
+  res.render 'map_base.jade', { title: 'Mapist' }
+
+app.get '/home', (req, res) ->
+  if req.loggedIn
+    personalWorldId= req.user.personalWorld
+    worlds = []
+    models.World.findById  personalWorldId ,(err,world) ->
+      worlds.push world
+      console.log worlds
+      res.render 'home.jade', { title: 'Home' ,worlds: worlds}
+  else
+      res.render 'home.jade', { title: 'Home' ,worlds: worlds}
+
+app.get '/uw/:slug', (req, res)->
+  if req.loggedIn
+    models.World.findOne {slug: req.params.slug},(err,world) ->
+      if world.personal
+        if world.owner.toString() is req.user._id.toString()
+          res.render 'map_base.jade', {title: world.name}
+        else
+          res.write 'error'
+          res.end()
+      else #it's not personal/private
+        res.render 'map_base.jade', {title: world.name}
+  else
+    #first add a message saying you gota login
+    res.redirect('/login')
 
 
-# everyone.now.sendSystemMessage = (heading, message, cssclass="" )->
-  # html = "<div class='alert fade  #{cssclass} '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>#{heading}</h4>#{message}</div>"
-  # this.now.insertMessage(html)
-  
-  
 everyone.now.setUserOption = (type, payload) ->
   console.log 'setUserOption', type, payload
   if type = 'color'

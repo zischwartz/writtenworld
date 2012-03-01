@@ -39,5 +39,10 @@
     p= JSON.stringify(everyauth.instagram.user)
   h3
     a(href='/logout') Logout
-  h2 #{user}
+  h2 User: 
+  p #{user}
+  h2 Your Worlds
+  for world in worlds
+    li
+     a(href='/uw/'+world.slug) #{world.name}
 

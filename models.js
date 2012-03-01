@@ -13,6 +13,9 @@
 
   WorldSchema = new Schema({
     owner: ObjectId,
+    ownerlogin: {
+      type: String
+    },
     name: {
       type: String,
       unique: true
@@ -222,7 +225,8 @@
           personal = new exports.World({
             personal: true,
             owner: user._id,
-            name: "" + user.login + "'s History"
+            name: "" + user.login + "'s History",
+            ownerlogin: user.login
           });
           personal.save(function(err, doc) {
             user.personalWorld = personal._id;

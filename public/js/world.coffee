@@ -274,7 +274,7 @@ window.Cell = class Cell
     return "c#{@x}x#{@y}"
 
   constructor: (@row, @col, @tile, @contents = config.defaultChar(), @props={}, @events=null) ->
-    @history = {}
+    # @history = {}
     @timestamp = null #just use servertime
     @key = this.generateKey()
     all[@key]=this

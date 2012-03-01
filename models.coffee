@@ -7,6 +7,7 @@ ObjectId = Schema.ObjectId
 
 WorldSchema = new Schema
   owner: ObjectId
+  ownerlogin: {type: String}
   name: {type: String, unique: true,}
   created: { type: Date, default: Date.now }
   personal: {type: Boolean, default: true}
@@ -124,7 +125,7 @@ UserSchema.plugin mongooseAuth,
 
         respondToRegistrationSucceed: (res, user, data) ->
           # console.log user, data
-          personal= new exports.World {personal:true, owner:user._id, name:"#{user.login}'s History" }
+          personal= new exports.World {personal:true, owner:user._id, name:"#{user.login}'s History", ownerlogin: user.login }
           personal.save (err, doc)->
             user.personalWorld = personal._id
             user.save (err) -> console.log err if err

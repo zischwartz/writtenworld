@@ -333,7 +333,6 @@
       this.contents = contents != null ? contents : config.defaultChar();
       this.props = props != null ? props : {};
       this.events = events != null ? events : null;
-      this.history = {};
       this.timestamp = null;
       this.key = this.generateKey();
       all[this.key] = this;

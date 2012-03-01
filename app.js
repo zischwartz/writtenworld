@@ -1,5 +1,5 @@
 (function() {
-  var SessionModel, aUsers, app, cUsers, config, connect, events, everyone, express, fs, getWhoCanSee, jade, leaflet, mainWorldId, models, mongoose, nowjs, sessionStore, util, _ref;
+  var SessionModel, aUsers, app, cUsers, connect, events, everyone, express, fs, getWhoCanSee, jade, leaflet, mainWorldId, models, mongoose, nowjs, sessionStore, util, _ref;
 
   express = require('express');
 
@@ -56,10 +56,6 @@
   mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001");
 
   everyone = nowjs.initialize(app);
-
-  config = {
-    maxZoom: 18
-  };
 
   cUsers = {};
 
@@ -138,6 +134,9 @@
       ownerId = this.user.session.auth.userId;
       props.color = this.user.session.color;
       models.writeCellToDb(cellPoint, content, mainWorldId, ownerId, isOwnerAuth, props);
+      models.User.findById(ownerId, function(err, user) {
+        return models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, props);
+      });
     } else {
       SessionModel.findOne({
         'sid': sid
@@ -208,6 +207,15 @@
   app.get('/', function(req, res) {
     return res.render('map_base.jade', {
       title: 'Mapist'
+    });
+  });
+
+  app.get('/uw/:login', function(req, res) {
+    var login;
+    login = req.params.login;
+    console.log("login " + login);
+    return res.render('map_base.jade', {
+      title: login
     });
   });
 
