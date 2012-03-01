@@ -70,17 +70,33 @@ L.TileLayer.Dom = L.TileLayer.extend
     tile = this._divProto.cloneNode(false)
     tile.onselectstart = tile.onmousemove = L.Util.falseFn
     return tile
+ 
+#   _loadTile: (tile, tilePoint, zoom) ->
+#     layer =this
+#     tile._layer = this
+#     tile._tilePoint = tilePoint
+#     tile._zoom = zoom
+#     tile.onload = this._tileOnLoad
+#     tile.onerror= this._tileOnError
+#     layer.drawTile(tile, tilePoint, zoom, document.createDocumentFragment())
+#     layer.tileDrawn(tile)
+#     $(tile).click =>
+#       console.log 'clicked tile!', this
+#       layer._trueLoadTile tile, tilePoint, zoom
+# 
+#     return true
 
+  # _trueLoadTile: (tile, tilePoint, zoom) ->
   _loadTile: (tile, tilePoint, zoom) ->
-    # console.log '_loadTile for: ', tilePoint.x, tilePoint.y
+    console.log  '_loadTile for: ', tilePoint.x, tilePoint.y
     tile._layer = this
     tile._tilePoint = tilePoint
     tile._zoom = zoom
     tile.onload = this._tileOnLoad
     tile.onerror= this._tileOnError
+    # commented out above for use with True Load Tile Experiment.
     if DEBUG
       d= document.createElement 'div'; d.className= 'debug'; d.innerHTML= tilePoint + ' '+ zoom; tile.appendChild d; $(tile).addClass 'debugTile'
-      # console.log 'this._layer:', this
     layer =this
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
     
@@ -91,11 +107,10 @@ L.TileLayer.Dom = L.TileLayer.extend
       layer.tileDrawn(tile)
     else
       now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-        # console.log tileData
         frag=betterBuildTile(tile, tileData, atp)
         layer.drawTile(tile, tilePoint, zoom, frag)
         layer.tileDrawn(tile)
-        # console.log 'end of loadtile  for: ', tilePoint.x, tilePoint.y
+        dbg 'end of loadtile  for: ', tilePoint.x, tilePoint.y
     true
 
   drawTile: (tile, tilePoint, zoom, frag)->

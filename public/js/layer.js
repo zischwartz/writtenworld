@@ -78,6 +78,7 @@
     },
     _loadTile: function(tile, tilePoint, zoom) {
       var absTilePoint, d, frag, layer;
+      console.log('_loadTile for: ', tilePoint.x, tilePoint.y);
       tile._layer = this;
       tile._tilePoint = tilePoint;
       tile._zoom = zoom;
@@ -103,7 +104,8 @@
         now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
           frag = betterBuildTile(tile, tileData, atp);
           layer.drawTile(tile, tilePoint, zoom, frag);
-          return layer.tileDrawn(tile);
+          layer.tileDrawn(tile);
+          return dbg('end of loadtile  for: ', tilePoint.x, tilePoint.y);
         });
       }
       return true;
