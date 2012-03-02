@@ -34,10 +34,10 @@ app.configure 'development', ->
 
 
 nownow = require('./nownow.js')(app, SessionModel)
-# config = {maxZoom: 18}
 
 app.get '/', (req, res) ->
-  res.render 'map_base.jade', { title: 'Mapist' }
+  worldId = models.mainWorldId
+  res.render 'map_base.jade', { title: 'Mapist', worldId: worldId }
 
 app.get '/home', (req, res) ->
   if req.loggedIn
@@ -45,16 +45,16 @@ app.get '/home', (req, res) ->
     worlds = []
     models.World.findById  personalWorldId ,(err,world) ->
       worlds.push world
-      res.render 'home.jade', { title: 'Home' ,worlds: worlds}
+      res.render 'home.jade', { title: 'Home', worlds: worlds}
   else
-      res.render 'home.jade', { title: 'Home' ,worlds: worlds}
+      res.render 'home.jade', { title: 'Home', worlds: worlds}
 
 app.get '/uw/:slug', (req, res)->
   if req.loggedIn
     models.World.findOne {slug: req.params.slug},(err,world) ->
       if world.personal
         if world.owner.toString() is req.user._id.toString()
-          res.render 'map_base.jade', {title: world.name}
+          res.render 'map_base.jade', {title: world.name, worldId: world._id}
         else
           res.write 'error'
           res.end()

@@ -1,4 +1,3 @@
-
 models= require './models.js'
 nowjs = require 'now'
 
@@ -8,12 +7,16 @@ module.exports = (app, SessionModel) ->
   console.log 'now now with the app!'
   everyone = nowjs.initialize app
 
-  # hmm these are for the main world..., how to generalize?
+  everyone.now.setCurrentWorld = (currentWorldId) ->
+    group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId)
+    this.now.currentWorldId = currentWorldId
+    # console.log group
+
+  # hmm were for the main world..., how to generalize?
   cUsers = {} #all of the connected users, by clientId (nowjs)
   aUsers = {} #all connected and auth'd users, by actual userId (mongoose _id)
 
   nowjs.on 'connect', ->
-    # console.log this.user
     sid=decodeURIComponent(this.user.cookie['connect.sid'])
     if this.user.session?.auth
       cUsers[this.user.clientId]={sid:sid, userId: this.user.session.auth.userId }
@@ -21,10 +24,10 @@ module.exports = (app, SessionModel) ->
     else
       cUsers[this.user.clientId]={sid:sid}
     console.log this.user.clientId, 'connected clientId: '
-    # console.log 'connected sid: ', sid
     true
 
   nowjs.on 'disconnect', ->
+    # Also remove from group/worlds here ? or it looks like it happens automatically. nice. 
     delete cUsers[this.user.clientId]
     if this.user.session?.auth
       delete aUsers[this.user.session.auth.userId]
@@ -40,17 +43,20 @@ module.exports = (app, SessionModel) ->
       callback(this.user.session)
 
   everyone.now.setSelectedCell = (cellPoint) ->
+    # console.log 'setSelectedCell'
     cid = this.user.clientId
     cUsers[cid].selected = cellPoint
-    toUpdate = getWhoCanSee(cellPoint)
-    for i of toUpdate
-      if i != cid
-        updates = {cid:cUsers[cid]} #client side is set up to recieve a number of updates, hence this being a list
-        nowjs.getClient i, -> this.now.drawCursors(updates)
+    getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
+      # console.log 'TO UPDATE CALLED BACK', toUpdate
+      for i of toUpdate
+        if i != cid
+          updates = {cid:cUsers[cid]} #client side is set up to recieve a number of updates, hence this being a list
+          nowjs.getClient i, -> this.now.drawCursors(updates)
 
   everyone.now.writeCell = (cellPoint, content) ->
     # console.log 'this.user', this.user
     cid = this.user.clientId
+    currentWorldId = this.now.currentWorldId
     sid= decodeURIComponent this.user.cookie['connect.sid']
     props = {}
     isOwnerAuth = false
@@ -58,31 +64,34 @@ module.exports = (app, SessionModel) ->
       isOwnerAuth = true
       ownerId = this.user.session.auth.userId
       props.color = this.user.session.color
-      models.writeCellToDb(cellPoint, content, models.mainWorldId, ownerId, isOwnerAuth,  props)
+      models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth,  props)
 
       # Disabled for testing-  this writes to your personal world.
       models.User.findById ownerId, (err, user) ->
-        models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth,  props)
+        console.log typeof user.personalWorld.toString() , currentWorldId
+        if user.personalWorld.toString()  isnt currentWorldId  #check if they're already in their own world (heh)
+          models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth,  props)
     else
       SessionModel.findOne {'sid': sid } , (err, doc) ->
         data = JSON.parse(doc.data)
         ownerId=doc._id
         props.color = data.color
-        models.writeCellToDb(cellPoint, content, models.mainWorldId, ownerId, isOwnerAuth,  props) #userId shouldbe an objectID for consistancy, either session or real user
+        models.writeCellToDb(cellPoint, content, currentWorldId ,ownerId, isOwnerAuth,  props) #userId shouldbe an objectID for consistancy, either session or real user
     
     if this.user.session.color? # if we have it, lets use it. the above won't have it in time to send to other clients
       props.color= this.user.session.color
 
-    toUpdate = getWhoCanSee(cellPoint)
+    # toUpdate = getWhoCanSee(cellPoint, this.now.currentWorldId)
     edits = {}
-    for i of toUpdate
-      if i !=cid
-        edits[cid] = {cellPoint: cellPoint, content: content, props:props}
-        nowjs.getClient i, -> this.now.drawEdits(edits)
+    getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
+      for i of toUpdate
+        if i !=cid
+          edits[cid] = {cellPoint: cellPoint, content: content, props:props}
+          nowjs.getClient i, -> this.now.drawEdits(edits)
     true
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
-    models.Cell.where('world', models.mainWorldId)
+    models.Cell.where('world', this.now.currentWorldId)
       .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows) #numrows for both, numcol == numrows
       .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows) #lt or lte??
       .populate('current')
@@ -99,12 +108,14 @@ module.exports = (app, SessionModel) ->
           callback(results, absTilePoint)
 
   #utility for the above
-  getWhoCanSee = (cellPoint) ->
-    toUpdate = {}
-    for i of cUsers
-      if cUsers[i].bounds.contains(cellPoint)
-        toUpdate[i] = cUsers[i]
-    return toUpdate
+  getWhoCanSee = (cellPoint, worldId, cb ) ->
+    nowjs.getGroup(worldId).getUsers (users) ->
+      console.log 'users in group: ', users
+      toUpdate = {}
+      for i in users
+        if cUsers[i].bounds.contains(cellPoint)
+          toUpdate[i] = cUsers[i]
+      cb(toUpdate)
   
   everyone.now.setUserOption = (type, payload) ->
     console.log 'setUserOption', type, payload

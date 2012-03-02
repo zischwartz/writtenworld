@@ -229,6 +229,7 @@
       tileSize: config.tileSize()
     });
     now.ready(function() {
+      now.setCurrentWorld(currentWorldId);
       map.addLayer(domTiles);
       setTileStyle();
       map.on('zoomend', function() {

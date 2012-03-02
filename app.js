@@ -52,8 +52,11 @@
   nownow = require('./nownow.js')(app, SessionModel);
 
   app.get('/', function(req, res) {
+    var worldId;
+    worldId = models.mainWorldId;
     return res.render('map_base.jade', {
-      title: 'Mapist'
+      title: 'Mapist',
+      worldId: worldId
     });
   });
 
@@ -85,7 +88,8 @@
         if (world.personal) {
           if (world.owner.toString() === req.user._id.toString()) {
             return res.render('map_base.jade', {
-              title: world.name
+              title: world.name,
+              worldId: world._id
             });
           } else {
             res.write('error');

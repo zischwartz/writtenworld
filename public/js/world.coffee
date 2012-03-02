@@ -36,7 +36,6 @@ window.state =
     config.tileSize().x/state.numCols()
   cellHeight: ->
     config.tileSize().y/state.numRows()
-#should set these up here beyond null, so it's clear what they represent
 
 setTileStyle = ->
  width = state.cellWidth()
@@ -200,6 +199,7 @@ jQuery ->
   #   return true
 
   now.ready ->
+    now.setCurrentWorld(currentWorldId)
     map.addLayer(domTiles)
     setTileStyle() #set initial
     map.on 'zoomend', ->
