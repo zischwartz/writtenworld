@@ -110,7 +110,7 @@ module.exports = (app, SessionModel) ->
   #utility for the above
   getWhoCanSee = (cellPoint, worldId, cb ) ->
     nowjs.getGroup(worldId).getUsers (users) ->
-      console.log 'users in group: ', users
+      # console.log 'users in group: ', users
       toUpdate = {}
       for i in users
         if cUsers[i].bounds.contains(cellPoint)

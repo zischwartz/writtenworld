@@ -13,8 +13,6 @@
 
   ObjectId = Schema.ObjectId;
 
-  exports.mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001");
-
   WorldSchema = new Schema({
     owner: ObjectId,
     ownerlogin: {
@@ -32,10 +30,38 @@
       type: Boolean,
       "default": true
     },
+    public: {
+      type: Boolean,
+      "default": false
+    },
     slug: {
       type: String,
       lowercase: true,
       trim: true
+    },
+    meta: {
+      maxZoom: {
+        type: Number
+      },
+      minZoom: {
+        type: Number
+      },
+      defaultChar: {
+        type: String,
+        "default": ' '
+      },
+      tileSize: {
+        x: {
+          type: Number
+        },
+        y: {
+          type: Number
+        }
+      }
+    },
+    props: {
+      type: Schema.Types.Mixed,
+      "default": {}
     }
   });
 
@@ -54,6 +80,33 @@
   WorldSchema.plugin(slugGenerator());
 
   exports.World = mongoose.model('World', WorldSchema);
+
+  exports.World.findOne({
+    name: 'main'
+  }, function(err, world) {
+    var mainWorld;
+    if (world) {
+      exports.mainWorldId = world._id;
+      return console.log(world);
+    } else {
+      mainWorld = new exports.World({
+        name: 'main',
+        personal: false,
+        public: true,
+        meta: {
+          maxZoom: 18,
+          minZoom: 10,
+          tileSize: {
+            x: 192,
+            y: 256
+          }
+        }
+      });
+      return mainWorld.save(function(err, world) {
+        return exports.mainWorldId = world._id;
+      });
+    }
+  });
 
   RiteSchema = new Schema({
     contents: {

@@ -7,8 +7,6 @@ mongoose.connect('mongodb://localhost/mapist')
 Schema = mongoose.Schema
 ObjectId = Schema.ObjectId
 
-# this should be in a config.js
-exports.mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")
 
 
 WorldSchema = new Schema
@@ -16,8 +14,18 @@ WorldSchema = new Schema
   ownerlogin: {type: String}
   name: {type: String, unique: true,}
   created: { type: Date, default: Date.now }
-  personal: {type: Boolean, default: true}
+  personal: {type: Boolean, default: true} #a personal history world
+  public: {type: Boolean, default: false}  # 
   slug: { type: String, lowercase: true, trim: true }
+  meta:
+    maxZoom: {type: Number}
+    minZoom: {type: Number}
+    defaultChar: {type: String, default: ' '}
+    tileSize:           #in pixels
+      x: {type: Number}
+      y: {type: Number}
+
+  props: {type:Schema.Types.Mixed, default:{} }
 
 slugGenerator= (options) ->
   options = options || {}
@@ -31,15 +39,31 @@ WorldSchema.plugin slugGenerator()
 
 exports.World = mongoose.model('World', WorldSchema)
 
+# this should be in a config.js
+# exports.mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")
 
+exports.World.findOne {name: 'main'}, (err, world)->
+  if world
+    exports.mainWorldId = world._id
+    console.log world
+  else
+    mainWorld = new exports.World
+      name: 'main'
+      personal: false
+      public: true
+      meta:
+        maxZoom:18
+        minZoom: 10
+        tileSize:
+          x: 192
+          y: 256
+    mainWorld.save (err, world) ->
+      exports.mainWorldId = world._id
 RiteSchema = new Schema
   contents: {type: String, default: ' '}
   date: { type: Date, default: Date.now }
   owner: ObjectId
-  # props: {}
-  # echoes: {type: Number, default: 0}
-  # isEcho: {type: Boolean, default: false}
-  props: {type:Schema.Types.Mixed, default:{} } # This default is failing.
+  props: {type:Schema.Types.Mixed, default:{} }
 
 RiteSchema.methods.getOwner= (cb)->
   return this.db.model('User').findById(this.owner).run(cb)

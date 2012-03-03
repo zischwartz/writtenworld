@@ -154,7 +154,6 @@
     getWhoCanSee = function(cellPoint, worldId, cb) {
       return nowjs.getGroup(worldId).getUsers(function(users) {
         var i, toUpdate, _i, _len;
-        console.log('users in group: ', users);
         toUpdate = {};
         for (_i = 0, _len = users.length; _i < _len; _i++) {
           i = users[_i];
