@@ -104,7 +104,7 @@
     dbg('initializing interface');
     $("#map").click(function(e) {
       var cell;
-      dbg(e);
+      console.log(e.target);
       if ($(e.target).hasClass('cell')) {
         cell = Cell.all()[e.target.id];
         state.lastClickCell = cell;
@@ -225,7 +225,7 @@
         scrollWheelZoom: false
       }).addLayer(tileServeLayer);
     }
-    window.domTiles = new L.TileLayer.Dom({
+    window.domTiles = new L.DomTileLayer({
       tileSize: config.tileSize()
     });
     now.ready(function() {
@@ -361,6 +361,15 @@
       dbg('killing a cell');
       this.span = null;
       return delete all[this.key];
+    };
+
+    Cell.prototype.clearSpan = function() {
+      return this.span.innerHTML = config.defaultChar();
+    };
+
+    Cell.prototype.cloneSpan = function(animateWith) {
+      if (animateWith == null) animateWith = 0;
+      return $(this.span).clone().appendTo('.goodbye');
     };
 
     Cell.getOrCreate = function(row, col, tile, contents, props) {

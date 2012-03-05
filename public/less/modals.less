@@ -18,6 +18,9 @@
   background-color: @black;
   // Fade for backdrop
   &.fade { opacity: 0; }
+
+  .transition(opacity .1s linear);
+
 }
 
 .modal-backdrop,
@@ -42,7 +45,7 @@
   .box-shadow(0 3px 7px rgba(0,0,0,0.3));
   .background-clip(padding-box);
   &.fade {
-    .transition(e('opacity .3s linear, top .3s ease-out'));
+    .transition(e('opacity .2s linear, top .2s ease-out'));
     top: -25%;
   }
   &.fade.in { top: 50%; }

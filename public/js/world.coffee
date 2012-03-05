@@ -83,7 +83,7 @@ moveCursor = (direction, from = state.selectedCell) ->
 initializeInterface = ->
   dbg 'initializing interface'
   $("#map").click (e) ->
-    dbg e
+    console.log e.target
     if $(e.target).hasClass 'cell'
       cell=Cell.all()[e.target.id]
       state.lastClickCell = cell
@@ -189,7 +189,8 @@ jQuery ->
   else
     window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}).addLayer(tileServeLayer)
   # initializeGeo()
-  window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
+  # window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
+  window.domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
  
   # map.locateAndSetView(17)
   # map.on 'locationfound', (e)->
@@ -303,6 +304,12 @@ window.Cell = class Cell
     @span= null
     delete all[@key]
 
+  clearSpan: ->
+    @span.innerHTML= config.defaultChar()
+
+  cloneSpan: (animateWith=0) ->
+    $(@span).clone().appendTo('.goodbye')
+  #todo finish
 
   @getOrCreate:(row, col, tile, contents=null, props={}) ->
     x=tile._tilePoint.x * Math.pow(2, state.zoomDiff())+col

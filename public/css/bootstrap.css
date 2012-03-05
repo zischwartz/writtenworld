@@ -2762,6 +2762,11 @@ button.btn.small, input[type="submit"].btn.small {
   left: 0;
   z-index: 1040;
   background-color: #000000;
+  -webkit-transition: opacity 0.1s linear;
+  -moz-transition: opacity 0.1s linear;
+  -ms-transition: opacity 0.1s linear;
+  -o-transition: opacity 0.1s linear;
+  transition: opacity 0.1s linear;
 }
 .modal-backdrop.fade {
   opacity: 0;
@@ -2796,11 +2801,11 @@ button.btn.small, input[type="submit"].btn.small {
   background-clip: padding-box;
 }
 .modal.fade {
-  -webkit-transition: opacity .3s linear, top .3s ease-out;
-  -moz-transition: opacity .3s linear, top .3s ease-out;
-  -ms-transition: opacity .3s linear, top .3s ease-out;
-  -o-transition: opacity .3s linear, top .3s ease-out;
-  transition: opacity .3s linear, top .3s ease-out;
+  -webkit-transition: opacity .2s linear, top .2s ease-out;
+  -moz-transition: opacity .2s linear, top .2s ease-out;
+  -ms-transition: opacity .2s linear, top .2s ease-out;
+  -o-transition: opacity .2s linear, top .2s ease-out;
+  transition: opacity .2s linear, top .2s ease-out;
   top: -25%;
 }
 .modal.fade.in {
@@ -3406,10 +3411,13 @@ div.leaflet-tile span {
   text-align: center;
   float: left;
   display: block;
-  font-weight: 400;
+  /*font-weight: 400;*/
+
   /* overflow: hidden; */
 
-  /* background: rgba(0,250, 0, 0.3); */
+  /*-webkit-box-shadow: 1px 1px 1px black;*/
+
+  /*background: rgba(0,250, 0, 0.3); */
 
   /* font-size: 8px; */
 
