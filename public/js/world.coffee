@@ -75,7 +75,18 @@ moveCursor = (direction, from = state.selectedCell) ->
   key = "c#{target.x}x#{target.y}"
   targetCell=Cell.all()[key]
   if not targetCell
-     throw 'cell does not exist'
+    return false
+     # throw 'cell does not exist'
+  setSelected(targetCell)
+  true
+
+centerCursor = ->
+  target = window.domTiles.getCenterTile()
+  key = "c#{target.x}x#{target.y}"
+  targetCell=Cell.all()[key]
+  if not targetCell
+    return false
+     # throw 'cell does not exist'
   setSelected(targetCell)
   true
 
@@ -83,7 +94,7 @@ moveCursor = (direction, from = state.selectedCell) ->
 initializeInterface = ->
   dbg 'initializing interface'
   $("#map").click (e) ->
-    console.log e.target
+    # console.log e.target
     if $(e.target).hasClass 'cell'
       cell=Cell.all()[e.target.id]
       state.lastClickCell = cell
@@ -159,6 +170,9 @@ initializeInterface = ->
   $(".modal").on 'shown', ->
     $(this).find('input')[0]?.focus()
     #end interface init
+ 
+  $(".modal").on 'hidden', ->
+    inputEl.focus()
 
 panIfAppropriate = (direction)->
   selectedPP= $(state.selectedEl).offset()
@@ -211,6 +225,10 @@ jQuery ->
     
     now.setClientState (s)->
       state.color = s.color if s.color
+    
+    $.doTimeout 500, ->
+      centerCursor()
+      false
 
     now.drawCursors = (users) ->
       $('.otherSelected').removeClass('otherSelected') #this is a dumb way 

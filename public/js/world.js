@@ -1,5 +1,5 @@
 (function() {
-  var Cell, Configuration, cellKeyToXY, filter, getNodeIndex, initializeInterface, moveCursor, pan, panIfAppropriate, setTileStyle,
+  var Cell, Configuration, cellKeyToXY, centerCursor, filter, getNodeIndex, initializeInterface, moveCursor, pan, panIfAppropriate, setTileStyle,
     __slice = Array.prototype.slice;
 
   window.DEBUG = false;
@@ -95,7 +95,17 @@
     }
     key = "c" + target.x + "x" + target.y;
     targetCell = Cell.all()[key];
-    if (!targetCell) throw 'cell does not exist';
+    if (!targetCell) return false;
+    setSelected(targetCell);
+    return true;
+  };
+
+  centerCursor = function() {
+    var key, target, targetCell;
+    target = window.domTiles.getCenterTile();
+    key = "c" + target.x + "x" + target.y;
+    targetCell = Cell.all()[key];
+    if (!targetCell) return false;
     setSelected(targetCell);
     return true;
   };
@@ -104,7 +114,6 @@
     dbg('initializing interface');
     $("#map").click(function(e) {
       var cell;
-      console.log(e.target);
       if ($(e.target).hasClass('cell')) {
         cell = Cell.all()[e.target.id];
         state.lastClickCell = cell;
@@ -177,9 +186,12 @@
       });
       return false;
     });
-    return $(".modal").on('shown', function() {
+    $(".modal").on('shown', function() {
       var _ref;
       return (_ref = $(this).find('input')[0]) != null ? _ref.focus() : void 0;
+    });
+    return $(".modal").on('hidden', function() {
+      return inputEl.focus();
     });
   };
 
@@ -239,6 +251,10 @@
       now.setBounds(domTiles.getTilePointAbsoluteBounds());
       now.setClientState(function(s) {
         if (s.color) return state.color = s.color;
+      });
+      $.doTimeout(500, function() {
+        centerCursor();
+        return false;
       });
       now.drawCursors = function(users) {
         var id, otherSelected, user, _results;

@@ -67,8 +67,8 @@
       noWrap: false,
       zoomOffset: 0,
       zoomReverse: false,
-      unloadInvisibleTiles: L.Browser.mobile,
-      updateWhenIdle: L.Browser.mobile,
+      unloadInvisibleTiles: true,
+      updateWhenIdle: true,
       reuseTiles: false
     },
     initialize: function(options, urlParams) {
@@ -80,6 +80,9 @@
         };
       }
       L.Util.setOptions(this, options);
+      this.on('tileunload', function(e) {
+        return this._onTileUnload(e);
+      });
       subdomains = this.options.subdomains;
       if (typeof subdomains === "string") {
         this.options.subdomains = subdomains.split("");
@@ -179,6 +182,12 @@
       if (this.options.unloadInvisibleTiles || this.options.reuseTiles) {
         return this._removeOtherTiles(tileBounds);
       }
+    },
+    getCenterTile: function() {
+      var bounds, center;
+      bounds = this.getTilePointAbsoluteBounds();
+      center = bounds.getCenter();
+      return center;
     },
     _addTilesFromCenterOut: function(bounds) {
       var center, fragment, i, j, k, len, queue;
@@ -322,22 +331,42 @@
         y: tilePoint.y * Math.pow(2, state.zoomDiff())
       };
       console.log('loadTile called for abstp: ', absTilePoint.x, absTilePoint.y);
-      frag = getTileLocally(absTilePoint, tile);
-      if (frag) {
-        layer.drawTile(tile, tilePoint, zoom, frag);
-        layer.tileDrawn(tile);
-      } else {
-        now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
-          frag = betterBuildTile(tile, tileData, atp);
-          layer.drawTile(tile, tilePoint, zoom, frag);
-          return layer.tileDrawn(tile);
+      layer.tileDrawn(tile);
+      if (state.zoomDiff() > 4) {
+        console.log('popualteDelay timer active');
+        $(tile).doTimeout('populateDelay', 500, function() {
+          var frag;
+          frag = getTileLocally(absTilePoint, tile);
+          if (frag) {
+            layer.populateTile(tile, tilePoint, zoom, frag);
+          } else {
+            now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
+              frag = betterBuildTile(tile, tileData, atp);
+              return layer.populateTile(tile, tilePoint, zoom, frag);
+            });
+          }
+          return false;
         });
+      } else {
+        frag = getTileLocally(absTilePoint, tile);
+        if (frag) {
+          layer.populateTile(tile, tilePoint, zoom, frag);
+        } else {
+          now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
+            frag = betterBuildTile(tile, tileData, atp);
+            return layer.populateTile(tile, tilePoint, zoom, frag);
+          });
+        }
       }
       return tile;
     },
     drawTile: function(tile, tilePoint, zoom, frag) {
       tile.appendChild(frag);
-      console.log('drawtile for: ', tilePoint.x, tilePoint.y);
+      return true;
+    },
+    populateTile: function(tile, tilePoint, zoom, frag) {
+      console.log('populate tile called');
+      tile.appendChild(frag);
       return true;
     },
     tileDrawn: function(tile) {
@@ -347,7 +376,6 @@
     },
     _tileOnLoad: function(e) {
       var layer;
-      console.log('_tileOnLoad called');
       layer = this._layer;
       this.className += " leaflet-tile-loaded";
       layer.fire("tileload", {
@@ -366,6 +394,26 @@
       });
       newUrl = layer.options.errorTileUrl;
       if (newUrl) return this.src = newUrl;
+    },
+    _onTileUnload: function(e) {
+      var c, _i, _len, _ref, _results;
+      console.log(e);
+      console.log('_onTileUnload');
+      $(e.tile).doTimeout('populateDelay');
+      if (e.tile._zoom === map.getZoom()) {
+        dbg('unload due to pan, easy');
+        _ref = e.tile._cells;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          c = _ref[_i];
+          _results.push(c.kill());
+        }
+        return _results;
+      } else if (e.tile._zoom < map.getZoom()) {
+        return dbg('unload due to zoom, less easy');
+      } else if (e.tile._zoom > map.getZoom()) {
+        return dbg('zoom out');
+      }
     },
     getTilePointBounds: function() {
       var bounds, nwTilePoint, seTilePoint, tileBounds, tileSize;

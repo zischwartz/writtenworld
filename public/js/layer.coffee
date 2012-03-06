@@ -63,8 +63,8 @@ L.DomTileLayer = L.Class.extend
     noWrap: false
     zoomOffset: 0
     zoomReverse: false
-    unloadInvisibleTiles: L.Browser.mobile # these should maybe be True
-    updateWhenIdle: L.Browser.mobile
+    unloadInvisibleTiles: true #  L.Browser.mobile # these should maybe be True
+    updateWhenIdle: true # L.Browser.mobile
     reuseTiles: false
 
   initialize: (options, urlParams) -> #removed url param
@@ -73,6 +73,7 @@ L.DomTileLayer = L.Class.extend
         x: @options.tileSize
         y: @options.tileSize
     L.Util.setOptions this, options
+    this.on 'tileunload', (e) -> this._onTileUnload(e)
     # @_url = url
     subdomains = @options.subdomains
     @options.subdomains = subdomains.split("")  if typeof subdomains is "string"
@@ -151,6 +152,11 @@ L.DomTileLayer = L.Class.extend
     tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
     @_addTilesFromCenterOut tileBounds
     @_removeOtherTiles tileBounds  if @options.unloadInvisibleTiles or @options.reuseTiles
+
+  getCenterTile: () ->
+    bounds= @getTilePointAbsoluteBounds()
+    center = bounds.getCenter()
+    center
 
   _addTilesFromCenterOut: (bounds) ->
     queue = []
@@ -236,15 +242,6 @@ L.DomTileLayer = L.Class.extend
 
   getTileUrl: (tilePoint, zoom) ->
     return 'noTileUrlForUsThanks'
-    # subdomains = @options.subdomains
-    # index = (tilePoint.x + tilePoint.y) % subdomains.length
-    # s = @options.subdomains[index]
-    # L.Util.template @_url, L.Util.extend(
-    #   s: s
-    #   z: @_getOffsetZoom(zoom)
-    #   x: tilePoint.x
-    #   y: tilePoint.y
-    # , @options)
 
   _createTileProto: ->
     dbg 'creatingTileProto'
@@ -276,33 +273,47 @@ L.DomTileLayer = L.Class.extend
     tile._tilePoint = tilePoint
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
     console.log 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
-    # d= document.createElement 'div'; d.className= 'debug'; d.innerHTML= tilePoint + ' '+ zoom; tile.appendChild d; $(tile).addClass 'debugTile'
-    #check / delay here. maybe just a doTimeout that gets canceled if we leave
-    frag=getTileLocally(absTilePoint, tile)
-    if frag
-      layer.drawTile(tile, tilePoint, zoom, frag)
-      layer.tileDrawn(tile)
+    layer.tileDrawn(tile)
+ 
+    if state.zoomDiff() > 4 # only doTimeout if its zoomed out far enough
+      console.log 'popualteDelay timer active'
+      $(tile).doTimeout 'populateDelay', 500, ->
+        frag=getTileLocally(absTilePoint, tile)
+        if frag
+          layer.populateTile(tile, tilePoint, zoom, frag)
+        else
+          now.getTile absTilePoint, state.numRows(), (tileData, atp)->
+            frag=betterBuildTile(tile, tileData, atp)
+            layer.populateTile(tile, tilePoint, zoom, frag)
+        return false #so it doesn't poll
     else
-      now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-        frag=betterBuildTile(tile, tileData, atp)
-        layer.drawTile(tile, tilePoint, zoom, frag)
-        layer.tileDrawn(tile)
-        # dbg 'end of loadtile  for: ', tilePoint.x, tilePoint.y
+      frag=getTileLocally(absTilePoint, tile)
+      if frag
+        layer.populateTile(tile, tilePoint, zoom, frag)
+      else
+        now.getTile absTilePoint, state.numRows(), (tileData, atp)->
+          frag=betterBuildTile(tile, tileData, atp)
+          layer.populateTile(tile, tilePoint, zoom, frag)
     tile
 
   drawTile: (tile, tilePoint, zoom, frag)->
     tile.appendChild(frag) # tile.appendChild(content.cloneNode(true))
     # tile.innerHTML= 'hi'
-    console.log 'drawtile for: ', tilePoint.x, tilePoint.y
+    # console.log 'drawtile for: ', tilePoint.x, tilePoint.y
     true
    
+  populateTile: (tile, tilePoint, zoom, frag) ->
+    console.log 'populate tile called'
+    tile.appendChild(frag)
+    true
+
   tileDrawn: (tile) ->
     console.log  'tileDrawn called'
     tile.className += ' leaflet-tile-drawn'
     @_tileOnLoad.call(tile)
 
   _tileOnLoad: (e) ->
-    console.log '_tileOnLoad called'
+    # console.log '_tileOnLoad called'
     layer = @_layer
     @className += " leaflet-tile-loaded"
     layer.fire "tileload",
@@ -321,6 +332,24 @@ L.DomTileLayer = L.Class.extend
     newUrl = layer.options.errorTileUrl
     @src = newUrl  if newUrl
 
+  _onTileUnload: (e) ->
+    console.log e
+    console.log '_onTileUnload'
+    $(e.tile).doTimeout 'populateDelay' #cancels the timer
+
+    if e.tile._zoom == map.getZoom()
+      dbg 'unload due to pan, easy'
+      for c in e.tile._cells
+        c.kill()
+      # e.tile = null #maybe dont' need to do this
+    else if e.tile._zoom < map.getZoom()
+      dbg 'unload due to zoom, less easy'
+    else if e.tile._zoom > map.getZoom()
+      dbg 'zoom out' # this case requires nothing, every cell will still be there
+      #on zoom out, we don't need to do anything
+      # for c in e.tile._cells
+        # c.kill()
+      # e.tile = null #maybe dont' need to do this
 
   getTilePointBounds: ->
     bounds = this._map.getPixelBounds()
