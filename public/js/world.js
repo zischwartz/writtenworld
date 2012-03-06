@@ -72,6 +72,12 @@
     $(cell.span).addClass('selected');
     state.selectedCell = cell;
     now.setSelectedCell(cellKeyToXY(cell.key));
+    if (cell.props) {
+      if (cell.props.color === 'c3') {
+        console.log('c33333');
+        cell.cloneSpan();
+      }
+    }
     return true;
   };
 
@@ -356,6 +362,8 @@
       this.span.innerHTML = this.contents;
       this.span.id = this.key;
       this.span.className = 'cell';
+      this.span.style.top = this.row * state.cellHeight() + 'px';
+      this.span.style.left = this.col * state.cellWidth() + 'px';
       if (this.props.color) this.span.className = 'cell ' + this.props.color;
       if (this.props.echoes) this.span.className += " e" + props.echoes;
     }
@@ -384,8 +392,11 @@
     };
 
     Cell.prototype.cloneSpan = function(animateWith) {
+      var cloned;
       if (animateWith == null) animateWith = 0;
-      return $(this.span).clone().appendTo('.goodbye');
+      cloned = $(this.span).clone();
+      cloned.css('position', 'relative');
+      return $(this.span).after(cloned);
     };
 
     Cell.getOrCreate = function(row, col, tile, contents, props) {

@@ -55,6 +55,11 @@ window.setSelected = (cell) ->
   $(cell.span).addClass('selected')
   state.selectedCell =cell
   now.setSelectedCell cellKeyToXY cell.key
+ 
+  if cell.props
+    if cell.props.color == 'c3'
+     console.log 'c33333'
+     cell.cloneSpan()
   true
 
 
@@ -301,6 +306,9 @@ window.Cell = class Cell
     @span.innerHTML= @contents
     @span.id= @key
     @span.className= 'cell'
+    @span.style.top = @row*state.cellHeight()+'px'
+    @span.style.left = @col*state.cellWidth()+'px'
+
     if @props.color
       @span.className='cell '+ @props.color
     if @props.echoes
@@ -326,7 +334,9 @@ window.Cell = class Cell
     @span.innerHTML= config.defaultChar()
 
   cloneSpan: (animateWith=0) ->
-    $(@span).clone().appendTo('.goodbye')
+   cloned=  $(@span).clone()
+   cloned.css('position', 'relative')
+   $(@span).after(cloned)
   #todo finish
 
   @getOrCreate:(row, col, tile, contents=null, props={}) ->
