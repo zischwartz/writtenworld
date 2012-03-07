@@ -3397,7 +3397,8 @@ body, html {
   -webkit-box-shadow: 1px 1px 1px black;
 }
 .cell {
-  position: absolute;
+  /*position: absolute;*/
+
 }
 .cell.otherSelected {
   background-color: red;
@@ -3572,7 +3573,8 @@ a.colorOptions.c2, a.colorOptions.c0 {
   background-color: white;
   /*-webkit-animation: pulse 1s infinite;*/
 
-  -webkit-animation: pulser 1s infinite;
+  /*-webkit-animation: pulser 1s infinite;*/
+
   /*-webkit-transform: translateZ(0);*/
 
 }

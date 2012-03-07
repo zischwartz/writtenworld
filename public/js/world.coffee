@@ -311,8 +311,9 @@ window.Cell = class Cell
     @span.innerHTML= @contents
     @span.id= @key
     @span.className= 'cell'
-    @span.style.top = @row*state.cellHeight()+'px'
-    @span.style.left = @col*state.cellWidth()+'px'
+    # these are for .cell with absolute positiong , for aniation...
+    # @span.style.top = @row*state.cellHeight()+'px'
+    # @span.style.left = @col*state.cellWidth()+'px'
 
     if @props.color
       @span.className='cell '+ @props.color
@@ -344,7 +345,7 @@ window.Cell = class Cell
   cloneSpan: (animateWith=0) ->
     dbg 'Cell cloneSpan  called'
     cloned=  $(@span).clone()
-    $(@span).after(cloned) #?
+    $(@span).after(cloned).css('position', 'absolute') #?
     $(@span).removeClass('selected')
     if animateWith
       $(@span).addClass('a'+animateWith)

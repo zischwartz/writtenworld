@@ -365,8 +365,6 @@
       this.span.innerHTML = this.contents;
       this.span.id = this.key;
       this.span.className = 'cell';
-      this.span.style.top = this.row * state.cellHeight() + 'px';
-      this.span.style.left = this.col * state.cellWidth() + 'px';
       if (this.props.color) this.span.className = 'cell ' + this.props.color;
       if (this.props.echoes) this.span.className += " e" + props.echoes;
     }
@@ -401,7 +399,7 @@
       if (animateWith == null) animateWith = 0;
       dbg('Cell cloneSpan  called');
       cloned = $(this.span).clone();
-      $(this.span).after(cloned);
+      $(this.span).after(cloned).css('position', 'absolute');
       $(this.span).removeClass('selected');
       if (animateWith) $(this.span).addClass('a' + animateWith);
       this.span = cloned;
