@@ -4,8 +4,6 @@ body, html
   width: 100%;
 }
 
-
-
 #map
 {
   font-family:monospace; 
@@ -13,6 +11,7 @@ body, html
   height: 100%;
   line-height: normal;
   //margin-top: @navbarHeight;
+  background-color: @grayDark;
 }
 
 #input
@@ -167,3 +166,12 @@ a.colorOptions
       background-color: white;
       -webkit-animation: pulser 1s infinite;
 }
+
+//animation classes
+.a1
+{
+  .transition(all ease .5s);
+  opacity: 0 !important;
+  font-size: 15em !important;
+}
+

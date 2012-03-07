@@ -1,5 +1,7 @@
 window.DEBUG = false
 # window.DEBUG = true
+window.USEMAP = false
+# window.USEMAP = true 
 
 window.Configuration = class Configuration
   constructor: (spec = {}) ->
@@ -59,7 +61,7 @@ window.setSelected = (cell) ->
   if cell.props
     if cell.props.color == 'c3'
      console.log 'c33333'
-     cell.cloneSpan()
+     cell.cloneSpan(1)
   true
 
 
@@ -203,7 +205,7 @@ jQuery ->
   tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png'
   tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
   centerPoint= new L.LatLng(40.714269, -74.005972)
-  if DEBUG
+  if not USEMAP 
     window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}) #.addLayer(tileServeLayer)
   else
     window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}).addLayer(tileServeLayer)
@@ -334,10 +336,22 @@ window.Cell = class Cell
     @span.innerHTML= config.defaultChar()
 
   cloneSpan: (animateWith=0) ->
-   cloned=  $(@span).clone()
-   cloned.css('position', 'relative')
-   $(@span).after(cloned)
-  #todo finish
+    cloned=  $(@span).clone()
+    $(@span).after(cloned) #?
+    $(@span).removeClass('selected')
+    if animateWith
+      $(@span).addClass('a'+animateWith)
+    
+    @span = cloned
+    state.selectedEl = @span
+    # $(@span).removeClass('selected')
+   
+   # $(@span).after(cloned)
+   # $(cloned).removeClass('selected')
+   # if animateWith
+     # $(cloned).addClass('a'+animateWith)
+   #decouple from position and setPos with offset. or don't
+   # return cloned
 
   @getOrCreate:(row, col, tile, contents=null, props={}) ->
     x=tile._tilePoint.x * Math.pow(2, state.zoomDiff())+col

@@ -4,6 +4,8 @@
 
   window.DEBUG = false;
 
+  window.USEMAP = false;
+
   window.Configuration = Configuration = (function() {
 
     function Configuration(spec) {
@@ -75,7 +77,7 @@
     if (cell.props) {
       if (cell.props.color === 'c3') {
         console.log('c33333');
-        cell.cloneSpan();
+        cell.cloneSpan(1);
       }
     }
     return true;
@@ -230,7 +232,7 @@
       maxZoom: config.maxZoom()
     });
     centerPoint = new L.LatLng(40.714269, -74.005972);
-    if (DEBUG) {
+    if (!USEMAP) {
       window.map = new L.Map('map', {
         center: centerPoint,
         zoom: 17,
@@ -395,8 +397,11 @@
       var cloned;
       if (animateWith == null) animateWith = 0;
       cloned = $(this.span).clone();
-      cloned.css('position', 'relative');
-      return $(this.span).after(cloned);
+      $(this.span).after(cloned);
+      $(this.span).removeClass('selected');
+      if (animateWith) $(this.span).addClass('a' + animateWith);
+      this.span = cloned;
+      return state.selectedEl = this.span;
     };
 
     Cell.getOrCreate = function(row, col, tile, contents, props) {

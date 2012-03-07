@@ -3383,6 +3383,7 @@ body, html {
   width: 100%;
   height: 100%;
   line-height: normal;
+  background-color: #333333;
 }
 #input {
   margin-left: -1000px;
@@ -3559,4 +3560,13 @@ a.colorOptions.c2, a.colorOptions.c0 {
 .cell.selected {
   background-color: white;
   -webkit-animation: pulser 1s infinite;
+}
+.a1 {
+  -webkit-transition: all ease 0.5s;
+  -moz-transition: all ease 0.5s;
+  -ms-transition: all ease 0.5s;
+  -o-transition: all ease 0.5s;
+  transition: all ease 0.5s;
+  opacity: 0 !important;
+  font-size: 15em !important;
 }
