@@ -61,6 +61,12 @@
       });
       return true;
     },
+    getCenterTile: function() {
+      var bounds, center;
+      bounds = this.getTilePointAbsoluteBounds();
+      center = bounds.getCenter();
+      return center;
+    },
     _createTileProto: function() {
       var tileSize;
       dbg('creatingTileProto');

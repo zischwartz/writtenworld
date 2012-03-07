@@ -4,7 +4,7 @@
 
   window.DEBUG = false;
 
-  window.USEMAP = false;
+  window.USEMAP = true;
 
   window.Configuration = Configuration = (function() {
 
@@ -245,7 +245,7 @@
         scrollWheelZoom: false
       }).addLayer(tileServeLayer);
     }
-    window.domTiles = new L.DomTileLayer({
+    window.domTiles = new L.TileLayer.Dom({
       tileSize: config.tileSize()
     });
     now.ready(function() {
@@ -357,6 +357,7 @@
       this.contents = contents != null ? contents : config.defaultChar();
       this.props = props != null ? props : {};
       this.events = events != null ? events : null;
+      dbg('Cell constructor called');
       this.timestamp = null;
       this.key = this.generateKey();
       all[this.key] = this;
@@ -371,12 +372,14 @@
     }
 
     Cell.prototype.write = function(c) {
+      dbg('Cell write  called');
       this.contents = c;
       this.span.innerHTML = c;
       if (state.color) return this.span.className = 'cell ' + state.color;
     };
 
     Cell.prototype.update = function(contents, props) {
+      dbg('Cell update called');
       this.contents = contents;
       this.span.innerHTML = contents;
       this.span.className = 'cell';
@@ -396,6 +399,7 @@
     Cell.prototype.cloneSpan = function(animateWith) {
       var cloned;
       if (animateWith == null) animateWith = 0;
+      dbg('Cell cloneSpan  called');
       cloned = $(this.span).clone();
       $(this.span).after(cloned);
       $(this.span).removeClass('selected');
@@ -408,6 +412,7 @@
       var cell, x, y;
       if (contents == null) contents = null;
       if (props == null) props = {};
+      dbg('cell @getOrCreate called');
       x = tile._tilePoint.x * Math.pow(2, state.zoomDiff()) + col;
       y = tile._tilePoint.y * Math.pow(2, state.zoomDiff()) + row;
       cell = Cell.get(x, y);

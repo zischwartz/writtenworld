@@ -1,7 +1,7 @@
 window.DEBUG = false
 # window.DEBUG = true
-window.USEMAP = false
-# window.USEMAP = true 
+# window.USEMAP = false
+window.USEMAP = true 
 
 window.Configuration = class Configuration
   constructor: (spec = {}) ->
@@ -210,8 +210,10 @@ jQuery ->
   else
     window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}).addLayer(tileServeLayer)
   # initializeGeo()
-  # window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
-  window.domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+  
+  window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
+
+  # window.domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
  
   # map.locateAndSetView(17)
   # map.on 'locationfound', (e)->
@@ -300,6 +302,7 @@ window.Cell = class Cell
     return "c#{@x}x#{@y}"
 
   constructor: (@row, @col, @tile, @contents = config.defaultChar(), @props={}, @events=null) ->
+    dbg 'Cell constructor called'
     # @history = {}
     @timestamp = null #just use servertime
     @key = this.generateKey()
@@ -315,13 +318,16 @@ window.Cell = class Cell
       @span.className='cell '+ @props.color
     if @props.echoes
       @span.className+= " e#{props.echoes}"
+
   write: (c) ->
+    dbg 'Cell write  called'
     @contents= c
     @span.innerHTML = c
     @span.className = 'cell '+ state.color if state.color
 
   #for updating from other users, above is for local user
   update: (contents, props)->
+    dbg 'Cell update called'
     @contents= contents
     @span.innerHTML = contents
     @span.className= 'cell'
@@ -336,6 +342,7 @@ window.Cell = class Cell
     @span.innerHTML= config.defaultChar()
 
   cloneSpan: (animateWith=0) ->
+    dbg 'Cell cloneSpan  called'
     cloned=  $(@span).clone()
     $(@span).after(cloned) #?
     $(@span).removeClass('selected')
@@ -354,6 +361,7 @@ window.Cell = class Cell
    # return cloned
 
   @getOrCreate:(row, col, tile, contents=null, props={}) ->
+    dbg 'cell @getOrCreate called'
     x=tile._tilePoint.x * Math.pow(2, state.zoomDiff())+col
     y=tile._tilePoint.y * Math.pow(2, state.zoomDiff())+row
     cell=Cell.get(x,y)

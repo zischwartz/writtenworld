@@ -8,6 +8,7 @@
 # Cell.get = -> null
 
 betterBuildTile= (tile, tileData, absTilePoint)->
+  dbg 'betterBuildTile'
   tile._cells = [] #this would be good to use for removing old cells
   frag = document.createDocumentFragment()
   for r in [0..state.numRows()-1]
@@ -25,6 +26,7 @@ betterBuildTile= (tile, tileData, absTilePoint)->
   return frag
 
 getTileLocally =(absTilePoint, tile) ->
+  dbg 'getTileLocally'
   tile._cells = []
   frag = document.createDocumentFragment()
   cellsNeeded = state.numRows()*state.numCols() #cellsNeeded to have a full tile
@@ -142,6 +144,7 @@ L.DomTileLayer = L.Class.extend
     @_initContainer()
 
   _update: (e) ->
+    dbg '_update'
     return  if @_map._panTransition and @_map._panTransition._inProgress
     bounds = @_map.getPixelBounds()
     zoom = @_map.getZoom()
@@ -258,8 +261,10 @@ L.DomTileLayer = L.Class.extend
     @_createTile()
 
   _resetTile: (tile) ->
+    true
 
   _createTile: ->
+    dbg '_createTile'
     tile = @_divProto.cloneNode(false)
     tile.onselectstart = tile.onmousemove = L.Util.falseFn
     tile
@@ -275,31 +280,32 @@ L.DomTileLayer = L.Class.extend
     console.log 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
     layer.tileDrawn(tile)
  
-    if state.zoomDiff() > 4 # only doTimeout if its zoomed out far enough
-      console.log 'popualteDelay timer active'
-      $(tile).doTimeout 'populateDelay', 500, ->
-        frag=getTileLocally(absTilePoint, tile)
-        if frag
-          layer.populateTile(tile, tilePoint, zoom, frag)
-        else
-          now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-            frag=betterBuildTile(tile, tileData, atp)
-            layer.populateTile(tile, tilePoint, zoom, frag)
-        return false #so it doesn't poll
+    # if state.zoomDiff() > 4 # only doTimeout if its zoomed out far enough
+    #   console.log 'popualteDelay timer active'
+    #   $(tile).doTimeout 'populateDelay', 500, ->
+    #     frag=getTileLocally(absTilePoint, tile)
+    #     if frag
+    #       layer.populateTile(tile, tilePoint, zoom, frag)
+    #     else
+    #       now.getTile absTilePoint, state.numRows(), (tileData, atp)->
+    #         frag=betterBuildTile(tile, tileData, atp)
+    #         layer.populateTile(tile, tilePoint, zoom, frag)
+    #     return false #so it doesn't poll
+    # else
+    frag=getTileLocally(absTilePoint, tile)
+    if frag
+      layer.populateTile(tile, tilePoint, zoom, frag)
     else
-      frag=getTileLocally(absTilePoint, tile)
-      if frag
+      now.getTile absTilePoint, state.numRows(), (tileData, atp)->
+        frag=betterBuildTile(tile, tileData, atp)
         layer.populateTile(tile, tilePoint, zoom, frag)
-      else
-        now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-          frag=betterBuildTile(tile, tileData, atp)
-          layer.populateTile(tile, tilePoint, zoom, frag)
     tile
 
   drawTile: (tile, tilePoint, zoom, frag)->
     tile.appendChild(frag) # tile.appendChild(content.cloneNode(true))
     # tile.innerHTML= 'hi'
     # console.log 'drawtile for: ', tilePoint.x, tilePoint.y
+    dbg 'drawTile'
     true
    
   populateTile: (tile, tilePoint, zoom, frag) ->
@@ -310,6 +316,7 @@ L.DomTileLayer = L.Class.extend
   tileDrawn: (tile) ->
     console.log  'tileDrawn called'
     tile.className += ' leaflet-tile-drawn'
+    dbg 'tileDrawn'
     @_tileOnLoad.call(tile)
 
   _tileOnLoad: (e) ->
@@ -322,8 +329,10 @@ L.DomTileLayer = L.Class.extend
 
     layer._tilesToLoad--
     layer.fire "load"  unless layer._tilesToLoad
+    dbg '_tileOnLoad'
 
   _tileOnError: (e) ->
+    dbg '_tileOnError'
     layer = @_layer
     layer.fire "tileerror",
       tile: this
@@ -333,9 +342,9 @@ L.DomTileLayer = L.Class.extend
     @src = newUrl  if newUrl
 
   _onTileUnload: (e) ->
-    console.log e
+    # console.log e
     console.log '_onTileUnload'
-    $(e.tile).doTimeout 'populateDelay' #cancels the timer
+    # $(e.tile).doTimeout 'populateDelay' #cancels the timer
 
     if e.tile._zoom == map.getZoom()
       dbg 'unload due to pan, easy'

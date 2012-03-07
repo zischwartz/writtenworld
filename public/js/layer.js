@@ -3,6 +3,7 @@
 
   betterBuildTile = function(tile, tileData, absTilePoint) {
     var c, cell, cellData, frag, r, _ref, _ref2;
+    dbg('betterBuildTile');
     tile._cells = [];
     frag = document.createDocumentFragment();
     for (r = 0, _ref = state.numRows() - 1; 0 <= _ref ? r <= _ref : r >= _ref; 0 <= _ref ? r++ : r--) {
@@ -25,6 +26,7 @@
 
   getTileLocally = function(absTilePoint, tile) {
     var c, cell, cellsNeeded, frag, r, _ref, _ref2;
+    dbg('getTileLocally');
     tile._cells = [];
     frag = document.createDocumentFragment();
     cellsNeeded = state.numRows() * state.numCols();
@@ -170,6 +172,7 @@
     },
     _update: function(e) {
       var bounds, nwTilePoint, seTilePoint, tileBounds, tileSize, zoom;
+      dbg('_update');
       if (this._map._panTransition && this._map._panTransition._inProgress) return;
       bounds = this._map.getPixelBounds();
       zoom = this._map.getZoom();
@@ -312,9 +315,12 @@
       }
       return this._createTile();
     },
-    _resetTile: function(tile) {},
+    _resetTile: function(tile) {
+      return true;
+    },
     _createTile: function() {
       var tile;
+      dbg('_createTile');
       tile = this._divProto.cloneNode(false);
       tile.onselectstart = tile.onmousemove = L.Util.falseFn;
       return tile;
@@ -332,36 +338,20 @@
       };
       console.log('loadTile called for abstp: ', absTilePoint.x, absTilePoint.y);
       layer.tileDrawn(tile);
-      if (state.zoomDiff() > 4) {
-        console.log('popualteDelay timer active');
-        $(tile).doTimeout('populateDelay', 500, function() {
-          var frag;
-          frag = getTileLocally(absTilePoint, tile);
-          if (frag) {
-            layer.populateTile(tile, tilePoint, zoom, frag);
-          } else {
-            now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
-              frag = betterBuildTile(tile, tileData, atp);
-              return layer.populateTile(tile, tilePoint, zoom, frag);
-            });
-          }
-          return false;
-        });
+      frag = getTileLocally(absTilePoint, tile);
+      if (frag) {
+        layer.populateTile(tile, tilePoint, zoom, frag);
       } else {
-        frag = getTileLocally(absTilePoint, tile);
-        if (frag) {
-          layer.populateTile(tile, tilePoint, zoom, frag);
-        } else {
-          now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
-            frag = betterBuildTile(tile, tileData, atp);
-            return layer.populateTile(tile, tilePoint, zoom, frag);
-          });
-        }
+        now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
+          frag = betterBuildTile(tile, tileData, atp);
+          return layer.populateTile(tile, tilePoint, zoom, frag);
+        });
       }
       return tile;
     },
     drawTile: function(tile, tilePoint, zoom, frag) {
       tile.appendChild(frag);
+      dbg('drawTile');
       return true;
     },
     populateTile: function(tile, tilePoint, zoom, frag) {
@@ -372,6 +362,7 @@
     tileDrawn: function(tile) {
       console.log('tileDrawn called');
       tile.className += ' leaflet-tile-drawn';
+      dbg('tileDrawn');
       return this._tileOnLoad.call(tile);
     },
     _tileOnLoad: function(e) {
@@ -383,10 +374,12 @@
         url: this.src
       });
       layer._tilesToLoad--;
-      if (!layer._tilesToLoad) return layer.fire("load");
+      if (!layer._tilesToLoad) layer.fire("load");
+      return dbg('_tileOnLoad');
     },
     _tileOnError: function(e) {
       var layer, newUrl;
+      dbg('_tileOnError');
       layer = this._layer;
       layer.fire("tileerror", {
         tile: this,
@@ -397,9 +390,7 @@
     },
     _onTileUnload: function(e) {
       var c, _i, _len, _ref, _results;
-      console.log(e);
       console.log('_onTileUnload');
-      $(e.tile).doTimeout('populateDelay');
       if (e.tile._zoom === map.getZoom()) {
         dbg('unload due to pan, easy');
         _ref = e.tile._cells;

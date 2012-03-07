@@ -58,6 +58,11 @@ L.TileLayer.Dom = L.TileLayer.extend
     this.on 'tileunload', (e) -> this._onTileUnload(e)
     true
 
+  getCenterTile: () ->
+    bounds= @getTilePointAbsoluteBounds()
+    center = bounds.getCenter()
+    center
+
   _createTileProto: ->
     dbg 'creatingTileProto'
     this._divProto = L.DomUtil.create('div', 'leaflet-tile')
