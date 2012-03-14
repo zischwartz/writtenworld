@@ -1,7 +1,7 @@
 window.DEBUG = false
 # window.DEBUG = true
-# window.USEMAP = false
-window.USEMAP = true 
+window.USEMAP = false
+# window.USEMAP = true 
 
 window.Configuration = class Configuration
   constructor: (spec = {}) ->
@@ -325,6 +325,7 @@ window.Cell = class Cell
     @contents= c
     @span.innerHTML = c
     @span.className = 'cell '+ state.color if state.color
+    @animateTextInsert(1)
 
   #for updating from other users, above is for local user
   update: (contents, props)->
@@ -342,24 +343,39 @@ window.Cell = class Cell
   clearSpan: ->
     @span.innerHTML= config.defaultChar()
 
-  cloneSpan: (animateWith=0) ->
-    dbg 'Cell cloneSpan  called'
+  #this doesn't work the way I wanted it to, but could be nice for typing anim
+  animateTextInsert: (animateWith=0) ->
     cloned=  $(@span).clone()
-    $(@span).after(cloned).css('position', 'absolute') #?
+    offset= $(@span).position()#offset()
+    console.log offset
+    $(@span).css({'position':'absolute', left: offset.left, top: offset.top}) #?
+    $(@span).after(cloned)
     $(@span).removeClass('selected')
+    console.log @span
     if animateWith
       $(@span).addClass('a'+animateWith)
     
     @span = cloned
     state.selectedEl = @span
-    # $(@span).removeClass('selected')
-   
-   # $(@span).after(cloned)
-   # $(cloned).removeClass('selected')
-   # if animateWith
-     # $(cloned).addClass('a'+animateWith)
-   #decouple from position and setPos with offset. or don't
-   # return cloned
+
+
+  #rewrite this so its the clone that gets removed
+  cloneSpan: (animateWith=0) ->
+    dbg 'Cell cloneSpan  called'
+    cloned=  $(@span).clone()
+    offset= $(@span).position()#offset()
+    console.log offset
+    $(@span).after(cloned)
+    $(@span).removeClass('selected')
+    $(@span).css({'position':'absolute', left: offset.left, top: offset.top}).hide() #?
+    $(@span).queue ->
+      $(this).show()
+      if animateWith
+        $(this).addClass('a'+animateWith)
+      $(this).dequeue()
+
+    @span = cloned
+    state.selectedEl = @span
 
   @getOrCreate:(row, col, tile, contents=null, props={}) ->
     dbg 'cell @getOrCreate called'

@@ -4,7 +4,7 @@
 
   window.DEBUG = false;
 
-  window.USEMAP = true;
+  window.USEMAP = false;
 
   window.Configuration = Configuration = (function() {
 
@@ -373,7 +373,8 @@
       dbg('Cell write  called');
       this.contents = c;
       this.span.innerHTML = c;
-      if (state.color) return this.span.className = 'cell ' + state.color;
+      if (state.color) this.span.className = 'cell ' + state.color;
+      return this.animateTextInsert(1);
     };
 
     Cell.prototype.update = function(contents, props) {
@@ -394,14 +395,44 @@
       return this.span.innerHTML = config.defaultChar();
     };
 
+    Cell.prototype.animateTextInsert = function(animateWith) {
+      var cloned, offset;
+      if (animateWith == null) animateWith = 0;
+      cloned = $(this.span).clone();
+      offset = $(this.span).position();
+      console.log(offset);
+      $(this.span).css({
+        'position': 'absolute',
+        left: offset.left,
+        top: offset.top
+      });
+      $(this.span).after(cloned);
+      $(this.span).removeClass('selected');
+      console.log(this.span);
+      if (animateWith) $(this.span).addClass('a' + animateWith);
+      this.span = cloned;
+      return state.selectedEl = this.span;
+    };
+
     Cell.prototype.cloneSpan = function(animateWith) {
-      var cloned;
+      var cloned, offset;
       if (animateWith == null) animateWith = 0;
       dbg('Cell cloneSpan  called');
       cloned = $(this.span).clone();
-      $(this.span).after(cloned).css('position', 'absolute');
+      offset = $(this.span).position();
+      console.log(offset);
+      $(this.span).after(cloned);
       $(this.span).removeClass('selected');
-      if (animateWith) $(this.span).addClass('a' + animateWith);
+      $(this.span).css({
+        'position': 'absolute',
+        left: offset.left,
+        top: offset.top
+      }).hide();
+      $(this.span).queue(function() {
+        $(this).show();
+        if (animateWith) $(this).addClass('a' + animateWith);
+        return $(this).dequeue();
+      });
       this.span = cloned;
       return state.selectedEl = this.span;
     };
