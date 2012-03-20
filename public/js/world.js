@@ -138,14 +138,14 @@
       return inputEl.focus();
     });
     inputEl.keypress(function(e) {
-      var c, cellPoint, userTotalRites;
-      if (e.which === 13) {
-        moveCursor('down', state.lastClickCell);
-        panIfAppropriate('down');
-        return state.lastClickCell = state.selectedCell;
+      var c, cellPoint, userTotalRites, _ref;
+      dbg(e.which, 'pressed');
+      if ((_ref = e.which) === 0 || _ref === 13 || _ref === 32 || _ref === 9 || _ref === 38 || _ref === 40 || _ref === 39 || _ref === 8) {
+        console.log('SPECIAL KEY, screw this keypress');
+        return false;
       } else {
         c = String.fromCharCode(e.which);
-        dbg(c, 'PRESSED!!!!');
+        console.log(c, 'Pressed!!!!');
         state.selectedCell.write(c);
         userTotalRites = parseInt($("#userTotalRites").text());
         $("#userTotalRites").text(userTotalRites + 1);
@@ -156,6 +156,7 @@
       }
     });
     inputEl.keydown(function(e) {
+      dbg(e.which, ' keydownd');
       switch (e.which) {
         case 9:
           e.preventDefault();
@@ -175,7 +176,14 @@
         case 8:
           moveCursor('left');
           panIfAppropriate('left');
-          return state.selectedCell.write(' ');
+          state.selectedCell.clear();
+          return setSelected(state.selectedCell);
+        case 13:
+          moveCursor('down', state.lastClickCell);
+          return panIfAppropriate('down');
+        case 32:
+          state.selectedCell.clear();
+          return moveCursor(state.writeDirection);
       }
     });
     $("#locationSearch").submit(function() {
@@ -372,9 +380,8 @@
     Cell.prototype.write = function(c) {
       dbg('Cell write  called');
       this.contents = c;
-      this.span.innerHTML = c;
       if (state.color) this.span.className = 'cell ' + state.color;
-      return this.animateTextInsert(1);
+      return this.animateTextInsert(2, c);
     };
 
     Cell.prototype.update = function(contents, props) {
@@ -391,37 +398,46 @@
       return delete all[this.key];
     };
 
-    Cell.prototype.clearSpan = function() {
-      return this.span.innerHTML = config.defaultChar();
+    Cell.prototype.clear = function() {
+      this.span.innerHTML = config.defaultChar();
+      this.write(config.defaultChar());
+      return this.span.className = 'cell';
     };
 
-    Cell.prototype.animateTextInsert = function(animateWith) {
-      var cloned, offset;
+    Cell.prototype.animateTextInsert = function(animateWith, c) {
+      var clone, offset, span;
       if (animateWith == null) animateWith = 0;
-      cloned = $(this.span).clone();
-      offset = $(this.span).position();
-      console.log(offset);
-      $(this.span).css({
+      clone = document.createElement('SPAN');
+      clone.className = 'cell ';
+      if (state.color) clone.className = 'cell ' + state.color;
+      clone.innerHTML = c;
+      span = this.span;
+      $(clone).css('position', 'absolute').insertBefore('body').addClass('a' + animateWith);
+      offset = $(this.span).offset();
+      console.log(clone);
+      $(clone).css({
+        'opacity': '1 !important',
+        'font-size': '1em'
+      });
+      $(clone).css({
         'position': 'absolute',
         left: offset.left,
         top: offset.top
       });
-      $(this.span).after(cloned);
-      $(this.span).removeClass('selected');
-      console.log(this.span);
-      if (animateWith) $(this.span).addClass('a' + animateWith);
-      this.span = cloned;
-      return state.selectedEl = this.span;
+      return $(clone).doTimeout(400, function() {
+        span.innerHTML = c;
+        $(clone).remove();
+        return false;
+      });
     };
 
     Cell.prototype.cloneSpan = function(animateWith) {
-      var cloned, offset;
+      var clone, offset, span;
       if (animateWith == null) animateWith = 0;
-      dbg('Cell cloneSpan  called');
-      cloned = $(this.span).clone();
+      span = this.span;
+      clone = $(this.span).clone();
       offset = $(this.span).position();
-      console.log(offset);
-      $(this.span).after(cloned);
+      $(this.span).after(clone);
       $(this.span).removeClass('selected');
       $(this.span).css({
         'position': 'absolute',
@@ -430,10 +446,15 @@
       }).hide();
       $(this.span).queue(function() {
         $(this).show();
+        console.log('this', this);
         if (animateWith) $(this).addClass('a' + animateWith);
         return $(this).dequeue();
       });
-      this.span = cloned;
+      $(span).doTimeout(800, function() {
+        $(span).remove();
+        return false;
+      });
+      this.span = clone;
       return state.selectedEl = this.span;
     };
 

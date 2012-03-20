@@ -1,7 +1,7 @@
 window.DEBUG = false
 # window.DEBUG = true
 window.USEMAP = false
-# window.USEMAP = true 
+# window.USEMAP = true
 
 window.Configuration = class Configuration
   constructor: (spec = {}) ->
@@ -117,13 +117,13 @@ initializeInterface = ->
     inputEl.focus()
 
   inputEl.keypress (e) ->
-    if e.which ==13
-      moveCursor 'down', state.lastClickCell
-      panIfAppropriate('down')
-      state.lastClickCell = state.selectedCell
+    dbg  e.which, 'pressed'
+    if e.which in [0, 13, 32, 9, 38, 40, 39, 8]
+      console.log 'SPECIAL KEY, screw this keypress'
+      return false
     else
       c = String.fromCharCode e.which
-      dbg  c,  'PRESSED!!!!'
+      console.log  c,  'Pressed!!!!'
       state.selectedCell.write( c)
       
       userTotalRites=parseInt($("#userTotalRites").text())
@@ -140,7 +140,8 @@ initializeInterface = ->
       # console.log("input was a letter, number, hyphen, underscore or space")
 
   inputEl.keydown (e) ->
-    # console.log e, e.which,' keydownd'
+    dbg e.which,' keydownd'
+    # e.stopPropagation() # e.stopImmediatePropagation()
     switch e.which
       when 9 #tab
         e.preventDefault()
@@ -160,7 +161,15 @@ initializeInterface = ->
       when 8
         moveCursor('left')
         panIfAppropriate('left')
-        state.selectedCell.write(' ')
+        state.selectedCell.clear()
+        setSelected(state.selectedCell)
+      when 13 #enter
+        moveCursor 'down', state.lastClickCell
+        panIfAppropriate('down')
+      when 32 #space
+        state.selectedCell.clear()
+        moveCursor state.writeDirection
+    # return false
 
   $("#locationSearch").submit ->
     locationString= $("#locationSearchInput").val()
@@ -323,9 +332,8 @@ window.Cell = class Cell
   write: (c) ->
     dbg 'Cell write  called'
     @contents= c
-    @span.innerHTML = c
     @span.className = 'cell '+ state.color if state.color
-    @animateTextInsert(1)
+    @animateTextInsert(2, c)
 
   #for updating from other users, above is for local user
   update: (contents, props)->
@@ -340,43 +348,47 @@ window.Cell = class Cell
     @span= null
     delete all[@key]
 
-  clearSpan: ->
+  clear: ->
     @span.innerHTML= config.defaultChar()
+    @write(config.defaultChar())
+    @span.className= 'cell'
 
-  #this doesn't work the way I wanted it to, but could be nice for typing anim
-  animateTextInsert: (animateWith=0) ->
-    cloned=  $(@span).clone()
-    offset= $(@span).position()#offset()
-    console.log offset
-    $(@span).css({'position':'absolute', left: offset.left, top: offset.top}) #?
-    $(@span).after(cloned)
-    $(@span).removeClass('selected')
-    console.log @span
-    if animateWith
-      $(@span).addClass('a'+animateWith)
-    
-    @span = cloned
-    state.selectedEl = @span
+  animateTextInsert: (animateWith=0, c) ->
+    clone=  document.createElement('SPAN') #$(@span).clone().removeClass('selected')
+    clone.className='cell '
+    clone.className='cell ' + state.color if state.color
+    clone.innerHTML=c
+    span=@span
+    $(clone).css('position', 'absolute').insertBefore('body').addClass('a'+animateWith)
+    offset= $(@span).offset()
+    console.log clone
+    $(clone).css({'opacity': '1 !important', 'font-size': '1em'})
+    $(clone).css({'position':'absolute', left: offset.left, top: offset.top})
+    $(clone).doTimeout 400, ->
+      span.innerHTML = c
+      $(clone).remove()
+      return false
 
-
-  #rewrite this so its the clone that gets removed
+  #rewrite this so its the clone that gets removed, which will require animationend event listeners
   cloneSpan: (animateWith=0) ->
-    dbg 'Cell cloneSpan  called'
-    cloned=  $(@span).clone()
+    span= @span #the original
+    clone=  $(@span).clone()
     offset= $(@span).position()#offset()
-    console.log offset
-    $(@span).after(cloned)
+    $(@span).after(clone)
     $(@span).removeClass('selected')
     $(@span).css({'position':'absolute', left: offset.left, top: offset.top}).hide() #?
     $(@span).queue ->
       $(this).show()
+      console.log 'this', this
       if animateWith
         $(this).addClass('a'+animateWith)
       $(this).dequeue()
-
-    @span = cloned
+    $(span).doTimeout 800, ->
+      $(span).remove()
+      return false
+    @span = clone
     state.selectedEl = @span
-
+    
   @getOrCreate:(row, col, tile, contents=null, props={}) ->
     dbg 'cell @getOrCreate called'
     x=tile._tilePoint.x * Math.pow(2, state.zoomDiff())+col

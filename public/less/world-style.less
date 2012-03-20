@@ -32,6 +32,7 @@ body, html
 
 .cell
 {
+  color: @white;
    /*position: absolute;*/
   
 }
@@ -194,12 +195,23 @@ a.colorOptions
 .a1
 {
   .transition(all ease-out .5s);
-  opacity: .20 !important;
+  opacity: .0 !important;
   font-size: 19em !important;
   top: 400px !important;
   left: 150px !important;
   /*-webkit-transform: rotate3d(2, 1, 1, 30deg);*/
   .skew(30deg,35deg);
+}
+
+.a2
+{
+  .transition(all ease-out .4s);
+  /*opacity: .0 !important;*/
+  font-size: 25em ;
+  top: 0px;
+  left: 0px;
+  .skew(30deg,35deg);
+  z-index: 100;
 }
 
 
