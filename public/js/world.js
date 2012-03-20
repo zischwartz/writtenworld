@@ -150,7 +150,6 @@
         userTotalRites = parseInt($("#userTotalRites").text());
         $("#userTotalRites").text(userTotalRites + 1);
         cellPoint = cellKeyToXY(state.selectedCell.key);
-        now.writeCell(cellPoint, c);
         moveCursor(state.writeDirection);
         return panIfAppropriate(state.writeDirection);
       }
@@ -378,18 +377,20 @@
     }
 
     Cell.prototype.write = function(c) {
+      var cellPoint;
       dbg('Cell write  called');
       this.contents = c;
-      if (state.color) this.span.className = 'cell ' + state.color;
-      return this.animateTextInsert(2, c);
+      this.span.className = 'cell ' + state.color;
+      this.animateTextInsert(2, c);
+      cellPoint = cellKeyToXY(this.key);
+      return now.writeCell(cellPoint, c);
     };
 
     Cell.prototype.update = function(contents, props) {
       dbg('Cell update called');
       this.contents = contents;
       this.span.innerHTML = contents;
-      this.span.className = 'cell';
-      if (props.color) return this.span.className += ' ' + props.color;
+      return this.span.className += 'cell ' + props.color;
     };
 
     Cell.prototype.kill = function() {
@@ -408,8 +409,7 @@
       var clone, offset, span;
       if (animateWith == null) animateWith = 0;
       clone = document.createElement('SPAN');
-      clone.className = 'cell ';
-      if (state.color) clone.className = 'cell ' + state.color;
+      clone.className = 'cell ' + state.color;
       clone.innerHTML = c;
       span = this.span;
       $(clone).css('position', 'absolute').insertBefore('body').addClass('a' + animateWith);

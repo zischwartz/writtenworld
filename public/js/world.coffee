@@ -130,7 +130,7 @@ initializeInterface = ->
       $("#userTotalRites").text(userTotalRites+1)
 
       cellPoint = cellKeyToXY state.selectedCell.key
-      now.writeCell(cellPoint, c)
+      # now.writeCell(cellPoint, c)
 
       moveCursor(state.writeDirection)
       panIfAppropriate(state.writeDirection)
@@ -242,7 +242,11 @@ jQuery ->
     now.setBounds domTiles.getTilePointAbsoluteBounds()
     
     now.setClientState (s)->
-      state.color = s.color if s.color
+      if s.color
+        state.color= s.color
+      else
+        state.color = 'c0'
+        now.setUserOption('color','c0')
     
     $.doTimeout 500, ->
       centerCursor()
@@ -271,7 +275,6 @@ jQuery ->
         console.log 'setting'
         state[type]=payload
         now.setUserOption(type, payload)
-      # return false
       return true
 
     now.insertMessage = (heading, message, cssclass="") ->
@@ -319,29 +322,24 @@ window.Cell = class Cell
     @span = document.createElement('span')
     @span.innerHTML= @contents
     @span.id= @key
-    @span.className= 'cell'
-    # these are for .cell with absolute positiong , for aniation...
-    # @span.style.top = @row*state.cellHeight()+'px'
-    # @span.style.left = @col*state.cellWidth()+'px'
-
-    if @props.color
-      @span.className='cell '+ @props.color
+    @span.className='cell '+ @props.color
     if @props.echoes
       @span.className+= " e#{props.echoes}"
 
   write: (c) ->
     dbg 'Cell write  called'
     @contents= c
-    @span.className = 'cell '+ state.color if state.color
+    @span.className = 'cell '+ state.color
     @animateTextInsert(2, c)
+    cellPoint = cellKeyToXY @key
+    now.writeCell(cellPoint, c)
 
   #for updating from other users, above is for local user
   update: (contents, props)->
     dbg 'Cell update called'
     @contents= contents
     @span.innerHTML = contents
-    @span.className= 'cell'
-    @span.className += ' '+ props.color if props.color
+    @span.className += 'cell '+ props.color
 
   kill: ->
     dbg 'killing a cell'#, @key
@@ -355,8 +353,7 @@ window.Cell = class Cell
 
   animateTextInsert: (animateWith=0, c) ->
     clone=  document.createElement('SPAN') #$(@span).clone().removeClass('selected')
-    clone.className='cell '
-    clone.className='cell ' + state.color if state.color
+    clone.className='cell ' + state.color
     clone.innerHTML=c
     span=@span
     $(clone).css('position', 'absolute').insertBefore('body').addClass('a'+animateWith)

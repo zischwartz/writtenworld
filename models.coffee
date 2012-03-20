@@ -59,6 +59,7 @@ exports.World.findOne {name: 'main'}, (err, world)->
           y: 256
     mainWorld.save (err, world) ->
       exports.mainWorldId = world._id
+
 RiteSchema = new Schema
   contents: {type: String, default: ' '}
   date: { type: Date, default: Date.now }
