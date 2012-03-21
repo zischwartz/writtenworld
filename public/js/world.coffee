@@ -245,6 +245,7 @@ jQuery ->
       if s.color
         state.color= s.color
       else
+        #easy fix for override issue, set default color. this could be random.
         state.color = 'c0'
         now.setUserOption('color','c0')
     

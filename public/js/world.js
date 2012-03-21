@@ -265,7 +265,12 @@
       initializeInterface();
       now.setBounds(domTiles.getTilePointAbsoluteBounds());
       now.setClientState(function(s) {
-        if (s.color) return state.color = s.color;
+        if (s.color) {
+          return state.color = s.color;
+        } else {
+          state.color = 'c0';
+          return now.setUserOption('color', 'c0');
+        }
       });
       $.doTimeout(500, function() {
         centerCursor();
@@ -371,8 +376,7 @@
       this.span = document.createElement('span');
       this.span.innerHTML = this.contents;
       this.span.id = this.key;
-      this.span.className = 'cell';
-      if (this.props.color) this.span.className = 'cell ' + this.props.color;
+      this.span.className = 'cell ' + this.props.color;
       if (this.props.echoes) this.span.className += " e" + props.echoes;
     }
 
