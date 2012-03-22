@@ -189,7 +189,7 @@
           contents: contents,
           world: worldId
         });
-      } else if ((cell.current.contents === contents) && (cell.current.owner.toString() !== ownerId) && isOwnerAuth) {
+      } else if ((cell.current.contents === contents) && (cell.current.owner.toString() !== ownerId)) {
         if (!cell.current.props.echoes) cell.current.props.echoes = 0;
         cell.current.props.echoes += 1;
         cell.current.markModified('props');

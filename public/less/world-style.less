@@ -2,6 +2,7 @@ body, html
 {
   height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 
 #map
@@ -10,9 +11,11 @@ body, html
   width: 100%;
   height: 100%;
   line-height: normal;
-  //margin-top: @navbarHeight;
+  position: absolute;
+  /*top: @navbarHeight;*/
   background-color: @grayDark;
 }
+
 
 #input
 {
@@ -33,8 +36,6 @@ body, html
 .cell
 {
   color: @white;
-   /*position: absolute;*/
-  
 }
 
 .cell.otherSelected
@@ -45,12 +46,6 @@ body, html
 div.leaflet-tile
 		{
       color: white;
-      //background-color: #777777;
-       //background: rgba(0, 0, 0, 0.5);
-
-       /*background: rgba(0,250, 0, 0.3); */
-			/*border-right: 1px solid red;*/
-			/* overflow: hidden; */
 		}
 
 		div.leaflet-tile span
@@ -58,11 +53,7 @@ div.leaflet-tile
       text-align: center;
       float:left;
 			display: block;
-      /*font-weight: 400;*/
-      /* overflow: hidden; */
-     /*-webkit-box-shadow: 1px 1px 1px black;*/
        /*background: rgba(0,250, 0, 0.3); */
-			/* font-size: 8px; */
 		}
     
     div.leaflet-tile-drawn
@@ -75,11 +66,6 @@ div.leaflet-tile
       /* background: rgba(255, 0, 0, 0.3); */
     }
 
-
-.navbar-fixed-top
-{
-  position: fixed !important;
-}
 
 a i.icon-search
 {
@@ -101,17 +87,25 @@ a:hover i.icon-search
 {
   position: absolute;
   margin-top: @navbarHeight;
-  width: 86%;
-  left: 7%;
+  /*width: 86%;*/
+  /*left: 7%;*/
   padding-top: 10px; 
   z-index: 10;
+  
+  width: 20%;
+  left: 78%;
+  right: 1%;
+  
+
 }
 
 //for the zoom controls, hacky
-.leaflet-top.leaflet-left
+.leaflet-top //.leaflet-left
 {
   margin-top: @navbarHeight;
 }
+
+
 
 //signup modal
 .modal-body .help-inline
@@ -119,7 +113,7 @@ a:hover i.icon-search
   color: @grayLight;
 }
 
-.c0 { color: white !important;}
+.c0 { color: @grayLight !important;}
 
 .c1 { color: green !important;}
 
@@ -199,14 +193,12 @@ a.colorOptions
   font-size: 19em !important;
   top: 400px !important;
   left: 150px !important;
-  /*-webkit-transform: rotate3d(2, 1, 1, 30deg);*/
   .skew(30deg,35deg);
 }
 
 .a2
 {
   .transition(all ease-out .4s);
-  /*opacity: .0 !important;*/
   font-size: 25em ;
   top: 0px;
   left: 0px;

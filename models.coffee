@@ -39,9 +39,6 @@ WorldSchema.plugin slugGenerator()
 
 exports.World = mongoose.model('World', WorldSchema)
 
-# this should be in a config.js
-# exports.mainWorldId = mongoose.Types.ObjectId.fromString("4f394bd7f4748fd7b3000001")
-
 exports.World.findOne {name: 'main'}, (err, world)->
   if world
     exports.mainWorldId = world._id
@@ -86,9 +83,9 @@ CellSchema.index {world:1, x:1, y:1}, {unique:true}
 
 exports.Cell = mongoose.model('Cell', CellSchema)
 
-#userId will either be a session or a real user id
 exports.writeCellToDb = (cellPoint, contents, worldId, ownerId, isOwnerAuth, props={}) ->
-  # console.log 'writing cell with ', contents
+    #userId will either be a session or a real user id
+    # console.log "writing cell ownerId is : #{ownerId}"
   exports.Cell
   .findOne({world: worldId, x:cellPoint.x, y: cellPoint.y})
   .populate('current')
@@ -97,7 +94,7 @@ exports.writeCellToDb = (cellPoint, contents, worldId, ownerId, isOwnerAuth, pro
       rite = new Rite({contents: contents, owner:ownerId, props:props })
       if not cell
           cell = new exports.Cell {x:cellPoint.x, y:cellPoint.y, contents: contents, world:worldId}
-      else if (cell.current.contents == contents) and (cell.current.owner.toString() != ownerId) and isOwnerAuth
+      else if (cell.current.contents == contents) and (cell.current.owner.toString() != ownerId) # and isOwnerAuth
           if not cell.current.props.echoes
             cell.current.props.echoes = 0
           cell.current.props.echoes+=1

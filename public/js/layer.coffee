@@ -202,7 +202,7 @@ L.DomTileLayer = L.Class.extend
     true
 
   _removeOtherTiles: (bounds) ->
-    dbg '_removeOtherTiles'
+    console.log '_removeOtherTiles called'
     kArr = undefined
     x = undefined
     y = undefined
@@ -213,16 +213,14 @@ L.DomTileLayer = L.Class.extend
         kArr = key.split(":")
         x = parseInt(kArr[0], 10)
         y = parseInt(kArr[1], 10)
-        # console.log key
-        # console.log bounds
+        # doesn't apply on zooms? only pan? 
         if x < bounds.min.x or x > bounds.max.x or y < bounds.min.y or y > bounds.max.y
-          console.log 'outa bounds, REMOVE THAT SHIT'
+          dbg 'outa bounds, REMOVE THAT SHIT'
           @_removeTile key
     true
 
   _removeTile: (key) ->
     console.log 'remove tile called yo!'
-    dbg '_removeTile called'
     tile = @_tiles[key]
     @fire "tileunload",
       tile: tile
@@ -232,7 +230,8 @@ L.DomTileLayer = L.Class.extend
     @_unusedTiles.push tile  if @options.reuseTiles
     tile.src = L.Util.emptyImageUrl
 
-    console.log "tile #{key} removed", tile
+    @_removeCellsFromTile(tile)
+
     delete @_tiles[key]
     true
 
@@ -375,12 +374,11 @@ L.DomTileLayer = L.Class.extend
     dbg e
     dbg '_onTileUnload !'
     # $(e.tile).doTimeout 'populateDelay' #cancels the timer
-    console.log 'tile to unload:'
-    console.log e.tile
+    # console.log 'tile to unload:'
+    # console.log e.tile
     tile = e.tile
     #the fix!
     tile.style.display = 'none'
-    
     #what was I doing below? tile doesn't have a ._zoom prop. I could give it one...
     # better to hook in to the _remove func
  
@@ -394,6 +392,10 @@ L.DomTileLayer = L.Class.extend
 #     else if e.tile._zoom > map.getZoom()
 #       dbg 'zoom out' # this case requires nothing, every cell will still be there
     true
+
+  _removeCellsFromTile: (tile) ->
+    for c in tile._cells
+      c.kill
 
   getTilePointBounds: ->
     bounds = this._map.getPixelBounds()

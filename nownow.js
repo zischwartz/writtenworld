@@ -162,6 +162,24 @@
         return cb(toUpdate);
       });
     };
+    everyone.now.getCloseUsers = function() {
+      var aC, cid;
+      cid = this.user.clientId;
+      aC = cUsers[cid].selected;
+      nowjs.getGroup(this.now.currentWorldId).getUsers(function(users) {
+        var distance, i, uC, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = users.length; _i < _len; _i++) {
+          i = users[_i];
+          uC = cUsers[i].selected;
+          console.log('usercenter', uC);
+          distance = Math.sqrt((aC.x - uC.x) * (aC.x - uC.x) + (aC.y - uC.y) * (aC.y - uC.y));
+          _results.push(console.log(distance));
+        }
+        return _results;
+      });
+      return true;
+    };
     everyone.now.setUserOption = function(type, payload) {
       var userId,
         _this = this;

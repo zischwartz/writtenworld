@@ -3377,12 +3377,16 @@ a.thumbnail:hover {
 body, html {
   height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 #map {
   font-family: monospace;
   width: 100%;
   height: 100%;
   line-height: normal;
+  position: absolute;
+  /*top: @navbarHeight;*/
+
   background-color: #333333;
 }
 #input {
@@ -3398,34 +3402,18 @@ body, html {
 }
 .cell {
   color: #ffffff;
-  /*position: absolute;*/
-
 }
 .cell.otherSelected {
   background-color: red;
 }
 div.leaflet-tile {
   color: white;
-  /*background: rgba(0,250, 0, 0.3); */
-
-  /*border-right: 1px solid red;*/
-
-  /* overflow: hidden; */
-
 }
 div.leaflet-tile span {
   text-align: center;
   float: left;
   display: block;
-  /*font-weight: 400;*/
-
-  /* overflow: hidden; */
-
-  /*-webkit-box-shadow: 1px 1px 1px black;*/
-
   /*background: rgba(0,250, 0, 0.3); */
-
-  /* font-size: 8px; */
 
 }
 div.leaflet-tile-drawn {
@@ -3435,9 +3423,6 @@ div.leaflet-tile-drawn {
 div.leaflet-tile-loaded {
   /* background: rgba(255, 0, 0, 0.3); */
 
-}
-.navbar-fixed-top {
-  position: fixed !important;
 }
 a i.icon-search {
   opacity: 0.5;
@@ -3454,19 +3439,24 @@ a:hover i.icon-search {
 #messages {
   position: absolute;
   margin-top: 40px;
-  width: 86%;
-  left: 7%;
+  /*width: 86%;*/
+
+  /*left: 7%;*/
+
   padding-top: 10px;
   z-index: 10;
+  width: 20%;
+  left: 78%;
+  right: 1%;
 }
-.leaflet-top.leaflet-left {
+.leaflet-top {
   margin-top: 40px;
 }
 .modal-body .help-inline {
   color: #999999;
 }
 .c0 {
-  color: white !important;
+  color: #999999 !important;
 }
 .c1 {
   color: green !important;
@@ -3587,8 +3577,6 @@ a.colorOptions.c2, a.colorOptions.c0 {
   font-size: 19em !important;
   top: 400px !important;
   left: 150px !important;
-  /*-webkit-transform: rotate3d(2, 1, 1, 30deg);*/
-
   -webkit-transform: translate(30deg, 35deg);
   -moz-transform: translate(30deg, 35deg);
   -ms-transform: translate(30deg, 35deg);
@@ -3606,8 +3594,6 @@ a.colorOptions.c2, a.colorOptions.c0 {
   -ms-transition: all ease-out 0.4s;
   -o-transition: all ease-out 0.4s;
   transition: all ease-out 0.4s;
-  /*opacity: .0 !important;*/
-
   font-size: 25em ;
   top: 0px;
   left: 0px;

@@ -230,7 +230,7 @@
     },
     _removeOtherTiles: function(bounds) {
       var kArr, key, tile, x, y;
-      dbg('_removeOtherTiles');
+      console.log('_removeOtherTiles called');
       kArr = void 0;
       x = void 0;
       y = void 0;
@@ -242,7 +242,7 @@
           x = parseInt(kArr[0], 10);
           y = parseInt(kArr[1], 10);
           if (x < bounds.min.x || x > bounds.max.x || y < bounds.min.y || y > bounds.max.y) {
-            console.log('outa bounds, REMOVE THAT SHIT');
+            dbg('outa bounds, REMOVE THAT SHIT');
             this._removeTile(key);
           }
         }
@@ -252,7 +252,6 @@
     _removeTile: function(key) {
       var tile;
       console.log('remove tile called yo!');
-      dbg('_removeTile called');
       tile = this._tiles[key];
       this.fire("tileunload", {
         tile: tile,
@@ -261,7 +260,7 @@
       if (tile.parentNode === this._container) this._container.removeChild(tile);
       if (this.options.reuseTiles) this._unusedTiles.push(tile);
       tile.src = L.Util.emptyImageUrl;
-      console.log("tile " + key + " removed", tile);
+      this._removeCellsFromTile(tile);
       delete this._tiles[key];
       return true;
     },
@@ -404,11 +403,19 @@
       var tile;
       dbg(e);
       dbg('_onTileUnload !');
-      console.log('tile to unload:');
-      console.log(e.tile);
       tile = e.tile;
       tile.style.display = 'none';
       return true;
+    },
+    _removeCellsFromTile: function(tile) {
+      var c, _i, _len, _ref, _results;
+      _ref = tile._cells;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        c = _ref[_i];
+        _results.push(c.kill);
+      }
+      return _results;
     },
     getTilePointBounds: function() {
       var bounds, nwTilePoint, seTilePoint, tileBounds, tileSize;

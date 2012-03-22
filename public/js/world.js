@@ -2,7 +2,7 @@
   var Cell, Configuration, cellKeyToXY, centerCursor, filter, getNodeIndex, initializeInterface, moveCursor, pan, panIfAppropriate, setTileStyle,
     __slice = Array.prototype.slice;
 
-  window.DEBUG = true;
+  window.DEBUG = false;
 
   window.USEMAP = false;
 
@@ -74,12 +74,7 @@
     $(cell.span).addClass('selected');
     state.selectedCell = cell;
     now.setSelectedCell(cellKeyToXY(cell.key));
-    if (cell.props) {
-      if (cell.props.color === 'c3') {
-        console.log('c33333');
-        cell.cloneSpan(1);
-      }
-    }
+    if (cell.props) if (cell.props.color === 'c3') cell.animateTextRemove(1);
     return true;
   };
 
@@ -215,7 +210,11 @@
     selectedPP = $(state.selectedEl).offset();
     dbg('selectedPP', selectedPP);
     panOnDist = 200;
-    panByDist = state.cellHeight();
+    if (direction === 'left' || 'right') {
+      panByDist = state.cellWidth();
+    } else {
+      panByDist = state.cellHeight();
+    }
     if (direction === 'up') if (selectedPP.top < panOnDist) pan(0, 0 - panByDist);
     if (direction === 'down') {
       if (selectedPP.top > document.body.clientHeight - panOnDist * 1.5) {
@@ -272,13 +271,14 @@
           return now.setUserOption('color', 'c0');
         }
       });
-      $.doTimeout(500, function() {
+      $.doTimeout(600, function() {
         centerCursor();
         return false;
       });
       now.drawCursors = function(users) {
         var id, otherSelected, user, _results;
         $('.otherSelected').removeClass('otherSelected');
+        console.log(users, 'users');
         _results = [];
         for (id in users) {
           user = users[id];
@@ -375,8 +375,9 @@
       this.span = document.createElement('span');
       this.span.innerHTML = this.contents;
       this.span.id = this.key;
+      if (!this.props.color) this.props.color = 'c0';
       this.span.className = 'cell ' + this.props.color;
-      if (this.props.echoes) this.span.className += " e" + props.echoes;
+      if (this.props.echoes) this.span.className += " e" + this.props.echoes;
     }
 
     Cell.prototype.write = function(c) {
@@ -393,7 +394,7 @@
       dbg('Cell update called');
       this.contents = contents;
       this.span.innerHTML = contents;
-      return this.span.className += 'cell ' + props.color;
+      return this.span.className = 'cell ' + props.color;
     };
 
     Cell.prototype.kill = function() {
@@ -434,7 +435,7 @@
       });
     };
 
-    Cell.prototype.cloneSpan = function(animateWith) {
+    Cell.prototype.animateTextRemove = function(animateWith) {
       var clone, offset, span;
       if (animateWith == null) animateWith = 0;
       span = this.span;

@@ -1,5 +1,5 @@
-# window.DEBUG = false
-window.DEBUG = true
+window.DEBUG = false
+# window.DEBUG = true
 window.USEMAP = false
 # window.USEMAP = true
 
@@ -60,8 +60,7 @@ window.setSelected = (cell) ->
  
   if cell.props
     if cell.props.color == 'c3'
-     console.log 'c33333'
-     cell.cloneSpan(1)
+     cell.animateTextRemove(1)
   true
 
 
@@ -142,6 +141,9 @@ initializeInterface = ->
   inputEl.keydown (e) ->
     dbg e.which,' keydownd'
     # e.stopPropagation() # e.stopImmediatePropagation()
+    
+    # TODO here, check if there's a div to go to. for now, only pan in that case.
+
     switch e.which
       when 9 #tab
         e.preventDefault()
@@ -194,7 +196,10 @@ panIfAppropriate = (direction)->
   selectedPP= $(state.selectedEl).offset()
   dbg 'selectedPP', selectedPP
   panOnDist = 200
-  panByDist = state.cellHeight()
+  if direction is 'left' or 'right'
+    panByDist = state.cellWidth()
+  else
+    panByDist = state.cellHeight()
   if direction == 'up'
     if selectedPP.top < panOnDist
       pan(0, 0-panByDist)
@@ -249,17 +254,18 @@ jQuery ->
         state.color = 'c0'
         now.setUserOption('color','c0')
     
-    $.doTimeout 500, ->
+    $.doTimeout 600, ->
       centerCursor()
       false
 
     now.drawCursors = (users) ->
       $('.otherSelected').removeClass('otherSelected') #this is a dumb way 
-      # console.log users, 'users'
+      console.log users, 'users'
       for id, user of users
         if user.selected.x
           otherSelected = Cell.get(user.selected.x, user.selected.y)
           $(otherSelected.span).addClass('otherSelected')
+    
     
     now.drawEdits = (edits) ->
       # console.log edits
@@ -316,6 +322,7 @@ window.Cell = class Cell
 
   constructor: (@row, @col, @tile, @contents = config.defaultChar(), @props={}, @events=null) ->
     # dbg 'Cell constructor called'
+    
     # @history = {}
     @timestamp = null #just use servertime
     @key = this.generateKey()
@@ -323,9 +330,11 @@ window.Cell = class Cell
     @span = document.createElement('span')
     @span.innerHTML= @contents
     @span.id= @key
+    if not @props.color
+      @props.color = 'c0'
     @span.className='cell '+ @props.color
     if @props.echoes
-      @span.className+= " e#{props.echoes}"
+      @span.className+= " e#{@props.echoes}"
 
   write: (c) ->
     dbg 'Cell write  called'
@@ -340,13 +349,13 @@ window.Cell = class Cell
     dbg 'Cell update called'
     @contents= contents
     @span.innerHTML = contents
-    @span.className += 'cell '+ props.color
+    @span.className = 'cell '+ props.color
 
   kill: ->
     dbg 'killing a cell'#, @key
     @span= null
     delete all[@key]
-
+    
   clear: ->
     @span.innerHTML= config.defaultChar()
     @write(config.defaultChar())
@@ -368,8 +377,7 @@ window.Cell = class Cell
       $(clone).remove()
       return false
 
-  #rewrite this so its the clone that gets removed, which will require animationend event listeners
-  cloneSpan: (animateWith=0) ->
+  animateTextRemove: (animateWith=0) ->
     span= @span #the original
     clone=  $(@span).clone()
     offset= $(@span).position()#offset()

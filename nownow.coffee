@@ -13,6 +13,8 @@ module.exports = (app, SessionModel) ->
     # console.log group
 
   # hmm were for the main world..., how to generalize?
+  #maybe add each of these to the currentworld? or add each world to these. perfer former
+  # or maybe I ALREADY SOLVED IT?
   cUsers = {} #all of the connected users, by clientId (nowjs)
   aUsers = {} #all connected and auth'd users, by actual userId (mongoose _id)
 
@@ -27,7 +29,6 @@ module.exports = (app, SessionModel) ->
     true
 
   nowjs.on 'disconnect', ->
-    # Also remove from group/worlds here ? or it looks like it happens automatically. nice. 
     delete cUsers[this.user.clientId]
     if this.user.session?.auth
       delete aUsers[this.user.session.auth.userId]
@@ -43,11 +44,9 @@ module.exports = (app, SessionModel) ->
       callback(this.user.session)
 
   everyone.now.setSelectedCell = (cellPoint) ->
-    # console.log 'setSelectedCell'
     cid = this.user.clientId
     cUsers[cid].selected = cellPoint
     getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
-      # console.log 'TO UPDATE CALLED BACK', toUpdate
       for i of toUpdate
         if i != cid
           updates = {cid:cUsers[cid]} #client side is set up to recieve a number of updates, hence this being a list
@@ -117,6 +116,19 @@ module.exports = (app, SessionModel) ->
           toUpdate[i] = cUsers[i]
       cb(toUpdate)
   
+  everyone.now.getCloseUsers= ->
+    cid = this.user.clientId
+    aC=cUsers[cid].selected
+    # aC= cUsers[this.user.clientId].bounds.getCenter() #actorCenter
+    nowjs.getGroup(this.now.currentWorldId).getUsers (users) ->
+      for i in users
+        uC = cUsers[i].selected #userCenter
+        # uC = cUsers[i].bounds.getCenter() #userCenter
+        console.log 'usercenter', uC
+        distance = Math.sqrt((aC.x-uC.x)*(aC.x-uC.x)+(aC.y-uC.y)*(aC.y-uC.y))
+        console.log distance
+    true
+
   everyone.now.setUserOption = (type, payload) ->
     console.log 'setUserOption', type, payload
     if type = 'color'
