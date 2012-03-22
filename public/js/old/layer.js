@@ -9,12 +9,9 @@
       for (c = 0, _ref2 = state.numCols() - 1; 0 <= _ref2 ? c <= _ref2 : c >= _ref2; 0 <= _ref2 ? c++ : c--) {
         cellData = tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)];
         if (cellData) {
-          dbg('cell loaded from server');
-          dbg('cellData', cellData.contents);
           cell = Cell.getOrCreate(r, c, tile, cellData.contents, cellData.props);
         } else {
           cell = Cell.getOrCreate(r, c, tile);
-          dbg('cell created, but others in tile were from server');
         }
         frag.appendChild(cell.span);
         tile._cells.push(cell);
@@ -34,7 +31,6 @@
         if (cell) {
           cell = Cell.getOrCreate(r, c, tile);
           frag.appendChild(cell.span);
-          dbg('FOUND CELL--------', cell);
           cellsNeeded--;
           tile._cells.push(cell);
         }
@@ -142,21 +138,7 @@
       return true;
     },
     _onTileUnload: function(e) {
-      var c, _i, _len, _ref, _results;
-      if (e.tile._zoom === map.getZoom()) {
-        dbg('unload due to pan, easy');
-        _ref = e.tile._cells;
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          c = _ref[_i];
-          _results.push(c.kill());
-        }
-        return _results;
-      } else if (e.tile._zoom < map.getZoom()) {
-        return dbg('unload due to zoom, less easy');
-      } else if (e.tile._zoom > map.getZoom()) {
-        return dbg('zoom out');
-      }
+      return dbg(e);
     },
     getTilePointBounds: function() {
       var bounds, nwTilePoint, seTilePoint, tileBounds, tileSize;

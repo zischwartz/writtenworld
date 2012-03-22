@@ -1,5 +1,5 @@
-window.DEBUG = false
-# window.DEBUG = true
+# window.DEBUG = false
+window.DEBUG = true
 window.USEMAP = false
 # window.USEMAP = true
 
@@ -214,15 +214,15 @@ jQuery ->
   tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png'
   tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
   centerPoint= new L.LatLng(40.714269, -74.005972)
-  if not USEMAP 
+  if not USEMAP
     window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}) #.addLayer(tileServeLayer)
   else
     window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}).addLayer(tileServeLayer)
   # initializeGeo()
   
-  window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
+  # window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
 
-  # window.domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+  window.domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
  
   # map.locateAndSetView(17)
   # map.on 'locationfound', (e)->
@@ -315,7 +315,7 @@ window.Cell = class Cell
     return "c#{@x}x#{@y}"
 
   constructor: (@row, @col, @tile, @contents = config.defaultChar(), @props={}, @events=null) ->
-    dbg 'Cell constructor called'
+    # dbg 'Cell constructor called'
     # @history = {}
     @timestamp = null #just use servertime
     @key = this.generateKey()
@@ -351,7 +351,8 @@ window.Cell = class Cell
     @span.innerHTML= config.defaultChar()
     @write(config.defaultChar())
     @span.className= 'cell'
-
+  
+  # this works for new text, if it's overwriting, it needs to use the one below to knock the old text out first maybe
   animateTextInsert: (animateWith=0, c) ->
     clone=  document.createElement('SPAN') #$(@span).clone().removeClass('selected')
     clone.className='cell ' + state.color
@@ -359,7 +360,7 @@ window.Cell = class Cell
     span=@span
     $(clone).css('position', 'absolute').insertBefore('body').addClass('a'+animateWith)
     offset= $(@span).offset()
-    console.log clone
+    dbg 'clone',  clone
     $(clone).css({'opacity': '1 !important', 'font-size': '1em'})
     $(clone).css({'position':'absolute', left: offset.left, top: offset.top})
     $(clone).doTimeout 400, ->
@@ -377,7 +378,7 @@ window.Cell = class Cell
     $(@span).css({'position':'absolute', left: offset.left, top: offset.top}).hide() #?
     $(@span).queue ->
       $(this).show()
-      console.log 'this', this
+      dbg 'this', this
       if animateWith
         $(this).addClass('a'+animateWith)
       $(this).dequeue()
@@ -388,7 +389,7 @@ window.Cell = class Cell
     state.selectedEl = @span
     
   @getOrCreate:(row, col, tile, contents=null, props={}) ->
-    dbg 'cell @getOrCreate called'
+    # dbg 'cell @getOrCreate called'
     x=tile._tilePoint.x * Math.pow(2, state.zoomDiff())+col
     y=tile._tilePoint.y * Math.pow(2, state.zoomDiff())+row
     cell=Cell.get(x,y)

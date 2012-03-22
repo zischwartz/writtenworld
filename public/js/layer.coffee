@@ -75,7 +75,10 @@ L.DomTileLayer = L.Class.extend
         x: @options.tileSize
         y: @options.tileSize
     L.Util.setOptions this, options
+    
+    # I dislike this, but removeOtherTiles isn't hitting the ones I need to remove. or unload? I think I don't understand the difference 
     this.on 'tileunload', (e) -> this._onTileUnload(e)
+
     # @_url = url
     subdomains = @options.subdomains
     @options.subdomains = subdomains.split("")  if typeof subdomains is "string"
@@ -93,6 +96,7 @@ L.DomTileLayer = L.Class.extend
       map.on "move", @_limitedUpdate, this
     @_reset()
     @_update()
+    true
 
   onRemove: (map) ->
     map._panes.tilePane.removeChild @_container
@@ -101,6 +105,7 @@ L.DomTileLayer = L.Class.extend
     map.off "move", @_limitedUpdate, this  unless @options.updateWhenIdle
     @_container = null
     @_map = null
+    true
 
   getAttribution: ->
     @options.attribution
@@ -113,9 +118,11 @@ L.DomTileLayer = L.Class.extend
     if L.Browser.webkit
       for i of tiles
         tiles[i].style.webkitTransform += " translate(0,0)"  if tiles.hasOwnProperty(i)
+    true
 
   _updateOpacity: ->
     L.DomUtil.setOpacity @_container, @options.opacity
+    true
 
   _initContainer: ->
     tilePane = @_map._panes.tilePane
@@ -127,11 +134,14 @@ L.DomTileLayer = L.Class.extend
       else
         tilePane.appendChild @_container
       @_updateOpacity()  if @options.opacity < 1
+    true
 
   _resetCallback: (e) ->
     @_reset e.hard
+    true
 
   _reset: (clearOldContainer) ->
+    dbg '_reset called'
     key = undefined
     tiles = @_tiles
     for key of tiles
@@ -142,6 +152,7 @@ L.DomTileLayer = L.Class.extend
     @_unusedTiles = []  if @options.reuseTiles
     @_container.innerHTML = ""  if clearOldContainer and @_container
     @_initContainer()
+    true
 
   _update: (e) ->
     dbg '_update'
@@ -155,6 +166,7 @@ L.DomTileLayer = L.Class.extend
     tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
     @_addTilesFromCenterOut tileBounds
     @_removeOtherTiles tileBounds  if @options.unloadInvisibleTiles or @options.reuseTiles
+    true
 
   getCenterTile: () ->
     bounds= @getTilePointAbsoluteBounds()
@@ -187,8 +199,10 @@ L.DomTileLayer = L.Class.extend
       @_addTile queue[k], fragment
       k++
     @_container.appendChild fragment
+    true
 
   _removeOtherTiles: (bounds) ->
+    dbg '_removeOtherTiles'
     kArr = undefined
     x = undefined
     y = undefined
@@ -199,9 +213,16 @@ L.DomTileLayer = L.Class.extend
         kArr = key.split(":")
         x = parseInt(kArr[0], 10)
         y = parseInt(kArr[1], 10)
-        @_removeTile key  if x < bounds.min.x or x > bounds.max.x or y < bounds.min.y or y > bounds.max.y
+        # console.log key
+        # console.log bounds
+        if x < bounds.min.x or x > bounds.max.x or y < bounds.min.y or y > bounds.max.y
+          console.log 'outa bounds, REMOVE THAT SHIT'
+          @_removeTile key
+    true
 
   _removeTile: (key) ->
+    console.log 'remove tile called yo!'
+    dbg '_removeTile called'
     tile = @_tiles[key]
     @fire "tileunload",
       tile: tile
@@ -210,7 +231,10 @@ L.DomTileLayer = L.Class.extend
     @_container.removeChild tile  if tile.parentNode is @_container
     @_unusedTiles.push tile  if @options.reuseTiles
     tile.src = L.Util.emptyImageUrl
+
+    console.log "tile #{key} removed", tile
     delete @_tiles[key]
+    true
 
   _addTile: (tilePoint, container) ->
     tilePos = @_getTilePos(tilePoint)
@@ -232,6 +256,7 @@ L.DomTileLayer = L.Class.extend
     tilePoint.y = limit - tilePoint.y - 1  if @options.scheme is "tms"
     @_loadTile tile, tilePoint, zoom
     container.appendChild tile
+    true
 
   _getOffsetZoom: (zoom) ->
     options = @options
@@ -252,6 +277,7 @@ L.DomTileLayer = L.Class.extend
     tileSize = this.options.tileSize
     @_divProto.style.width = tileSize.x+'px'
     @_divProto.style.height = tileSize.y+'px'
+    true
 
   _getTile: ->
     if @options.reuseTiles and @_unusedTiles.length > 0
@@ -261,6 +287,7 @@ L.DomTileLayer = L.Class.extend
     @_createTile()
 
   _resetTile: (tile) ->
+    console.log '_resetTile called, and the function does nothing'
     true
 
   _createTile: ->
@@ -277,11 +304,11 @@ L.DomTileLayer = L.Class.extend
     # tile.src = @getTileUrl(tilePoint, zoom)
     tile._tilePoint = tilePoint
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
-    console.log 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
+    # dbg 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
     layer.tileDrawn(tile)
  
     # if state.zoomDiff() > 4 # only doTimeout if its zoomed out far enough
-    #   console.log 'popualteDelay timer active'
+    #   dbg 'popualteDelay timer active'
     #   $(tile).doTimeout 'populateDelay', 500, ->
     #     frag=getTileLocally(absTilePoint, tile)
     #     if frag
@@ -304,23 +331,24 @@ L.DomTileLayer = L.Class.extend
   drawTile: (tile, tilePoint, zoom, frag)->
     tile.appendChild(frag) # tile.appendChild(content.cloneNode(true))
     # tile.innerHTML= 'hi'
-    # console.log 'drawtile for: ', tilePoint.x, tilePoint.y
+    # dbg 'drawtile for: ', tilePoint.x, tilePoint.y
     dbg 'drawTile'
     true
    
   populateTile: (tile, tilePoint, zoom, frag) ->
-    console.log 'populate tile called'
+    dbg 'populate tile called'
     tile.appendChild(frag)
     true
 
   tileDrawn: (tile) ->
-    console.log  'tileDrawn called'
+    dbg  'tileDrawn called'
     tile.className += ' leaflet-tile-drawn'
     dbg 'tileDrawn'
     @_tileOnLoad.call(tile)
+    true
 
   _tileOnLoad: (e) ->
-    # console.log '_tileOnLoad called'
+    # dbg '_tileOnLoad called'
     layer = @_layer
     @className += " leaflet-tile-loaded"
     layer.fire "tileload",
@@ -330,6 +358,7 @@ L.DomTileLayer = L.Class.extend
     layer._tilesToLoad--
     layer.fire "load"  unless layer._tilesToLoad
     dbg '_tileOnLoad'
+    true
 
   _tileOnError: (e) ->
     dbg '_tileOnError'
@@ -340,25 +369,31 @@ L.DomTileLayer = L.Class.extend
 
     newUrl = layer.options.errorTileUrl
     @src = newUrl  if newUrl
+    true
 
   _onTileUnload: (e) ->
-    # console.log e
-    console.log '_onTileUnload'
+    dbg e
+    dbg '_onTileUnload !'
     # $(e.tile).doTimeout 'populateDelay' #cancels the timer
-
-    if e.tile._zoom == map.getZoom()
-      dbg 'unload due to pan, easy'
-      for c in e.tile._cells
-        c.kill()
-      # e.tile = null #maybe dont' need to do this
-    else if e.tile._zoom < map.getZoom()
-      dbg 'unload due to zoom, less easy'
-    else if e.tile._zoom > map.getZoom()
-      dbg 'zoom out' # this case requires nothing, every cell will still be there
-      #on zoom out, we don't need to do anything
-      # for c in e.tile._cells
-        # c.kill()
-      # e.tile = null #maybe dont' need to do this
+    console.log 'tile to unload:'
+    console.log e.tile
+    tile = e.tile
+    #the fix!
+    tile.style.display = 'none'
+    
+    #what was I doing below? tile doesn't have a ._zoom prop. I could give it one...
+    # better to hook in to the _remove func
+ 
+#     if e.tile._zoom == map.getZoom()
+#       dbg 'unload due to pan, easy'
+#       # for c in e.tile._cells
+#       #   c.kill()
+#       # e.tile = null #maybe dont' need to do this
+#     else if e.tile._zoom < map.getZoom()
+#       dbg 'unload due to zoom in, less easy'
+#     else if e.tile._zoom > map.getZoom()
+#       dbg 'zoom out' # this case requires nothing, every cell will still be there
+    true
 
   getTilePointBounds: ->
     bounds = this._map.getPixelBounds()

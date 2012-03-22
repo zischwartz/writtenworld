@@ -15,12 +15,12 @@ betterBuildTile= (tile, tileData, absTilePoint)->
     for c in [0..state.numCols()-1]
       cellData=tileData["#{absTilePoint.x+c}x#{absTilePoint.y+r}"]
       if cellData
-        dbg 'cell loaded from server'
-        dbg 'cellData', cellData.contents
+        # dbg 'cell loaded from server'
+        # dbg 'cellData', cellData.contents
         cell=Cell.getOrCreate r, c, tile, cellData.contents, cellData.props
       else
         cell= Cell.getOrCreate r,c, tile
-        dbg 'cell created, but others in tile were from server'
+        # dbg 'cell created, but others in tile were from server'
       frag.appendChild(cell.span)
       tile._cells.push(cell)
   return frag
@@ -35,7 +35,7 @@ getTileLocally =(absTilePoint, tile) ->
       if cell
         cell=Cell.getOrCreate r, c, tile
         frag.appendChild(cell.span)
-        dbg 'FOUND CELL--------', cell
+        # dbg 'FOUND CELL--------', cell
         cellsNeeded--
         tile._cells.push(cell)
   if cellsNeeded <=0
@@ -144,16 +144,17 @@ L.TileLayer.Dom = L.TileLayer.extend
     true
   
   _onTileUnload: (e) ->
-    # console.log e
-    if e.tile._zoom == map.getZoom()
-      dbg 'unload due to pan, easy'
-      for c in e.tile._cells
-        c.kill()
-      # e.tile = null #maybe dont' need to do this
-    else if e.tile._zoom < map.getZoom()
-      dbg 'unload due to zoom, less easy'
-    else if e.tile._zoom > map.getZoom()
-      dbg 'zoom out' # this case requires nothing, every cell will still be there
+    dbg e
+    # if e.tile._zoom == map.getZoom()
+    #   dbg 'unload due to pan, easy'
+    #   for c in e.tile._cells
+    #     c.kill()
+    #   # e.tile = null #maybe dont' need to do this
+    # else if e.tile._zoom < map.getZoom()
+    #   dbg 'unload due to zoom, less easy'
+    # else if e.tile._zoom > map.getZoom()
+    #   dbg 'zoom out' # this case requires nothing, every cell will still be there
+
       #on zoom out, we don't need to do anything
       # for c in e.tile._cells
         # c.kill()

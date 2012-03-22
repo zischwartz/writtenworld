@@ -2,7 +2,7 @@
   var Cell, Configuration, cellKeyToXY, centerCursor, filter, getNodeIndex, initializeInterface, moveCursor, pan, panIfAppropriate, setTileStyle,
     __slice = Array.prototype.slice;
 
-  window.DEBUG = false;
+  window.DEBUG = true;
 
   window.USEMAP = false;
 
@@ -252,7 +252,7 @@
         scrollWheelZoom: false
       }).addLayer(tileServeLayer);
     }
-    window.domTiles = new L.TileLayer.Dom({
+    window.domTiles = new L.DomTileLayer({
       tileSize: config.tileSize()
     });
     now.ready(function() {
@@ -369,7 +369,6 @@
       this.contents = contents != null ? contents : config.defaultChar();
       this.props = props != null ? props : {};
       this.events = events != null ? events : null;
-      dbg('Cell constructor called');
       this.timestamp = null;
       this.key = this.generateKey();
       all[this.key] = this;
@@ -418,7 +417,7 @@
       span = this.span;
       $(clone).css('position', 'absolute').insertBefore('body').addClass('a' + animateWith);
       offset = $(this.span).offset();
-      console.log(clone);
+      dbg('clone', clone);
       $(clone).css({
         'opacity': '1 !important',
         'font-size': '1em'
@@ -450,7 +449,7 @@
       }).hide();
       $(this.span).queue(function() {
         $(this).show();
-        console.log('this', this);
+        dbg('this', this);
         if (animateWith) $(this).addClass('a' + animateWith);
         return $(this).dequeue();
       });
@@ -466,7 +465,6 @@
       var cell, x, y;
       if (contents == null) contents = null;
       if (props == null) props = {};
-      dbg('cell @getOrCreate called');
       x = tile._tilePoint.x * Math.pow(2, state.zoomDiff()) + col;
       y = tile._tilePoint.y * Math.pow(2, state.zoomDiff()) + row;
       cell = Cell.get(x, y);
