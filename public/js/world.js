@@ -25,6 +25,10 @@
         var _ref;
         return (_ref = spec.defaultChar) != null ? _ref : " ";
       };
+      this.inputRateLimit = function() {
+        var _ref;
+        return (_ref = spec.inputRateLimit) != null ? _ref : 40;
+      };
     }
 
     return Configuration;
@@ -54,7 +58,8 @@
     },
     cellHeight: function() {
       return config.tileSize().y / state.numRows();
-    }
+    },
+    belowInputRateLimit: true
   };
 
   setTileStyle = function() {
@@ -74,7 +79,7 @@
     $(cell.span).addClass('selected');
     state.selectedCell = cell;
     now.setSelectedCell(cellKeyToXY(cell.key));
-    if (cell.props) if (cell.props.color === 'c3') cell.animateTextRemove(1);
+    if (cell.props) if (cell.props.decayed) cell.animateTextRemove(1);
     return true;
   };
 
@@ -98,8 +103,12 @@
     }
     key = "c" + target.x + "x" + target.y;
     targetCell = Cell.all()[key];
-    if (!targetCell) return false;
-    setSelected(targetCell);
+    if (!targetCell) {
+      return false;
+    } else {
+      panIfAppropriate(direction);
+      setSelected(targetCell);
+    }
     return true;
   };
 
@@ -145,36 +154,35 @@
         userTotalRites = parseInt($("#userTotalRites").text());
         $("#userTotalRites").text(userTotalRites + 1);
         cellPoint = cellKeyToXY(state.selectedCell.key);
-        moveCursor(state.writeDirection);
-        return panIfAppropriate(state.writeDirection);
+        return moveCursor(state.writeDirection);
       }
     });
     inputEl.keydown(function(e) {
       dbg(e.which, ' keydownd');
+      if (!state.belowInputRateLimit) return false;
+      state.belowInputRateLimit = false;
+      $.doTimeout('keydownlimit', config.inputRateLimit(), function() {
+        state.belowInputRateLimit = true;
+        return false;
+      });
       switch (e.which) {
         case 9:
           e.preventDefault();
           return false;
         case 38:
-          moveCursor('up');
-          return panIfAppropriate('up');
+          return moveCursor('up');
         case 40:
-          moveCursor('down');
-          return panIfAppropriate('down');
+          return moveCursor('down');
         case 39:
-          moveCursor('right');
-          return panIfAppropriate('right');
+          return moveCursor('right');
         case 37:
-          moveCursor('left');
-          return panIfAppropriate('left');
+          return moveCursor('left');
         case 8:
           moveCursor('left');
-          panIfAppropriate('left');
           state.selectedCell.clear();
           return setSelected(state.selectedCell);
         case 13:
-          moveCursor('down', state.lastClickCell);
-          return panIfAppropriate('down');
+          return moveCursor('down', state.lastClickCell);
         case 32:
           state.selectedCell.clear();
           return moveCursor(state.writeDirection);
@@ -383,6 +391,7 @@
     Cell.prototype.write = function(c) {
       var cellPoint;
       dbg('Cell write  called');
+      if (this.contents) this.animateTextRemove(1);
       this.contents = c;
       this.span.className = 'cell ' + state.color;
       this.animateTextInsert(2, c);
@@ -440,26 +449,25 @@
       if (animateWith == null) animateWith = 0;
       span = this.span;
       clone = $(this.span).clone();
+      this.span.innerHTML = config.defaultChar();
       offset = $(this.span).position();
       $(this.span).after(clone);
-      $(this.span).removeClass('selected');
-      $(this.span).css({
+      $(clone).removeClass('selected');
+      $(clone).css({
         'position': 'absolute',
         left: offset.left,
         top: offset.top
       }).hide();
-      $(this.span).queue(function() {
+      $(clone).queue(function() {
         $(this).show();
         dbg('this', this);
         if (animateWith) $(this).addClass('a' + animateWith);
         return $(this).dequeue();
       });
-      $(span).doTimeout(800, function() {
-        $(span).remove();
+      return $(clone).doTimeout(800, function() {
+        $(clone).remove();
         return false;
       });
-      this.span = clone;
-      return state.selectedEl = this.span;
     };
 
     Cell.getOrCreate = function(row, col, tile, contents, props) {

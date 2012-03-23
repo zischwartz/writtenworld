@@ -13,6 +13,7 @@ window.Configuration = class Configuration
     # @tileSize = -> spec.tileSize ? {x: 192, y: 224} #liking this one
     @maxZoom = -> spec.maxZoom ? 20 # was 18, current image tiles are only 18
     @defaultChar = -> spec.defaultChar ? " "
+    @inputRateLimit = -> spec.inputRateLimit ? 40
 
 #ratio of row/cols in WW was .77.. (14/18)
 
@@ -38,6 +39,8 @@ window.state =
     config.tileSize().x/state.numCols()
   cellHeight: ->
     config.tileSize().y/state.numRows()
+  belowInputRateLimit: true
+
 
 setTileStyle = ->
  width = state.cellWidth()
@@ -45,7 +48,6 @@ setTileStyle = ->
  fontSize = height*0.9 #width*1.5 #why not
  rules = []
  rules.push("div.leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
- # console.log rules
  $("#dynamicStyles").text rules.join("\n")
 
 # takes the object, not the dom element
@@ -59,7 +61,7 @@ window.setSelected = (cell) ->
   now.setSelectedCell cellKeyToXY cell.key
  
   if cell.props
-    if cell.props.color == 'c3'
+    if cell.props.decayed
      cell.animateTextRemove(1)
   true
 
@@ -83,7 +85,9 @@ moveCursor = (direction, from = state.selectedCell) ->
   if not targetCell
     return false
      # throw 'cell does not exist'
-  setSelected(targetCell)
+  else
+    panIfAppropriate(direction)
+    setSelected(targetCell)
   true
 
 centerCursor = ->
@@ -120,7 +124,7 @@ initializeInterface = ->
     if e.which in [0, 13, 32, 9, 38, 40, 39, 8]
       console.log 'SPECIAL KEY, screw this keypress'
       return false
-    else
+    else #it's a normal character which we should actually write
       c = String.fromCharCode e.which
       console.log  c,  'Pressed!!!!'
       state.selectedCell.write( c)
@@ -132,7 +136,7 @@ initializeInterface = ->
       # now.writeCell(cellPoint, c)
 
       moveCursor(state.writeDirection)
-      panIfAppropriate(state.writeDirection)
+      # panIfAppropriate(state.writeDirection)
 
     # inp = String.fromCharCode(event.keyCode)
     # if (/[a-zA-Z0-9-_ ]/.test(inp))
@@ -141,8 +145,13 @@ initializeInterface = ->
   inputEl.keydown (e) ->
     dbg e.which,' keydownd'
     # e.stopPropagation() # e.stopImmediatePropagation()
-    
-    # TODO here, check if there's a div to go to. for now, only pan in that case.
+
+    if not (state.belowInputRateLimit)
+      return false
+    state.belowInputRateLimit = false
+    $.doTimeout 'keydownlimit', config.inputRateLimit(), ->
+      state.belowInputRateLimit =true
+      return false 
 
     switch e.which
       when 9 #tab
@@ -150,24 +159,24 @@ initializeInterface = ->
         return false
       when 38
         moveCursor('up')
-        panIfAppropriate('up')
+        # panIfAppropriate('up')
       when 40
         moveCursor('down')
-        panIfAppropriate('down')
+        # panIfAppropriate('down')
       when 39
         moveCursor('right')
-        panIfAppropriate('right')
+        # panIfAppropriate('right')
       when 37
         moveCursor('left')
-        panIfAppropriate('left')
+        # panIfAppropriate('left')
       when 8
         moveCursor('left')
-        panIfAppropriate('left')
+        # panIfAppropriate('left')
         state.selectedCell.clear()
         setSelected(state.selectedCell)
       when 13 #enter
         moveCursor 'down', state.lastClickCell
-        panIfAppropriate('down')
+        # panIfAppropriate('down')
       when 32 #space
         state.selectedCell.clear()
         moveCursor state.writeDirection
@@ -338,8 +347,11 @@ window.Cell = class Cell
 
   write: (c) ->
     dbg 'Cell write  called'
+    if @contents
+      @animateTextRemove(1)
     @contents= c
     @span.className = 'cell '+ state.color
+    
     @animateTextInsert(2, c)
     cellPoint = cellKeyToXY @key
     now.writeCell(cellPoint, c)
@@ -361,7 +373,6 @@ window.Cell = class Cell
     @write(config.defaultChar())
     @span.className= 'cell'
   
-  # this works for new text, if it's overwriting, it needs to use the one below to knock the old text out first maybe
   animateTextInsert: (animateWith=0, c) ->
     clone=  document.createElement('SPAN') #$(@span).clone().removeClass('selected')
     clone.className='cell ' + state.color
@@ -376,25 +387,24 @@ window.Cell = class Cell
       span.innerHTML = c
       $(clone).remove()
       return false
-
+  
   animateTextRemove: (animateWith=0) ->
     span= @span #the original
     clone=  $(@span).clone()
+    @span.innerHTML= config.defaultChar()
     offset= $(@span).position()#offset()
     $(@span).after(clone)
-    $(@span).removeClass('selected')
-    $(@span).css({'position':'absolute', left: offset.left, top: offset.top}).hide() #?
-    $(@span).queue ->
+    $(clone).removeClass('selected')
+    $(clone).css({'position':'absolute', left: offset.left, top: offset.top}).hide() #?
+    $(clone).queue ->
       $(this).show()
       dbg 'this', this
       if animateWith
         $(this).addClass('a'+animateWith)
       $(this).dequeue()
-    $(span).doTimeout 800, ->
-      $(span).remove()
+    $(clone).doTimeout 800, ->
+      $(clone).remove()
       return false
-    @span = clone
-    state.selectedEl = @span
     
   @getOrCreate:(row, col, tile, contents=null, props={}) ->
     # dbg 'cell @getOrCreate called'
