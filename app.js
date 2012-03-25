@@ -126,6 +126,14 @@
 
   app.listen(app.settings.port);
 
+  console.log('process.env.node_env:');
+
+  console.log(process.env.NODE_ENV);
+
+  console.log('app.settings.env:');
+
+  console.log(app.settings.env);
+
   console.log('SCRIBVERSE is running on :');
 
   console.log(app.address());
