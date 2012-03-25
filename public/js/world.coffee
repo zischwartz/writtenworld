@@ -1,24 +1,3 @@
-window.DEBUG = false
-# window.DEBUG = true
-window.USEMAP = false
-# window.USEMAP = true
-
-window.Configuration = class Configuration
-  constructor: (spec = {}) ->
-    # @tileSize = -> spec.tileSize ? {x: 128, y: 256} #the best powers of 2
-    # @tileSize = -> spec.tileSize ? {x: 128, y: 196}
-    # @tileSize = -> spec.tileSize ? {x: 128, y: 160} #this one is good, but 160 isn't a power of 2
-    @tileSize = -> spec.tileSize ? {x: 192, y: 256} #been using THIS one
-    # @tileSize = -> spec.tileSize ? {x: 256, y: 256}
-    # @tileSize = -> spec.tileSize ? {x: 192, y: 224} #liking this one
-    @maxZoom = -> spec.maxZoom ? 20 # was 18, current image tiles are only 18
-    @defaultChar = -> spec.defaultChar ? " "
-    @inputRateLimit = -> spec.inputRateLimit ? 40
-
-#ratio of row/cols in WW was .77.. (14/18)
-
-window.config = new Configuration
-
 window.state =
   selectedCell: null
   lastClickCell: null
@@ -151,7 +130,7 @@ initializeInterface = ->
     state.belowInputRateLimit = false
     $.doTimeout 'keydownlimit', config.inputRateLimit(), ->
       state.belowInputRateLimit =true
-      return false 
+      return false
 
     switch e.which
       when 9 #tab
@@ -229,7 +208,7 @@ jQuery ->
   tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
   centerPoint= new L.LatLng(40.714269, -74.005972)
   if not USEMAP
-    window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}) #.addLayer(tileServeLayer)
+    window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom() }) #.addLayer(tileServeLayer)
   else
     window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}).addLayer(tileServeLayer)
   # initializeGeo()

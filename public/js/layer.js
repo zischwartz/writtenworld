@@ -55,7 +55,7 @@
     includes: L.Mixin.Events,
     options: {
       minZoom: 0,
-      maxZoom: 18,
+      maxZoom: config.maxZoom(),
       tileSize: {
         x: 256,
         y: 256

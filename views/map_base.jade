@@ -17,6 +17,7 @@ html(lang="en")
     script(src="/js/libs/bootstrap-alert.js")
     script(src="/js/libs/dotimeout.js")
     script(src="/js/leaflet-src.js")
+    script(src="/js/config_client.js")
     script(src="/js/layer.js")
     //script(src="/js/old/layer.js")
     script(src="/js/world.js")
@@ -25,11 +26,15 @@ html(lang="en")
     
     style(id="dynamicStyles")
 
+    script(src='http://127.0.0.1:8000/static/test.js')
+    link(rel="stylesheet", href="http://127.0.0.1:8000/static/thef.css", type="text/css")
+
 body
   include include/header.jade
   div(id="messages") 
   div(id="map")
   div(id="inputWrap")
     input(id="input", type="text")
- 
+  
+  div.F(data-toggle="modal", href="#thef-dialog") Feedback
   include include/modals.jade

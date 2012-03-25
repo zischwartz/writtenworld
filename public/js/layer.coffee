@@ -52,7 +52,7 @@ L.DomTileLayer = L.Class.extend
   includes: L.Mixin.Events
   options:
     minZoom: 0
-    maxZoom: 18
+    maxZoom: config.maxZoom() #18
     tileSize:
       x: 256
       y: 256
