@@ -76,13 +76,17 @@ app.get '/uw/:slug', (req, res)->
 
 models.mongooseAuth.helpExpress(app)
 
-app.listen(app.settings.port)
+port = app.settings.port
+if 'prod' in process.argv
+  console.log 'DIRTY PRODUCTION MODE ENABLED'
+  port = 80
 
-console.log 'process.env.node_env:'
-console.log process.env.NODE_ENV
+app.listen(port)
 
-console.log 'app.settings.env:'
-console.log app.settings.env
+# console.log 'process.env.node_env:'
+# console.log process.env.NODE_ENV
+# console.log 'app.settings.env:'
+# console.log app.settings.env
 
 console.log 'SCRIBVERSE is running on :'
 console.log app.address()
