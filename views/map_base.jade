@@ -6,6 +6,8 @@ html(lang="en")
 
     link(rel="stylesheet", href="/css/bootstrap.css")
     
+    meta(name = "viewport", content = "width = device-width, initial-scale = 1.0,  user-scalable = no")
+
     script
       currentWorldId="#{worldId}";
     script(src="/js/libs/async.min.js")
@@ -26,11 +28,11 @@ html(lang="en")
     
     style(id="dynamicStyles")
 
-    script(src='http://127.0.0.1:8000/static/test.js')
-    link(rel="stylesheet", href="http://127.0.0.1:8000/static/thef.css", type="text/css")
+    //script(src='http://127.0.0.1:8000/static/test.js')
+    //link(rel="stylesheet", href="http://127.0.0.1:8000/static/thef.css", type="text/css")
 
 body
-  include include/header.jade
+  include include/nav.jade
   div(id="messages") 
   div(id="map")
   div(id="inputWrap")

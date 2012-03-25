@@ -26,12 +26,22 @@ app.configure ->
   # app.use app.router #mongooseAuth says not to use this.
 
 app.configure 'development', ->
+  console.log '-in development mode-'
   app.use express.static __dirname+'/public'
   app.set 'view engine', 'jade'
   app.use express.logger({ format: ':method :url' })
   app.set 'view options', { layout: false }
   app.use express.errorHandler {dumpExceptions:true, showStack:true}
+  app.set 'port', 3000
 
+app.configure 'production', ->
+  console.log '-in production mode-'
+  app.use express.static __dirname+'/public'
+  app.set 'view engine', 'jade'
+  app.use express.logger({ format: ':method :url' })
+  app.set 'view options', { layout: false }
+  app.use express.errorHandler()
+  app.set 'port', 80
 
 nownow = require('./nownow.js')(app, SessionModel)
 
@@ -66,4 +76,6 @@ app.get '/uw/:slug', (req, res)->
 
 models.mongooseAuth.helpExpress(app)
 
-app.listen 3000
+app.listen(app.settings.port)
+
+

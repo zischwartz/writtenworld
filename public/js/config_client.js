@@ -5,6 +5,13 @@
 
   window.USEMAP = false;
 
+  window.addEventListener("load", function() {
+    return setTimeout(function() {
+      console.log('trying to scroll yo');
+      return window.scrollTo(0, 0);
+    }, 0);
+  });
+
   window.Configuration = Configuration = (function() {
 
     function Configuration(spec) {

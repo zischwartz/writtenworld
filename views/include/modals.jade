@@ -2,7 +2,7 @@
 
 link(rel='stylesheet', href="/css/bootstrap.css")
 
-.modal.fade#colorModal
+.modal.fade.hide#colorModal
   .modal-header
       a.close(data-dismiss='modal') ×
       h3 Pick A Color 
@@ -13,7 +13,7 @@ link(rel='stylesheet', href="/css/bootstrap.css")
     .modal-footer
       a.btn(href='#', data-dismiss='modal') Close
 
-form.modal.fade#registerModal(action="/register", method="POST")
+form.modal.fade.hide#registerModal(action="/register", method="POST")
   .modal-header
       a.close(data-dismiss='modal') ×
       h3 Get an Account 
@@ -34,7 +34,7 @@ form.modal.fade#registerModal(action="/register", method="POST")
       button.btn.btn-primary(type="submit") Sign up!
       a.btn(href='#', data-dismiss='modal') Nevermind 
 
-form.modal.fade#locationSearch
+form.modal.fade.hide#locationSearch
   .modal-header
       a.close(data-dismiss='modal') ×
       h3 Find a Place 
@@ -46,7 +46,7 @@ form.modal.fade#locationSearch
       button.btn.btn-primary(type="submit") Go!
       a.btn(href='#', data-dismiss='modal') Nevermind 
 
-form.modal.fade#loginModal(action="/login", method="POST")
+form.modal.fade.hide#loginModal(action="/login", method="POST")
   .modal-header
       a.close(data-dismiss='modal') ×
       h3 Log In

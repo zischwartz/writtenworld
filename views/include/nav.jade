@@ -1,0 +1,56 @@
+.navbar.navbar-fixed-top
+    .navbar-inner
+        .container-fluid
+          a.btn.btn-navbar(data-toggle="collapse", data-target=".nav-collapse")
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+          a.brand(href='#') Scribver.se 
+          .nav-collapse
+            ul.nav
+              li.dropdown
+                a.dropdown-toggle(href='#', data-toggle='dropdown')
+                  | World
+                  b.caret
+                ul.dropdown-menu
+                  li.active
+                    a(href="#") Main World
+                  li
+                    a(href='#') Your World 
+                  li
+                    a(href='#') Pics
+                  li
+                    a(href='#') Links &amp; Files
+                  li.divider
+                  li
+                    a(href='#') More Worlds...
+              li
+                a(href='#colorModal', data-toggle="modal") Colors
+              li
+                a(href='#locationSearch', data-toggle="modal") 
+                  i.icon-search.icon-white 
+
+            - if (!everyauth.loggedIn)
+              p.navbar-text.pull-right
+                a(href="#loginModal", data-toggle="modal") Login 
+                | or 
+                a(href="#registerModal", data-toggle="modal") Register
+            - else
+              ul.nav.pull-right
+                li.dropdown
+                  a.dropdown-toggle(href='#', data-toggle='dropdown')
+                    span#username(href='#') #{user.login} 
+                      b.caret 
+                  ul.dropdown-menu
+                    li
+                      a(href='#') Your World 
+                    li
+                      a(href='#') Account Preferences
+                    li.divider
+                    li
+                      a(href="/logout") Log out
+                li
+                  p.navbar-text
+                    | #{user.totalEchoes} echos, 
+                    span#userTotalRites #{user.totalRites} 
+                    |  rites

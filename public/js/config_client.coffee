@@ -3,6 +3,14 @@ window.DEBUG = false
 window.USEMAP = false
 # window.USEMAP = true
 
+window.addEventListener "load", ->
+  setTimeout ->
+    console.log 'trying to scroll yo'
+    window.scrollTo(0,0)
+  , 0
+
+
+
 window.Configuration = class Configuration
   constructor: (spec = {}) ->
     # @tileSize = -> spec.tileSize ? {x: 128, y: 256} #the best powers of 2

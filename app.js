@@ -35,6 +35,7 @@
   });
 
   app.configure('development', function() {
+    console.log('-in development mode-');
     app.use(express.static(__dirname + '/public'));
     app.set('view engine', 'jade');
     app.use(express.logger({
@@ -43,10 +44,25 @@
     app.set('view options', {
       layout: false
     });
-    return app.use(express.errorHandler({
+    app.use(express.errorHandler({
       dumpExceptions: true,
       showStack: true
     }));
+    return app.set('port', 3000);
+  });
+
+  app.configure('production', function() {
+    console.log('-in production mode-');
+    app.use(express.static(__dirname + '/public'));
+    app.set('view engine', 'jade');
+    app.use(express.logger({
+      format: ':method :url'
+    }));
+    app.set('view options', {
+      layout: false
+    });
+    app.use(express.errorHandler());
+    return app.set('port', 80);
   });
 
   nownow = require('./nownow.js')(app, SessionModel);
@@ -108,6 +124,6 @@
 
   models.mongooseAuth.helpExpress(app);
 
-  app.listen(3000);
+  app.listen(app.settings.port);
 
 }).call(this);

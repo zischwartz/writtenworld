@@ -20,6 +20,7 @@ window.state =
     config.tileSize().y/state.numRows()
   belowInputRateLimit: true
 
+#NOTE: Scroll Timer Code to get rid of address bar on mobile/ios is in client_config
 
 setTileStyle = ->
  width = state.cellWidth()
