@@ -4,7 +4,6 @@ nowjs = require 'now'
 leaflet = require './leaflet-custom-src.js'
 
 module.exports = (app, SessionModel) ->
-  console.log 'now now with the app!'
   everyone = nowjs.initialize app
 
   everyone.now.setCurrentWorld = (currentWorldId) ->

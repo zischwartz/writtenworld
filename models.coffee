@@ -42,8 +42,9 @@ exports.World = mongoose.model('World', WorldSchema)
 exports.World.findOne {name: 'main'}, (err, world)->
   if world
     exports.mainWorldId = world._id
-    console.log world
+    console.log ' Found main world'
   else
+    console.log ' Could not find main world...'
     mainWorld = new exports.World
       name: 'main'
       personal: false
@@ -55,6 +56,8 @@ exports.World.findOne {name: 'main'}, (err, world)->
           x: 192
           y: 256
     mainWorld.save (err, world) ->
+      console log err if err
+      console.log ' So we created the main world'
       exports.mainWorldId = world._id
 
 RiteSchema = new Schema

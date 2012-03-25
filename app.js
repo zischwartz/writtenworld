@@ -126,4 +126,10 @@
 
   app.listen(app.settings.port);
 
+  console.log('SCRIBVERSE is running on :');
+
+  console.log(app.address());
+
+  console.log('- - - - - ');
+
 }).call(this);

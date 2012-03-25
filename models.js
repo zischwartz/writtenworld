@@ -87,8 +87,9 @@
     var mainWorld;
     if (world) {
       exports.mainWorldId = world._id;
-      return console.log(world);
+      return console.log(' Found main world');
     } else {
+      console.log(' Could not find main world...');
       mainWorld = new exports.World({
         name: 'main',
         personal: false,
@@ -103,6 +104,8 @@
         }
       });
       return mainWorld.save(function(err, world) {
+        if (err) console(log(err));
+        console.log(' So we created the main world');
         return exports.mainWorldId = world._id;
       });
     }

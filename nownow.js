@@ -9,7 +9,6 @@
 
   module.exports = function(app, SessionModel) {
     var aUsers, cUsers, everyone, getWhoCanSee;
-    console.log('now now with the app!');
     everyone = nowjs.initialize(app);
     everyone.now.setCurrentWorld = function(currentWorldId) {
       var group;
