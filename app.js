@@ -1,5 +1,6 @@
 (function() {
-  var SessionModel, app, connect, events, express, jade, models, mongoose, nowjs, nownow, sessionStore, util, _ref;
+  var SessionModel, app, connect, events, express, jade, models, mongoose, nowjs, nownow, port, sessionStore, util, _ref,
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   express = require('express');
 
@@ -124,15 +125,14 @@
 
   models.mongooseAuth.helpExpress(app);
 
-  app.listen(app.settings.port);
+  port = app.settings.port;
 
-  console.log('process.env.node_env:');
+  if (__indexOf.call(process.argv, 'prod') >= 0) {
+    console.log('DIRTY PRODUCTION MODE ENABLED');
+    port = 80;
+  }
 
-  console.log(process.env.NODE_ENV);
-
-  console.log('app.settings.env:');
-
-  console.log(app.settings.env);
+  app.listen(port);
 
   console.log('SCRIBVERSE is running on :');
 

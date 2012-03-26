@@ -185,7 +185,7 @@ panIfAppropriate = (direction)->
   selectedPP= $(state.selectedEl).offset()
   dbg 'selectedPP', selectedPP
   panOnDist = 200
-  if direction is 'left' or 'right'
+  if direction is 'left' or direction is 'right'
     panByDist = state.cellWidth()
   else
     panByDist = state.cellHeight()
@@ -266,12 +266,20 @@ jQuery ->
       action= $(this).data('action')
       type= $(this).data('type')
       payload= $(this).data('payload')
-    
-      if action == 'set'
+      
+      console.log 'trigger triggered'
+      if action == 'set' #change this (and setUserOption below) setServerState
         console.log 'setting'
         state[type]=payload
         now.setUserOption(type, payload)
+
+      if action == 'setClientState'
+        console.log 'settingClientState', type
+        state[type] = payload
+
       return true
+
+
 
     now.insertMessage = (heading, message, cssclass="") ->
       html = "<div class='alert fade  #{cssclass} '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>#{heading}</h4>#{message}</div>"

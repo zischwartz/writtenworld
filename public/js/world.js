@@ -183,7 +183,7 @@
     selectedPP = $(state.selectedEl).offset();
     dbg('selectedPP', selectedPP);
     panOnDist = 200;
-    if (direction === 'left' || 'right') {
+    if (direction === 'left' || direction === 'right') {
       panByDist = state.cellWidth();
     } else {
       panByDist = state.cellHeight();
@@ -281,10 +281,15 @@
         action = $(this).data('action');
         type = $(this).data('type');
         payload = $(this).data('payload');
+        console.log('trigger triggered');
         if (action === 'set') {
           console.log('setting');
           state[type] = payload;
           now.setUserOption(type, payload);
+        }
+        if (action === 'setClientState') {
+          console.log('settingClientState', type);
+          state[type] = payload;
         }
         return true;
       });
