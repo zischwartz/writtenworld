@@ -6088,14 +6088,6 @@ div.leaflet-tile span {
   /*background: rgba(0,250, 0, 0.3); */
 
 }
-div.leaflet-tile-drawn {
-  /* background: rgba(0,250, 0, 0.3); */
-
-}
-div.leaflet-tile-loaded {
-  /* background: rgba(255, 0, 0, 0.3); */
-
-}
 a i.icon-search {
   opacity: 0.5;
   filter: alpha(opacity=50);

@@ -341,7 +341,10 @@ L.DomTileLayer = L.Class.extend
 
   tileDrawn: (tile) ->
     dbg  'tileDrawn called'
-    tile.className += ' leaflet-tile-drawn'
+    # $.doTimeout 200, ->
+    #   dbg 'tiledrawntimer'
+    #   tile.className += ' leaflet-tile-drawn'
+    #   return false
     dbg 'tileDrawn'
     @_tileOnLoad.call(tile)
     true

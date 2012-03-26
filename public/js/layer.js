@@ -369,7 +369,6 @@
     },
     tileDrawn: function(tile) {
       dbg('tileDrawn called');
-      tile.className += ' leaflet-tile-drawn';
       dbg('tileDrawn');
       this._tileOnLoad.call(tile);
       return true;
