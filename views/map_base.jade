@@ -7,6 +7,7 @@ html(lang="en")
     link(rel="stylesheet", href="/css/bootstrap.css")
     
     meta(name = "viewport", content = "width = device-width, initial-scale = 1.0,  user-scalable = no")
+    meta(name="apple-mobile-web-app-capable", content="yes") 
 
     script
       currentWorldId="#{worldId}";
@@ -36,7 +37,7 @@ body
   div(id="messages") 
   div(id="map")
   div(id="inputWrap")
-    input(id="input", type="text")
+    input(id="input", type="text", autocorrect="off", autocapitalize="off")
   
   div.F(data-toggle="modal", href="#thef-dialog") Feedback
   include include/modals.jade
