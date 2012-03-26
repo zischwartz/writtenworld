@@ -78,13 +78,20 @@
   };
 
   centerCursor = function() {
-    var key, target, targetCell;
-    target = window.domTiles.getCenterTile();
-    key = "c" + target.x + "x" + target.y;
-    targetCell = Cell.all()[key];
-    if (!targetCell) return false;
-    setSelected(targetCell);
-    return true;
+    return $.doTimeout(200, function() {
+      var key, target, targetCell;
+      target = window.domTiles.getCenterTile();
+      console.log('center cursor poll');
+      key = "c" + target.x + "x" + target.y;
+      targetCell = Cell.all()[key];
+      if (!targetCell) {
+        return true;
+      } else {
+        setSelected(targetCell);
+        return false;
+      }
+      return true;
+    });
   };
 
   initializeInterface = function() {
@@ -164,7 +171,8 @@
           latlng = new L.LatLng(parseFloat(result.latitude), parseFloat(result.longitude));
           dbg('go to, ', latlng);
           map.panTo(latlng);
-          return $('#locationSearch').modal('hide');
+          $('#locationSearch').modal('hide');
+          return centerCursor();
         }
       });
       return false;
@@ -246,10 +254,7 @@
           return now.setUserOption('color', 'c0');
         }
       });
-      $.doTimeout(600, function() {
-        centerCursor();
-        return false;
-      });
+      centerCursor();
       now.drawCursors = function(users) {
         var id, otherSelected, user, _results;
         $('.otherSelected').removeClass('otherSelected');
@@ -277,11 +282,12 @@
         return _results;
       };
       $(".trigger").live('click', function() {
-        var action, payload, type;
+        var action, c, payload, type;
         action = $(this).data('action');
         type = $(this).data('type');
         payload = $(this).data('payload');
         console.log('trigger triggered');
+        console.log(this);
         if (action === 'set') {
           console.log('setting');
           state[type] = payload;
@@ -290,6 +296,12 @@
         if (action === 'setClientState') {
           console.log('settingClientState', type);
           state[type] = payload;
+          if (type === 'writeDirection') {
+            c = this.innerHTML;
+            $('.direction-dropdown')[0].innerHTML = c;
+            $('.direction-dropdown i').addClass('icon-white');
+            inputEl.focus();
+          }
         }
         return true;
       });

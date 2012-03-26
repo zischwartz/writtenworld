@@ -71,14 +71,17 @@ moveCursor = (direction, from = state.selectedCell) ->
   true
 
 centerCursor = ->
-  target = window.domTiles.getCenterTile()
-  key = "c#{target.x}x#{target.y}"
-  targetCell=Cell.all()[key]
-  if not targetCell
-    return false
-     # throw 'cell does not exist'
-  setSelected(targetCell)
-  true
+  $.doTimeout 200, ->
+    target = window.domTiles.getCenterTile()
+    console.log('center cursor poll')
+    key = "c#{target.x}x#{target.y}"
+    targetCell=Cell.all()[key]
+    if not targetCell
+      return true #true to repeat the timer and try again
+    else
+      setSelected(targetCell)
+      return false
+    true
 
 #INTERFACE INITIALIZER 
 initializeInterface = ->
@@ -172,6 +175,8 @@ initializeInterface = ->
         dbg 'go to, ',  latlng
         map.panTo(latlng)
         $('#locationSearch').modal('hide')
+        centerCursor()
+
     return false
 
   $(".modal").on 'shown', ->
@@ -242,11 +247,8 @@ jQuery ->
         #easy fix for override issue, set default color. this could be random.
         state.color = 'c0'
         now.setUserOption('color','c0')
-    
-    $.doTimeout 600, ->
-      centerCursor()
-      false
 
+    centerCursor()
     now.drawCursors = (users) ->
       $('.otherSelected').removeClass('otherSelected') #this is a dumb way 
       console.log users, 'users'
@@ -268,6 +270,8 @@ jQuery ->
       payload= $(this).data('payload')
       
       console.log 'trigger triggered'
+      console.log this
+
       if action == 'set' #change this (and setUserOption below) setServerState
         console.log 'setting'
         state[type]=payload
@@ -277,6 +281,12 @@ jQuery ->
         console.log 'settingClientState', type
         state[type] = payload
 
+        #specific interfaces
+        if type == 'writeDirection'
+          c= this.innerHTML
+          $('.direction-dropdown')[0].innerHTML=c
+          $('.direction-dropdown i').addClass('icon-white')
+          inputEl.focus()
       return true
 
 
