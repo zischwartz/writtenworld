@@ -19,6 +19,7 @@ module.exports = (app, SessionModel) ->
 
   nowjs.on 'connect', ->
     sid=decodeURIComponent(this.user.cookie['connect.sid'])
+     
     if this.user.session?.auth
       cUsers[this.user.clientId]={sid:sid, userId: this.user.session.auth.userId }
       aUsers[this.user.session.auth.userId]={sid:sid,cid: this.user.clientId}
@@ -38,17 +39,19 @@ module.exports = (app, SessionModel) ->
     b = new leaflet.L.Bounds bounds.max, bounds.min
     cUsers[this.user.clientId].bounds = b
 
-  everyone.now.setClientState = (callback) ->
+  everyone.now.setClientStateFromServer = (callback) ->
     if this.user.session
       callback(this.user.session)
 
   everyone.now.setSelectedCell = (cellPoint) ->
     cid = this.user.clientId
     cUsers[cid].selected = cellPoint
+    user = this.user
     getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
       for i of toUpdate
-        if i != cid
+        if i != cid #not you
           updates = {cid:cUsers[cid]} #client side is set up to recieve a number of updates, hence this being a list
+          # console.log user.session
           nowjs.getClient i, -> this.now.drawCursors(updates)
 
   everyone.now.writeCell = (cellPoint, content) ->
@@ -64,7 +67,7 @@ module.exports = (app, SessionModel) ->
       props.color = this.user.session.color
       models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth,  props)
 
-      # Disabled for testing-  this writes to your personal world.
+      # Writes to your personal world.
       models.User.findById ownerId, (err, user) ->
         console.log typeof user.personalWorld.toString() , currentWorldId
         if user.personalWorld.toString()  isnt currentWorldId  #check if they're already in their own world (heh)
@@ -105,7 +108,7 @@ module.exports = (app, SessionModel) ->
           # console.log 'not found'
           callback(results, absTilePoint)
 
-  #utility for the above
+  #utility for above 
   getWhoCanSee = (cellPoint, worldId, cb ) ->
     nowjs.getGroup(worldId).getUsers (users) ->
       # console.log 'users in group: ', users
@@ -114,7 +117,7 @@ module.exports = (app, SessionModel) ->
         if cUsers[i].bounds.contains(cellPoint)
           toUpdate[i] = cUsers[i]
       cb(toUpdate)
-  
+
   everyone.now.getCloseUsers= ->
     cid = this.user.clientId
     aC=cUsers[cid].selected
@@ -131,6 +134,8 @@ module.exports = (app, SessionModel) ->
   everyone.now.setUserOption = (type, payload) ->
     console.log 'setUserOption', type, payload
     if type = 'color'
+      cid=this.user.clientId
+      cUsers[cid].color= payload
       this.user.session.color=payload
       this.user.session.save()
       if this.user.session.auth

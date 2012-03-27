@@ -255,6 +255,7 @@ L.DomTileLayer = L.Class.extend
     tilePoint.y = limit - tilePoint.y - 1  if @options.scheme is "tms"
     @_loadTile tile, tilePoint, zoom
     container.appendChild tile
+    console.log '_addTile called'
     true
 
   _getOffsetZoom: (zoom) ->
@@ -341,6 +342,7 @@ L.DomTileLayer = L.Class.extend
 
   tileDrawn: (tile) ->
     dbg  'tileDrawn called'
+    tile.className += ' leaflet-tile-drawn'
     # $.doTimeout 200, ->
     #   dbg 'tiledrawntimer'
     #   tile.className += ' leaflet-tile-drawn'
@@ -353,6 +355,10 @@ L.DomTileLayer = L.Class.extend
     # dbg '_tileOnLoad called'
     layer = @_layer
     @className += " leaflet-tile-loaded"
+    # $.doTimeout 500, =>
+    #   console.log 'tiledrawntimer'
+    #   @className += ' leaflet-tile-loaded'
+    #   return false
     layer.fire "tileload",
       tile: this
       url: @src

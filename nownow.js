@@ -51,13 +51,14 @@
       b = new leaflet.L.Bounds(bounds.max, bounds.min);
       return cUsers[this.user.clientId].bounds = b;
     };
-    everyone.now.setClientState = function(callback) {
+    everyone.now.setClientStateFromServer = function(callback) {
       if (this.user.session) return callback(this.user.session);
     };
     everyone.now.setSelectedCell = function(cellPoint) {
-      var cid;
+      var cid, user;
       cid = this.user.clientId;
       cUsers[cid].selected = cellPoint;
+      user = this.user;
       return getWhoCanSee(cellPoint, this.now.currentWorldId, function(toUpdate) {
         var i, updates, _results;
         _results = [];
@@ -180,10 +181,12 @@
       return true;
     };
     everyone.now.setUserOption = function(type, payload) {
-      var userId,
+      var cid, userId,
         _this = this;
       console.log('setUserOption', type, payload);
       if (type = 'color') {
+        cid = this.user.clientId;
+        cUsers[cid].color = payload;
         this.user.session.color = payload;
         this.user.session.save();
         if (this.user.session.auth) {

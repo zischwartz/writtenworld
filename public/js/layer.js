@@ -288,6 +288,7 @@
       if (this.options.scheme === "tms") tilePoint.y = limit - tilePoint.y - 1;
       this._loadTile(tile, tilePoint, zoom);
       container.appendChild(tile);
+      console.log('_addTile called');
       return true;
     },
     _getOffsetZoom: function(zoom) {
@@ -369,6 +370,7 @@
     },
     tileDrawn: function(tile) {
       dbg('tileDrawn called');
+      tile.className += ' leaflet-tile-drawn';
       dbg('tileDrawn');
       this._tileOnLoad.call(tile);
       return true;

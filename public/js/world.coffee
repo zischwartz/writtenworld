@@ -30,8 +30,7 @@ setTileStyle = ->
  rules.push("div.leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
  $("#dynamicStyles").text rules.join("\n")
 
-# takes the object, not the dom element
-window.setSelected = (cell) ->
+window.setSelected = (cell) ->  # takes the object, not the dom element
   dbg 'selecting', cell
   if state.selectedEl
     $(state.selectedEl).removeClass('selected')
@@ -238,9 +237,9 @@ jQuery ->
       setTileStyle()
     initializeInterface()
 
-    now.setBounds domTiles.getTilePointAbsoluteBounds()
+    now.setBounds domTiles.getTilePointAbsoluteBounds() #this seems to be buggy on iOS
     
-    now.setClientState (s)->
+    now.setClientStateFromServer (s)->
       if s.color
         state.color= s.color
       else
@@ -249,8 +248,11 @@ jQuery ->
         now.setUserOption('color','c0')
 
     centerCursor()
+    
     now.drawCursors = (users) ->
       $('.otherSelected').removeClass('otherSelected') #this is a dumb way 
+      # TODO Fix this up with colors and meta data
+
       console.log users, 'users'
       for id, user of users
         if user.selected.x
@@ -277,7 +279,7 @@ jQuery ->
         state[type]=payload
         now.setUserOption(type, payload)
 
-      if action == 'setClientState'
+      if action == 'setClientState' # unrelated to setClientStateFromServer 
         console.log 'settingClientState', type
         state[type] = payload
 

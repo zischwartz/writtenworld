@@ -246,7 +246,7 @@
       });
       initializeInterface();
       now.setBounds(domTiles.getTilePointAbsoluteBounds());
-      now.setClientState(function(s) {
+      now.setClientStateFromServer(function(s) {
         if (s.color) {
           return state.color = s.color;
         } else {
