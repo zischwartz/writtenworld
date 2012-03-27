@@ -38,10 +38,6 @@ body, html
   color: @white;
 }
 
-.cell.otherSelected
-{
-  background-color: red; 
-}
 
 div.leaflet-tile
 		{
@@ -126,14 +122,20 @@ a.direction-dropdown:hover
 }
 
 .c0 { color: @grayLight !important;}
+.cc0 { background-color: @grayLight !important;}
 
 .c1 { color: green !important;}
+.cc1 { background-color: green !important;}
 
 .c2 { color: yellow !important;} 
+.cc2 { background-color: yellow !important;} 
 
 .c3 { color: red !important;}
+.cc3 { background-color: red !important;}
 
 .c4 { color: blue !important;}
+.cc4 { background-color: blue !important;}
+
 
 .e1, .e2, .e3 
 {
@@ -192,12 +194,21 @@ a.colorOptions
       }
 }
 
+
+
 .cell.selected {
-      //make it fade, but not opacity
+      box-shadow: 0px 0px 4px white;
       background-color: @grayLight;
       -webkit-animation: pulserBg 1s infinite;   
      /*-webkit-animation: pulserOp 1s infinite;*/
       /*opacity: 1;*/
+}
+
+.cell.otherSelected
+{
+  /*border: 1px solid white;*/
+  box-shadow: 0px 0px 4px white;
+  /*-webkit-animation: pulserOp 1s infinite;   */
 }
 
 //animation classes

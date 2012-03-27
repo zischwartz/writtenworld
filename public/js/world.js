@@ -255,21 +255,14 @@
         }
       });
       centerCursor();
-      now.drawCursors = function(users) {
-        var id, otherSelected, user, _results;
-        $('.otherSelected').removeClass('otherSelected');
-        console.log(users, 'users');
-        _results = [];
-        for (id in users) {
-          user = users[id];
-          if (user.selected.x) {
-            otherSelected = Cell.get(user.selected.x, user.selected.y);
-            _results.push($(otherSelected.span).addClass('otherSelected'));
-          } else {
-            _results.push(void 0);
-          }
+      now.drawCursors = function(user) {
+        var otherSelected;
+        console.log(user, 'users');
+        $(".otherSelected").removeClass("otherSelected u" + user.cid + " c" + user.color);
+        if (user.selected.x) {
+          otherSelected = Cell.get(user.selected.x, user.selected.y);
+          return $(otherSelected.span).addClass("u" + user.cid + " c" + user.color + " otherSelected");
         }
-        return _results;
       };
       now.drawEdits = function(edits) {
         var c, edit, id, _results;
@@ -296,15 +289,20 @@
         if (action === 'setClientState') {
           console.log('settingClientState', type);
           state[type] = payload;
-          if (type === 'writeDirection') {
-            c = this.innerHTML;
-            $('.direction-dropdown')[0].innerHTML = c;
-            $('.direction-dropdown i').addClass('icon-white');
-            inputEl.focus();
-          }
         }
-        return true;
+        if (type === 'color') {
+          console.log('ch color');
+          $("#color").addClass(payload);
+          inputEl.focus();
+        }
+        if (type === 'writeDirection') {
+          c = this.innerHTML;
+          $('.direction-dropdown')[0].innerHTML = c;
+          $('.direction-dropdown i').addClass('icon-white');
+          return inputEl.focus();
+        }
       });
+      return true;
       now.insertMessage = function(heading, message, cssclass) {
         var html;
         if (cssclass == null) cssclass = "";

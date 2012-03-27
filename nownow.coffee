@@ -11,9 +11,7 @@ module.exports = (app, SessionModel) ->
     this.now.currentWorldId = currentWorldId
     # console.log group
 
-  # hmm were for the main world..., how to generalize?
-  #maybe add each of these to the currentworld? or add each world to these. perfer former
-  # or maybe I ALREADY SOLVED IT?
+  # These are problematic, but we never iterate through them, just look ups
   cUsers = {} #all of the connected users, by clientId (nowjs)
   aUsers = {} #all connected and auth'd users, by actual userId (mongoose _id)
 
@@ -50,9 +48,11 @@ module.exports = (app, SessionModel) ->
     getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
       for i of toUpdate
         if i != cid #not you
-          updates = {cid:cUsers[cid]} #client side is set up to recieve a number of updates, hence this being a list
+          update = cUsers[cid] #client side is set up to recieve a number of updates, hence this being a list
+          update.color = user.session.color
+          update.cid = cid
           # console.log user.session
-          nowjs.getClient i, -> this.now.drawCursors(updates)
+          nowjs.getClient i, -> this.now.drawCursors(update)
 
   everyone.now.writeCell = (cellPoint, content) ->
     # console.log 'this.user', this.user

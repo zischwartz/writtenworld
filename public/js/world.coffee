@@ -249,15 +249,15 @@ jQuery ->
 
     centerCursor()
     
-    now.drawCursors = (users) ->
-      $('.otherSelected').removeClass('otherSelected') #this is a dumb way 
+    now.drawCursors = (user) ->
+      # $('.otherSelected').removeClass('otherSelected') #this is a dumb way 
       # TODO Fix this up with colors and meta data
+      console.log user, 'users'
+      $(".otherSelected").removeClass("otherSelected u#{user.cid} c#{user.color}")
 
-      console.log users, 'users'
-      for id, user of users
-        if user.selected.x
-          otherSelected = Cell.get(user.selected.x, user.selected.y)
-          $(otherSelected.span).addClass('otherSelected')
+      if user.selected.x
+        otherSelected = Cell.get(user.selected.x, user.selected.y)
+        $(otherSelected.span).addClass("u#{user.cid} c#{user.color} otherSelected")
     
     
     now.drawEdits = (edits) ->
@@ -283,13 +283,18 @@ jQuery ->
         console.log 'settingClientState', type
         state[type] = payload
 
-        #specific interfaces
-        if type == 'writeDirection'
-          c= this.innerHTML
-          $('.direction-dropdown')[0].innerHTML=c
-          $('.direction-dropdown i').addClass('icon-white')
-          inputEl.focus()
-      return true
+      #specific interfaces
+      if type == 'color'
+        console.log 'ch color'
+        $("#color").addClass(payload)
+        inputEl.focus()
+
+      if type == 'writeDirection'
+        c= this.innerHTML
+        $('.direction-dropdown')[0].innerHTML=c
+        $('.direction-dropdown i').addClass('icon-white')
+        inputEl.focus()
+    return true
 
 
 

@@ -6075,9 +6075,6 @@ body, html {
 .cell {
   color: #ffffff;
 }
-.cell.otherSelected {
-  background-color: red;
-}
 div.leaflet-tile {
   color: white;
 }
@@ -6138,17 +6135,32 @@ a.direction-dropdown:hover {
 .c0 {
   color: #999999 !important;
 }
+.cc0 {
+  background-color: #999999 !important;
+}
 .c1 {
   color: green !important;
+}
+.cc1 {
+  background-color: green !important;
 }
 .c2 {
   color: yellow !important;
 }
+.cc2 {
+  background-color: yellow !important;
+}
 .c3 {
   color: red !important;
 }
+.cc3 {
+  background-color: red !important;
+}
 .c4 {
   color: blue !important;
+}
+.cc4 {
+  background-color: blue !important;
 }
 .e1, .e2, .e3 {
   font-weight: bold !important;
@@ -6296,11 +6308,19 @@ a.colorOptions.c2, a.colorOptions.c0 {
   }
 }
 .cell.selected {
+  box-shadow: 0px 0px 4px white;
   background-color: #999999;
   -webkit-animation: pulserBg 1s infinite;
   /*-webkit-animation: pulserOp 1s infinite;*/
 
   /*opacity: 1;*/
+
+}
+.cell.otherSelected {
+  /*border: 1px solid white;*/
+
+  box-shadow: 0px 0px 4px white;
+  /*-webkit-animation: pulserOp 1s infinite;   */
 
 }
 .a1 {

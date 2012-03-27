@@ -60,15 +60,15 @@
       cUsers[cid].selected = cellPoint;
       user = this.user;
       return getWhoCanSee(cellPoint, this.now.currentWorldId, function(toUpdate) {
-        var i, updates, _results;
+        var i, update, _results;
         _results = [];
         for (i in toUpdate) {
           if (i !== cid) {
-            updates = {
-              cid: cUsers[cid]
-            };
+            update = cUsers[cid];
+            update.color = user.session.color;
+            update.cid = cid;
             _results.push(nowjs.getClient(i, function() {
-              return this.now.drawCursors(updates);
+              return this.now.drawCursors(update);
             }));
           } else {
             _results.push(void 0);
