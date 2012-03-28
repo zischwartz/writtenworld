@@ -1,5 +1,6 @@
 (function() {
-  var leaflet, models, nowjs;
+  var leaflet, models, nowjs,
+    __hasProp = Object.prototype.hasOwnProperty;
 
   models = require('./models.js');
 
@@ -65,7 +66,7 @@
         for (i in toUpdate) {
           if (i !== cid) {
             update = cUsers[cid];
-            update.color = user.session.color;
+            if (user.session) update.color = user.session.color;
             update.cid = cid;
             _results.push(nowjs.getClient(i, function() {
               return this.now.drawCursors(update);
@@ -162,21 +163,34 @@
         return cb(toUpdate);
       });
     };
-    everyone.now.getCloseUsers = function() {
-      var aC, cid;
+    everyone.now.getCloseUsers = function(cb) {
+      var aC, cid, closeUsers;
+      console.log('getCloseUsers called');
+      closeUsers = [];
       cid = this.user.clientId;
       aC = cUsers[cid].selected;
+      console.log(cUsers[cid]);
+      console.log('ac', aC);
       nowjs.getGroup(this.now.currentWorldId).getUsers(function(users) {
-        var distance, i, uC, _i, _len, _results;
-        _results = [];
+        var distance, i, key, u, uC, value, _i, _len, _ref;
         for (_i = 0, _len = users.length; _i < _len; _i++) {
           i = users[_i];
           uC = cUsers[i].selected;
-          console.log('usercenter', uC);
           distance = Math.sqrt((aC.x - uC.x) * (aC.x - uC.x) + (aC.y - uC.y) * (aC.y - uC.y));
-          _results.push(console.log(distance));
+          console.log(distance);
+          if (distance < 1000) {
+            u = {};
+            _ref = cUsers[i];
+            for (key in _ref) {
+              if (!__hasProp.call(_ref, key)) continue;
+              value = _ref[key];
+              u[key] = value;
+            }
+            u.distance = distance;
+          }
+          closeUsers.push(u);
         }
-        return _results;
+        return cb(closeUsers);
       });
       return true;
     };

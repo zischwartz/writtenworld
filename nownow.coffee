@@ -48,10 +48,9 @@ module.exports = (app, SessionModel) ->
     getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
       for i of toUpdate
         if i != cid #not you
-          update = cUsers[cid] #client side is set up to recieve a number of updates, hence this being a list
-          update.color = user.session.color
+          update = cUsers[cid]
+          update.color = user.session.color if user.session
           update.cid = cid
-          # console.log user.session
           nowjs.getClient i, -> this.now.drawCursors(update)
 
   everyone.now.writeCell = (cellPoint, content) ->
@@ -118,17 +117,25 @@ module.exports = (app, SessionModel) ->
           toUpdate[i] = cUsers[i]
       cb(toUpdate)
 
-  everyone.now.getCloseUsers= ->
+  everyone.now.getCloseUsers= (cb)->
+    console.log 'getCloseUsers called'
+    # console.log this.user
+    closeUsers= []
     cid = this.user.clientId
     aC=cUsers[cid].selected
-    # aC= cUsers[this.user.clientId].bounds.getCenter() #actorCenter
+    console.log cUsers[cid]
+    console.log 'ac', aC
     nowjs.getGroup(this.now.currentWorldId).getUsers (users) ->
       for i in users
-        uC = cUsers[i].selected #userCenter
-        # uC = cUsers[i].bounds.getCenter() #userCenter
-        console.log 'usercenter', uC
+        uC = cUsers[i].selected
         distance = Math.sqrt((aC.x-uC.x)*(aC.x-uC.x)+(aC.y-uC.y)*(aC.y-uC.y))
         console.log distance
+        if distance < 1000
+          u = {}
+          u[key] = value  for own key,value of cUsers[i]
+          u.distance = distance
+        closeUsers.push(u)
+      cb(closeUsers)
     true
 
   everyone.now.setUserOption = (type, payload) ->

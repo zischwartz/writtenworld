@@ -257,8 +257,7 @@
       centerCursor();
       now.drawCursors = function(user) {
         var otherSelected;
-        console.log(user, 'users');
-        $(".otherSelected").removeClass("otherSelected u" + user.cid + " c" + user.color);
+        $(".u" + user.cid).removeClass("otherSelected u" + user.cid + " c" + user.color);
         if (user.selected.x) {
           otherSelected = Cell.get(user.selected.x, user.selected.y);
           return $(otherSelected.span).addClass("u" + user.cid + " c" + user.color + " otherSelected");

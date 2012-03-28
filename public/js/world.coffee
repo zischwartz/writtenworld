@@ -250,16 +250,28 @@ jQuery ->
     centerCursor()
     
     now.drawCursors = (user) ->
-      # $('.otherSelected').removeClass('otherSelected') #this is a dumb way 
-      # TODO Fix this up with colors and meta data
-      console.log user, 'users'
-      $(".otherSelected").removeClass("otherSelected u#{user.cid} c#{user.color}")
+      # TODO Fix this up: make it a global object 
+      # console.log user, 'users'
+      $(".u#{user.cid}").removeClass("otherSelected u#{user.cid} c#{user.color}")
 
       if user.selected.x
         otherSelected = Cell.get(user.selected.x, user.selected.y)
         $(otherSelected.span).addClass("u#{user.cid} c#{user.color} otherSelected")
     
-    
+    # this works, gota do something with it
+    # $.doTimeout 2000,  ->
+    #   now.getCloseUsers (closeUsers)->
+    #     cellPoint=cellKeyToXY state.selectedCell.key
+    #     for user in closeUsers
+    #       user.radians=Math.atan2(cellPoint.y-user.selected.y, cellPoint.x-user.selected.x) #y,x
+    #       user.degrees= user.radians*(180/Math.PI)
+    #       # console.log user.radians
+    #       # console.log user.degrees
+    #     console.log 'closeUsers:'
+    #     console.log closeUsers
+    #     true
+    #   false #so it won't poll
+
     now.drawEdits = (edits) ->
       # console.log edits
       for id, edit of  edits
