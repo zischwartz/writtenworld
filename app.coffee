@@ -20,7 +20,7 @@ app.configure ->
   app.use express.bodyParser()
   app.use express.cookieParser()
   app.use express.session {secret: 'tshh secret', store : new sessionStore()}
-  app.use express.favicon(__dirname + '/public/favicon.ico')
+  app.use express.favicon(__dirname + '/public/img/favicon.ico')
   # app.use express.compiler { src: __dirname + '/public', enable: ['less', 'coffeescript'] }
   app.use models.mongooseAuth.middleware()
   # app.use app.router #mongooseAuth says not to use this.
@@ -47,7 +47,7 @@ nownow = require('./nownow.js')(app, SessionModel)
 
 app.get '/', (req, res) ->
   worldId = models.mainWorldId
-  res.render 'map_base.jade', { title: 'Mapist', worldId: worldId }
+  res.render 'map_base.jade', { title: 'Scribver.se', worldId: worldId }
 
 app.get '/home', (req, res) ->
   if req.loggedIn

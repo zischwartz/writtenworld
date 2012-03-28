@@ -31,7 +31,7 @@
       secret: 'tshh secret',
       store: new sessionStore()
     }));
-    app.use(express.favicon(__dirname + '/public/favicon.ico'));
+    app.use(express.favicon(__dirname + '/public/img/favicon.ico'));
     return app.use(models.mongooseAuth.middleware());
   });
 
@@ -72,7 +72,7 @@
     var worldId;
     worldId = models.mainWorldId;
     return res.render('map_base.jade', {
-      title: 'Mapist',
+      title: 'Scribver.se',
       worldId: worldId
     });
   });

@@ -16,7 +16,7 @@ from contextlib import contextmanager as _contextmanager
 import os.path
 
 env.user = 'ec2-user'
-env.hosts = ['ec2-23-20-186-182.compute-1.amazonaws.com']
+env.hosts = ['23.21.103.176']
 
 
 env.project_name = 'scribverse'
