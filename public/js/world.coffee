@@ -70,10 +70,11 @@ moveCursor = (direction, from = state.selectedCell) ->
   true
 
 centerCursor = ->
-  $.doTimeout 200, ->
+  $.doTimeout 400, ->
     target = window.domTiles.getCenterTile()
     console.log('center cursor poll')
     key = "c#{target.x}x#{target.y}"
+    console.log key
     targetCell=Cell.all()[key]
     if not targetCell
       return true #true to repeat the timer and try again
@@ -185,6 +186,30 @@ initializeInterface = ->
   $(".modal").on 'hidden', ->
     inputEl.focus()
 
+  $(".trigger").live 'click', ->
+    action= $(this).data('action')
+    type= $(this).data('type')
+    payload= $(this).data('payload')
+    console.log 'trigger triggered'
+    if action == 'set' #change this (and setUserOption below) setServerState
+      console.log 'setting'
+      state[type]=payload
+      now.setUserOption(type, payload)
+    if action == 'setClientState' # unrelated to setClientStateFromServer 
+      console.log 'settingClientState', type
+      state[type] = payload
+    #specific interfaces
+    if type == 'color'
+      console.log 'ch color'
+      $("#color").addClass(payload)
+      inputEl.focus()
+    if type == 'writeDirection'
+      c= this.innerHTML
+      $('.direction-dropdown')[0].innerHTML=c
+      $('.direction-dropdown i').addClass('icon-white')
+      inputEl.focus()
+    return true
+
 panIfAppropriate = (direction)->
   selectedPP= $(state.selectedEl).offset()
   dbg 'selectedPP', selectedPP
@@ -239,6 +264,14 @@ jQuery ->
 
     now.setBounds domTiles.getTilePointAbsoluteBounds() #this seems to be buggy on iOS
     
+    map.on 'moveend', (e)->
+      console.log 'now.setBounds called'
+      #not being called? huh?
+      now.setBounds domTiles.getTilePointAbsoluteBounds()
+    map.on 'zoomend', (e)->
+      console.log 'zoomend'
+      now.setBounds domTiles.getTilePointAbsoluteBounds()
+
     now.setClientStateFromServer (s)->
       if s.color
         state.color= s.color
@@ -256,7 +289,8 @@ jQuery ->
 
       if user.selected.x
         otherSelected = Cell.get(user.selected.x, user.selected.y)
-        $(otherSelected.span).addClass("u#{user.cid} c#{user.color} otherSelected")
+        if otherSelected
+          $(otherSelected.span).addClass("u#{user.cid} c#{user.color} otherSelected")
     
     # this works, gota do something with it
     # $.doTimeout 2000,  ->
@@ -276,39 +310,9 @@ jQuery ->
       # console.log edits
       for id, edit of  edits
         c=Cell.get(edit.cellPoint.x, edit.cellPoint.y)
-        c.update(edit.content, edit.props)
+        if c
+          c.update(edit.content, edit.props)
     
-    $(".trigger").live 'click', ->
-      action= $(this).data('action')
-      type= $(this).data('type')
-      payload= $(this).data('payload')
-      
-      console.log 'trigger triggered'
-      console.log this
-
-      if action == 'set' #change this (and setUserOption below) setServerState
-        console.log 'setting'
-        state[type]=payload
-        now.setUserOption(type, payload)
-
-      if action == 'setClientState' # unrelated to setClientStateFromServer 
-        console.log 'settingClientState', type
-        state[type] = payload
-
-      #specific interfaces
-      if type == 'color'
-        console.log 'ch color'
-        $("#color").addClass(payload)
-        inputEl.focus()
-
-      if type == 'writeDirection'
-        c= this.innerHTML
-        $('.direction-dropdown')[0].innerHTML=c
-        $('.direction-dropdown i').addClass('icon-white')
-        inputEl.focus()
-    return true
-
-
 
     now.insertMessage = (heading, message, cssclass="") ->
       html = "<div class='alert fade  #{cssclass} '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>#{heading}</h4>#{message}</div>"
@@ -318,10 +322,6 @@ jQuery ->
 
     $().alert() #applies close functionality to all alerts
 
-    map.on 'moveend', ->
-      now.setBounds domTiles.getTilePointAbsoluteBounds()
-    map.on 'zoomend', ->
-      now.setBounds domTiles.getTilePointAbsoluteBounds()
 
   true
 # END DOC READY

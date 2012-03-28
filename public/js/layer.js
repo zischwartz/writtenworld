@@ -427,7 +427,7 @@
       tileBounds = new L.Bounds(nwTilePoint, seTilePoint);
       return tileBounds;
     },
-    getTilePointAbsoluteBounds: function() {
+    getTilePointAbsoluteBoundsTrue: function() {
       var bounds, nwTilePoint, offset, seTilePoint, tileBounds, tileSize;
       bounds = this._map.getPixelBounds();
       tileSize = this.options.tileSize;
@@ -435,6 +435,17 @@
       nwTilePoint = new L.Point(Math.floor(bounds.min.x / tileSize.x) * offset, Math.floor(bounds.min.y / tileSize.y) * offset);
       seTilePoint = new L.Point(Math.floor(bounds.max.x / tileSize.x) * offset, Math.floor(bounds.max.y / tileSize.y) * offset);
       tileBounds = new L.Bounds(nwTilePoint, seTilePoint);
+      return tileBounds;
+    },
+    getTilePointAbsoluteBounds: function() {
+      var bounds, nwTilePoint, offset, seTilePoint, tileBounds, tileSize;
+      bounds = this._map.getPixelBounds();
+      tileSize = this.options.tileSize;
+      offset = Math.pow(2, state.zoomDiff());
+      nwTilePoint = new L.Point(Math.floor(bounds.min.x / tileSize.x) * offset, Math.floor(bounds.min.y / tileSize.y) * offset);
+      seTilePoint = new L.Point(Math.ceil(bounds.max.x / tileSize.x) * offset, Math.ceil(bounds.max.y / tileSize.y) * offset);
+      tileBounds = new L.Bounds(nwTilePoint, seTilePoint);
+      console.log(tileBounds);
       return tileBounds;
     }
   });

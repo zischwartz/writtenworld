@@ -50,6 +50,8 @@
     everyone.now.setBounds = function(bounds) {
       var b;
       b = new leaflet.L.Bounds(bounds.max, bounds.min);
+      console.log('bounds set');
+      console.log(b);
       return cUsers[this.user.clientId].bounds = b;
     };
     everyone.now.setClientStateFromServer = function(callback) {
@@ -187,6 +189,7 @@
               u[key] = value;
             }
             u.distance = distance;
+            u.direction = 0;
           }
           closeUsers.push(u);
         }

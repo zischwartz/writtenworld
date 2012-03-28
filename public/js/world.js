@@ -78,11 +78,12 @@
   };
 
   centerCursor = function() {
-    return $.doTimeout(200, function() {
+    return $.doTimeout(400, function() {
       var key, target, targetCell;
       target = window.domTiles.getCenterTile();
       console.log('center cursor poll');
       key = "c" + target.x + "x" + target.y;
+      console.log(key);
       targetCell = Cell.all()[key];
       if (!targetCell) {
         return true;
@@ -181,8 +182,36 @@
       var _ref;
       return (_ref = $(this).find('input')[0]) != null ? _ref.focus() : void 0;
     });
-    return $(".modal").on('hidden', function() {
+    $(".modal").on('hidden', function() {
       return inputEl.focus();
+    });
+    return $(".trigger").live('click', function() {
+      var action, c, payload, type;
+      action = $(this).data('action');
+      type = $(this).data('type');
+      payload = $(this).data('payload');
+      console.log('trigger triggered');
+      if (action === 'set') {
+        console.log('setting');
+        state[type] = payload;
+        now.setUserOption(type, payload);
+      }
+      if (action === 'setClientState') {
+        console.log('settingClientState', type);
+        state[type] = payload;
+      }
+      if (type === 'color') {
+        console.log('ch color');
+        $("#color").addClass(payload);
+        inputEl.focus();
+      }
+      if (type === 'writeDirection') {
+        c = this.innerHTML;
+        $('.direction-dropdown')[0].innerHTML = c;
+        $('.direction-dropdown i').addClass('icon-white');
+        inputEl.focus();
+      }
+      return true;
     });
   };
 
@@ -246,6 +275,14 @@
       });
       initializeInterface();
       now.setBounds(domTiles.getTilePointAbsoluteBounds());
+      map.on('moveend', function(e) {
+        console.log('now.setBounds called');
+        return now.setBounds(domTiles.getTilePointAbsoluteBounds());
+      });
+      map.on('zoomend', function(e) {
+        console.log('zoomend');
+        return now.setBounds(domTiles.getTilePointAbsoluteBounds());
+      });
       now.setClientStateFromServer(function(s) {
         if (s.color) {
           return state.color = s.color;
@@ -260,7 +297,9 @@
         $(".u" + user.cid).removeClass("otherSelected u" + user.cid + " c" + user.color);
         if (user.selected.x) {
           otherSelected = Cell.get(user.selected.x, user.selected.y);
-          return $(otherSelected.span).addClass("u" + user.cid + " c" + user.color + " otherSelected");
+          if (otherSelected) {
+            return $(otherSelected.span).addClass("u" + user.cid + " c" + user.color + " otherSelected");
+          }
         }
       };
       now.drawEdits = function(edits) {
@@ -269,39 +308,14 @@
         for (id in edits) {
           edit = edits[id];
           c = Cell.get(edit.cellPoint.x, edit.cellPoint.y);
-          _results.push(c.update(edit.content, edit.props));
+          if (c) {
+            _results.push(c.update(edit.content, edit.props));
+          } else {
+            _results.push(void 0);
+          }
         }
         return _results;
       };
-      $(".trigger").live('click', function() {
-        var action, c, payload, type;
-        action = $(this).data('action');
-        type = $(this).data('type');
-        payload = $(this).data('payload');
-        console.log('trigger triggered');
-        console.log(this);
-        if (action === 'set') {
-          console.log('setting');
-          state[type] = payload;
-          now.setUserOption(type, payload);
-        }
-        if (action === 'setClientState') {
-          console.log('settingClientState', type);
-          state[type] = payload;
-        }
-        if (type === 'color') {
-          console.log('ch color');
-          $("#color").addClass(payload);
-          inputEl.focus();
-        }
-        if (type === 'writeDirection') {
-          c = this.innerHTML;
-          $('.direction-dropdown')[0].innerHTML = c;
-          $('.direction-dropdown i').addClass('icon-white');
-          return inputEl.focus();
-        }
-      });
-      return true;
       now.insertMessage = function(heading, message, cssclass) {
         var html;
         if (cssclass == null) cssclass = "";
@@ -312,13 +326,7 @@
           });
         });
       };
-      $().alert();
-      map.on('moveend', function() {
-        return now.setBounds(domTiles.getTilePointAbsoluteBounds());
-      });
-      return map.on('zoomend', function() {
-        return now.setBounds(domTiles.getTilePointAbsoluteBounds());
-      });
+      return $().alert();
     });
     return true;
   });

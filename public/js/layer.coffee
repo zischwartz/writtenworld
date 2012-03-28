@@ -414,7 +414,7 @@ L.DomTileLayer = L.Class.extend
     tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
     tileBounds
 
-  getTilePointAbsoluteBounds: ->
+  getTilePointAbsoluteBoundsTrue: -> #this version doesn't have the additional buffertile, for use with getCenterTile
     bounds = this._map.getPixelBounds()
     tileSize= this.options.tileSize
     offset = Math.pow 2, state.zoomDiff()
@@ -422,3 +422,14 @@ L.DomTileLayer = L.Class.extend
     seTilePoint = new L.Point( Math.floor(bounds.max.x / tileSize.x)*offset, Math.floor(bounds.max.y / tileSize.y)*offset)
     tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
     tileBounds
+
+  getTilePointAbsoluteBounds: ->
+    bounds = this._map.getPixelBounds()
+    tileSize= this.options.tileSize
+    offset = Math.pow 2, state.zoomDiff()
+    nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x)*offset, Math.floor(bounds.min.y / tileSize.y)*offset)
+    seTilePoint = new L.Point( Math.ceil(bounds.max.x / tileSize.x)*offset, Math.ceil(bounds.max.y / tileSize.y)*offset)
+    tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
+    console.log tileBounds
+    tileBounds
+

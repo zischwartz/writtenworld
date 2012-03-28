@@ -35,6 +35,8 @@ module.exports = (app, SessionModel) ->
 
   everyone.now.setBounds = (bounds) ->
     b = new leaflet.L.Bounds bounds.max, bounds.min
+    console.log 'bounds set'
+    console.log b
     cUsers[this.user.clientId].bounds = b
 
   everyone.now.setClientStateFromServer = (callback) ->
@@ -108,6 +110,7 @@ module.exports = (app, SessionModel) ->
           callback(results, absTilePoint)
 
   #utility for above 
+  ##small bug, likely in getTilePoint or abs version
   getWhoCanSee = (cellPoint, worldId, cb ) ->
     nowjs.getGroup(worldId).getUsers (users) ->
       # console.log 'users in group: ', users
@@ -134,6 +137,7 @@ module.exports = (app, SessionModel) ->
           u = {}
           u[key] = value  for own key,value of cUsers[i]
           u.distance = distance
+          u.direction= 0 # probably use Math.atan2 actually lets do it clientside
         closeUsers.push(u)
       cb(closeUsers)
     true
