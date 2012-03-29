@@ -4,8 +4,7 @@ window.state =
   color: null
   # canRead: true
   # canWrite: true
-  # geoInitialPos: null
-  # geoCurrentPos: null
+  # geoPos: null
   # geoAccuracy: null
   writeDirection: 'right'
   zoomDiff: ->
@@ -237,7 +236,7 @@ jQuery ->
   tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
   centerPoint= new L.LatLng(40.714269, -74.005972) #try adding slight randomness to this
   if not USEMAP
-    window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom() }) #.addLayer(tileServeLayer)
+    window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom() })
   else
     window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom() }).addLayer(tileServeLayer)
   initializeGeo()

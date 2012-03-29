@@ -40,7 +40,7 @@ geoAlternative = ->
     geoHasPosition {coords:{latitude: geoip_latitude(), longitude: geoip_longitude(), accuracy:-1}}
     true
 
-chicago = new L.LatLng(41.878114,-87.629798) # for testing
+# chicago = new L.LatLng(41.878114,-87.629798) # for testing
 nj = new L.LatLng(40.058324,-74.405661) # for testing
 
 geoHasPosition = (position) ->
@@ -49,7 +49,13 @@ geoHasPosition = (position) ->
   distanceToClosest = 10000000000000000000000000000000
 
   p = new L.LatLng(position.coords.latitude,position.coords.longitude)
-  state.geoCurrentPos = p
+  if position.coords.accuracy > 2000 or position.coords.accuracy is -1
+    console.log 'varying'
+    p = varyLatLng(p)
+  # console.log "accuracy: #{position.coords.accuracy}"
+  # p = nj
+  state.geoPos = p
+
   for own key, val of officialCities
     distance = p.distanceTo(val)
     if distance < config.maxDistanceFromOfficial()
@@ -63,8 +69,8 @@ geoHasPosition = (position) ->
     window.centerCursor()
     # console.log 'we have the position, one way or the other! and yr in an official city'
   else
-    # console.log 'dang you arent in an official city'
-    map.setView(officialCities[closest], config.defZoom() )
+    console.log 'dang you arent in an official city'
+    map.setView(varyLatLng(officialCities[closest]), config.defZoom() )
     window.insertMessage "&quotHey, That's Not Where I Am!&quot", "Scribver.se is still in beta, so we're limiting ourselves to a few cities for now. We took you to <b>#{closest}</b>.<br><br>Want a head start writing on your actual location? It may be kinda empty.<br><br><a href='#' class='goToActualPos btn' data-dismiss='alert'>Click here to go to your location</a>", 'major alert-info', 25
   return true
 
@@ -72,5 +78,17 @@ $('.cancelAltGeo').live 'click', ->
   $.doTimeout 'GeoPermissionTimer' #cancel the timer
 
 $('.goToActualPos').live 'click', ->
-  map.setView(state.geoCurrentPos, config.defZoom() )
+  map.setView(state.geoPos, config.defZoom() )
   window.centerCursor()
+  true
+
+
+window.varyLatLng = (l) ->
+  latOffset = Math.random()/100
+  lngOffset = Math.random()/100
+  if Math.random() > 0.5
+    latOffset= 0-latOffset
+  if Math.random() > 0.5
+    lngOffset= 0-lngOffset
+  p = new L.LatLng(l.lat+latOffset,l.lng+lngOffset)
+  return p

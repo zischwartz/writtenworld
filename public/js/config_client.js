@@ -1,5 +1,5 @@
 (function() {
-  var Configuration;
+  var Configuration, userLevels;
 
   window.DEBUG = false;
 
@@ -49,8 +49,15 @@
   window.config = new Configuration;
 
   window.officialCities = {
-    'New York City': new L.LatLng(40.714269, -74.005972),
+    'New York City': new L.LatLng(40.73037270272987, -73.99361729621887),
     'Washington DC': new L.LatLng(38.898715, -77.037655)
+  };
+
+  userLevels = {
+    0: {
+      showLotsOfAnimations: false,
+      colorsAvailable: ['c0', 'c1', 'c2', 'c3']
+    }
   };
 
 }).call(this);

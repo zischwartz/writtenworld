@@ -1,5 +1,5 @@
 (function() {
-  var chicago, geoAlternative, geoFailed, geoHasPosition, geoSucceeded, geoWatch, nj,
+  var geoAlternative, geoFailed, geoHasPosition, geoSucceeded, geoWatch, nj,
     __hasProp = Object.prototype.hasOwnProperty;
 
   window.initializeGeo = function() {
@@ -46,8 +46,6 @@
     });
   };
 
-  chicago = new L.LatLng(41.878114, -87.629798);
-
   nj = new L.LatLng(40.058324, -74.405661);
 
   geoHasPosition = function(position) {
@@ -56,7 +54,11 @@
     closest = '';
     distanceToClosest = 10000000000000000000000000000000;
     p = new L.LatLng(position.coords.latitude, position.coords.longitude);
-    state.geoCurrentPos = p;
+    if (position.coords.accuracy > 2000 || position.coords.accuracy === -1) {
+      console.log('varying');
+      p = varyLatLng(p);
+    }
+    state.geoPos = p;
     for (key in officialCities) {
       if (!__hasProp.call(officialCities, key)) continue;
       val = officialCities[key];
@@ -71,7 +73,8 @@
       map.setView(p, config.defZoom());
       window.centerCursor();
     } else {
-      map.setView(officialCities[closest], config.defZoom());
+      console.log('dang you arent in an official city');
+      map.setView(varyLatLng(officialCities[closest]), config.defZoom());
       window.insertMessage("&quotHey, That's Not Where I Am!&quot", "Scribver.se is still in beta, so we're limiting ourselves to a few cities for now. We took you to <b>" + closest + "</b>.<br><br>Want a head start writing on your actual location? It may be kinda empty.<br><br><a href='#' class='goToActualPos btn' data-dismiss='alert'>Click here to go to your location</a>", 'major alert-info', 25);
     }
     return true;
@@ -82,8 +85,19 @@
   });
 
   $('.goToActualPos').live('click', function() {
-    map.setView(state.geoCurrentPos, config.defZoom());
-    return window.centerCursor();
+    map.setView(state.geoPos, config.defZoom());
+    window.centerCursor();
+    return true;
   });
+
+  window.varyLatLng = function(l) {
+    var latOffset, lngOffset, p;
+    latOffset = Math.random() / 100;
+    lngOffset = Math.random() / 100;
+    if (Math.random() > 0.5) latOffset = 0 - latOffset;
+    if (Math.random() > 0.5) lngOffset = 0 - lngOffset;
+    p = new L.LatLng(l.lat + latOffset, l.lng + lngOffset);
+    return p;
+  };
 
 }).call(this);
