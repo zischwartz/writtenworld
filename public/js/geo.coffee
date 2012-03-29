@@ -1,0 +1,76 @@
+
+window.initializeGeo = ->
+  
+  $.doTimeout 'GeoPermissionTimer', 10*1000, ->
+    console.log 'User did not respond for a while, switching to alt'
+    geoAlternative()
+    return false # don't poll
+
+  if (navigator.geolocation)
+      window.insertMessage 'Welcome', "If your browser asks you if it's ok to use location, please click <b> allow</b>. Otherwise, we'll try to find you based on your IP in a few seconds. <br> <a href='#' class='cancelAltGeo btn'>Or click here to stay right here</a>", 'major alert-info geoHelper', 9
+      # console.log('Geolocation is supported!')
+      navigator.geolocation.getCurrentPosition(geoSucceeded, geoFailed)
+      # navigator.geolocation.watchPosition geoWatch #possibly use this for mobile
+  else
+      # console.log('Geolocation is not supported for this Browser/OS version yet.')
+      geoAlternative()
+  true
+
+geoFailed = (error) ->
+  # geoAlternative()
+  $.doTimeout 'GeoPermissionTimer', false #cancel timer, exec the cb now
+  # console.log error.message
+  true
+
+geoSucceeded = (position) ->
+  # window.clearMessages()
+  $('.geoHelper').remove()
+  $.doTimeout 'GeoPermissionTimer' #cancel the timer
+  geoHasPosition position
+  true
+
+# not used
+geoWatch = (position) ->
+  geoHasPosition position
+  # console.log('Moved position, or just the initial')
+  # console.log position
+
+geoAlternative = ->
+  $.getScript 'http://j.maxmind.com/app/geoip.js', (data, textStatus) ->
+    geoHasPosition {coords:{latitude: geoip_latitude(), longitude: geoip_longitude(), accuracy:-1}}
+    true
+
+chicago = new L.LatLng(41.878114,-87.629798) # for testing
+nj = new L.LatLng(40.058324,-74.405661) # for testing
+
+geoHasPosition = (position) ->
+  inOfficialCity = false
+  closest= ''
+  distanceToClosest = 10000000000000000000000000000000
+
+  p = new L.LatLng(position.coords.latitude,position.coords.longitude)
+  state.geoCurrentPos = p
+  for own key, val of officialCities
+    distance = p.distanceTo(val)
+    if distance < config.maxDistanceFromOfficial()
+      inOfficialCity= true
+      # console.log 'inofficial true'
+    if distance < distanceToClosest
+      distanceToClosest = distance
+      closest= key
+  if inOfficialCity
+    map.setView(p, config.defZoom() )
+    window.centerCursor()
+    # console.log 'we have the position, one way or the other! and yr in an official city'
+  else
+    # console.log 'dang you arent in an official city'
+    map.setView(officialCities[closest], config.defZoom() )
+    window.insertMessage "&quotHey, That's Not Where I Am!&quot", "Scribver.se is still in beta, so we're limiting ourselves to a few cities for now. We took you to <b>#{closest}</b>.<br><br>Want a head start writing on your actual location? It may be kinda empty.<br><br><a href='#' class='goToActualPos btn' data-dismiss='alert'>Click here to go to your location</a>", 'major alert-info', 25
+  return true
+
+$('.cancelAltGeo').live 'click', ->
+  $.doTimeout 'GeoPermissionTimer' #cancel the timer
+
+$('.goToActualPos').live 'click', ->
+  map.setView(state.geoCurrentPos, config.defZoom() )
+  window.centerCursor()

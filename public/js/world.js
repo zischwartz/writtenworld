@@ -1,5 +1,5 @@
 (function() {
-  var Cell, cellKeyToXY, centerCursor, filter, getNodeIndex, initializeInterface, moveCursor, pan, panIfAppropriate, setTileStyle,
+  var Cell, cellKeyToXY, filter, getNodeIndex, initializeInterface, moveCursor, pan, panIfAppropriate, setTileStyle,
     __slice = Array.prototype.slice;
 
   window.state = {
@@ -77,13 +77,11 @@
     return true;
   };
 
-  centerCursor = function() {
+  window.centerCursor = function() {
     return $.doTimeout(400, function() {
       var key, target, targetCell;
       target = window.domTiles.getCenterTile();
-      console.log('center cursor poll');
       key = "c" + target.x + "x" + target.y;
-      console.log(key);
       targetCell = Cell.all()[key];
       if (!targetCell) {
         return true;
@@ -118,11 +116,9 @@
       var c, cellPoint, userTotalRites, _ref;
       dbg(e.which, 'pressed');
       if ((_ref = e.which) === 0 || _ref === 13 || _ref === 32 || _ref === 9 || _ref === 38 || _ref === 40 || _ref === 39 || _ref === 8) {
-        console.log('SPECIAL KEY, screw this keypress');
         return false;
       } else {
         c = String.fromCharCode(e.which);
-        console.log(c, 'Pressed!!!!');
         state.selectedCell.write(c);
         userTotalRites = parseInt($("#userTotalRites").text());
         $("#userTotalRites").text(userTotalRites + 1);
@@ -190,18 +186,12 @@
       action = $(this).data('action');
       type = $(this).data('type');
       payload = $(this).data('payload');
-      console.log('trigger triggered');
       if (action === 'set') {
-        console.log('setting');
         state[type] = payload;
         now.setUserOption(type, payload);
       }
-      if (action === 'setClientState') {
-        console.log('settingClientState', type);
-        state[type] = payload;
-      }
+      if (action === 'setClientState') state[type] = payload;
       if (type === 'color') {
-        console.log('ch color');
         $("#color").addClass(payload);
         inputEl.focus();
       }
@@ -260,9 +250,12 @@
       window.map = new L.Map('map', {
         center: centerPoint,
         zoom: 17,
-        scrollWheelZoom: false
+        scrollWheelZoom: false,
+        minZoom: config.minZoom(),
+        maxZoom: config.maxZoom()
       }).addLayer(tileServeLayer);
     }
+    initializeGeo();
     window.domTiles = new L.DomTileLayer({
       tileSize: config.tileSize()
     });
@@ -276,11 +269,9 @@
       initializeInterface();
       now.setBounds(domTiles.getTilePointAbsoluteBounds());
       map.on('moveend', function(e) {
-        console.log('now.setBounds called');
         return now.setBounds(domTiles.getTilePointAbsoluteBounds());
       });
       map.on('zoomend', function(e) {
-        console.log('zoomend');
         return now.setBounds(domTiles.getTilePointAbsoluteBounds());
       });
       now.setClientStateFromServer(function(s) {
@@ -317,19 +308,37 @@
         return _results;
       };
       now.insertMessage = function(heading, message, cssclass) {
-        var html;
-        if (cssclass == null) cssclass = "";
-        html = "<div class='alert fade  " + cssclass + " '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>" + heading + "</h4>" + message + "</div>";
-        return $("#messages").append(html).children().doTimeout(100, 'addClass', 'in').doTimeout(5000, function() {
-          return $(this).removeClass('in').doTimeout(300, function() {
-            return $(this).alert('close').remove();
-          });
-        });
+        return insertMessage(heading, message, cssclass);
       };
-      return $().alert();
+      return true;
     });
     return true;
   });
+
+  window.insertMessage = function(heading, message, cssclass, timing) {
+    var html;
+    if (cssclass == null) cssclass = "";
+    if (timing == null) timing = 6;
+    html = "<div class='alert alert-block fade  " + cssclass + " '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>" + heading + "</h4>" + message + "</div>";
+    if (timing > 0) {
+      return $("#messages").append(html).children().doTimeout(100, 'addClass', 'in').doTimeout(timing * 1000, function() {
+        return $(this).removeClass('in').doTimeout(300, function() {
+          return $(this).alert('close').remove();
+        });
+      });
+    } else {
+      return $("#messages").append(html).children().doTimeout(100, 'addClass', 'in');
+    }
+  };
+
+  window.clearMessages = function() {
+    $("#messages").children().removeClass('in').doTimeout(300, function() {
+      return $(this).alert('close').remove();
+    });
+    return true;
+  };
+
+  $().alert();
 
   window.Cell = Cell = (function() {
     var all;

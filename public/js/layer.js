@@ -54,7 +54,7 @@
   L.DomTileLayer = L.Class.extend({
     includes: L.Mixin.Events,
     options: {
-      minZoom: 0,
+      minZoom: config.minZoom(),
       maxZoom: config.maxZoom(),
       tileSize: {
         x: 256,
@@ -230,7 +230,6 @@
     },
     _removeOtherTiles: function(bounds) {
       var kArr, key, tile, x, y;
-      console.log('_removeOtherTiles called');
       kArr = void 0;
       x = void 0;
       y = void 0;
@@ -251,7 +250,6 @@
     },
     _removeTile: function(key) {
       var tile;
-      console.log('remove tile called yo!');
       tile = this._tiles[key];
       this.fire("tileunload", {
         tile: tile,
@@ -288,7 +286,6 @@
       if (this.options.scheme === "tms") tilePoint.y = limit - tilePoint.y - 1;
       this._loadTile(tile, tilePoint, zoom);
       container.appendChild(tile);
-      console.log('_addTile called');
       return true;
     },
     _getOffsetZoom: function(zoom) {
@@ -325,7 +322,6 @@
       return this._createTile();
     },
     _resetTile: function(tile) {
-      console.log('_resetTile called, and the function does nothing');
       return true;
     },
     _createTile: function() {
@@ -445,7 +441,6 @@
       nwTilePoint = new L.Point(Math.floor(bounds.min.x / tileSize.x) * offset, Math.floor(bounds.min.y / tileSize.y) * offset);
       seTilePoint = new L.Point(Math.ceil(bounds.max.x / tileSize.x) * offset, Math.ceil(bounds.max.y / tileSize.y) * offset);
       tileBounds = new L.Bounds(nwTilePoint, seTilePoint);
-      console.log(tileBounds);
       return tileBounds;
     }
   });

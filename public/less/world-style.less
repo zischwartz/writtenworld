@@ -95,16 +95,28 @@ a.direction-dropdown:hover
 {
   position: absolute;
   margin-top: @navbarHeight;
-  /*width: 86%;*/
-  /*left: 7%;*/
   padding-top: 10px; 
   z-index: 10;
-  
-  width: 20%;
-  left: 78%;
-  right: 1%;
-  
+  width: 100%;  
+}
 
+.alert
+{
+  width: 20%;
+  left: 74%;
+  position: absolute;
+}
+
+.alert.major
+{
+  position: absolute;
+  width: 86%;
+  left: 7%;
+  .alert-heading
+  {
+    font-size: 140%;
+    margin-bottom: 5px;
+  } 
 }
 
 //for the zoom controls, hacky

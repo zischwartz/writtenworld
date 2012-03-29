@@ -6116,15 +6116,23 @@ a.direction-dropdown:hover {
 #messages {
   position: absolute;
   margin-top: 40px;
-  /*width: 86%;*/
-
-  /*left: 7%;*/
-
   padding-top: 10px;
   z-index: 10;
+  width: 100%;
+}
+.alert {
   width: 20%;
-  left: 78%;
-  right: 1%;
+  left: 74%;
+  position: absolute;
+}
+.alert.major {
+  position: absolute;
+  width: 86%;
+  left: 7%;
+}
+.alert.major .alert-heading {
+  font-size: 140%;
+  margin-bottom: 5px;
 }
 .leaflet-top {
   margin-top: 40px;

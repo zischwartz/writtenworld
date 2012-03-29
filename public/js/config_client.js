@@ -3,9 +3,9 @@
 
   window.DEBUG = false;
 
-  window.USEMAP = false;
+  window.USEMAP = true;
 
-  window.Configuration = Configuration = (function() {
+  Configuration = Configuration = (function() {
 
     function Configuration(spec) {
       if (spec == null) spec = {};
@@ -24,6 +24,10 @@
         var _ref;
         return (_ref = spec.maxZoom) != null ? _ref : 16;
       };
+      this.defZoom = function() {
+        var _ref;
+        return (_ref = spec.maxZoom) != null ? _ref : 17;
+      };
       this.defaultChar = function() {
         var _ref;
         return (_ref = spec.defaultChar) != null ? _ref : " ";
@@ -32,6 +36,10 @@
         var _ref;
         return (_ref = spec.inputRateLimit) != null ? _ref : 40;
       };
+      this.maxDistanceFromOfficial = function() {
+        var _ref;
+        return (_ref = spec.maxDistanceFromOfficial) != null ? _ref : 10000;
+      };
     }
 
     return Configuration;
@@ -39,5 +47,10 @@
   })();
 
   window.config = new Configuration;
+
+  window.officialCities = {
+    'New York City': new L.LatLng(40.714269, -74.005972),
+    'Washington DC': new L.LatLng(38.898715, -77.037655)
+  };
 
 }).call(this);

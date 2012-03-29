@@ -69,12 +69,11 @@ moveCursor = (direction, from = state.selectedCell) ->
     setSelected(targetCell)
   true
 
-centerCursor = ->
+window.centerCursor = ->
   $.doTimeout 400, ->
     target = window.domTiles.getCenterTile()
-    console.log('center cursor poll')
+    # console.log('center cursor poll')
     key = "c#{target.x}x#{target.y}"
-    console.log key
     targetCell=Cell.all()[key]
     if not targetCell
       return true #true to repeat the timer and try again
@@ -105,11 +104,11 @@ initializeInterface = ->
   inputEl.keypress (e) ->
     dbg  e.which, 'pressed'
     if e.which in [0, 13, 32, 9, 38, 40, 39, 8]
-      console.log 'SPECIAL KEY, screw this keypress'
+      # console.log 'SPECIAL KEY, screw this keypress'
       return false
     else #it's a normal character which we should actually write
       c = String.fromCharCode e.which
-      console.log  c,  'Pressed!!!!'
+      # console.log  c,  'Pressed!!!!'
       state.selectedCell.write( c)
       
       userTotalRites=parseInt($("#userTotalRites").text())
@@ -186,21 +185,21 @@ initializeInterface = ->
   $(".modal").on 'hidden', ->
     inputEl.focus()
 
+
   $(".trigger").live 'click', ->
     action= $(this).data('action')
     type= $(this).data('type')
     payload= $(this).data('payload')
-    console.log 'trigger triggered'
+    # console.log 'trigger triggered'
     if action == 'set' #change this (and setUserOption below) setServerState
-      console.log 'setting'
       state[type]=payload
       now.setUserOption(type, payload)
     if action == 'setClientState' # unrelated to setClientStateFromServer 
-      console.log 'settingClientState', type
+      # console.log 'settingClientState', type
       state[type] = payload
     #specific interfaces
     if type == 'color'
-      console.log 'ch color'
+      # console.log 'ch color'
       $("#color").addClass(payload)
       inputEl.focus()
     if type == 'writeDirection'
@@ -236,24 +235,16 @@ jQuery ->
   # tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png'
   tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png'
   tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
-  centerPoint= new L.LatLng(40.714269, -74.005972)
+  centerPoint= new L.LatLng(40.714269, -74.005972) #try adding slight randomness to this
   if not USEMAP
     window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom() }) #.addLayer(tileServeLayer)
   else
-    window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false}).addLayer(tileServeLayer)
-  # initializeGeo()
+    window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom() }).addLayer(tileServeLayer)
+  initializeGeo()
   
   # window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
-
   window.domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
  
-  # map.locateAndSetView(17)
-  # map.on 'locationfound', (e)->
-  #   radius = e.accuracy / 2
-  #   circle = new L.Circle(e.latlng, radius)
-  #   map.addLayer(circle)
-  #   return true
-
   now.ready ->
     now.setCurrentWorld(currentWorldId)
     map.addLayer(domTiles)
@@ -265,11 +256,8 @@ jQuery ->
     now.setBounds domTiles.getTilePointAbsoluteBounds() #this seems to be buggy on iOS
     
     map.on 'moveend', (e)->
-      console.log 'now.setBounds called'
-      #not being called? huh?
       now.setBounds domTiles.getTilePointAbsoluteBounds()
     map.on 'zoomend', (e)->
-      console.log 'zoomend'
       now.setBounds domTiles.getTilePointAbsoluteBounds()
 
     now.setClientStateFromServer (s)->
@@ -312,22 +300,32 @@ jQuery ->
         c=Cell.get(edit.cellPoint.x, edit.cellPoint.y)
         if c
           c.update(edit.content, edit.props)
-    
 
-    now.insertMessage = (heading, message, cssclass="") ->
-      html = "<div class='alert fade  #{cssclass} '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>#{heading}</h4>#{message}</div>"
-      $("#messages").append(html).children().doTimeout(100, 'addClass', 'in') #.addClass('in')
-      .doTimeout 5000, ->
-        $(this).removeClass('in').doTimeout 300, ->$(this).alert('close').remove()
+    now.insertMessage = (heading, message, cssclass) ->
+      insertMessage(heading, message, cssclass)
 
-    $().alert() #applies close functionality to all alerts
+    true # end now.ready
+
+  true # end doc.ready
 
 
+# this shouldn't get called until docready anyway...
+window.insertMessage = (heading, message, cssclass="", timing=6 ) ->
+  html = "<div class='alert alert-block fade  #{cssclass} '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>#{heading}</h4>#{message}</div>"
+  if timing > 0
+    $("#messages").append(html).children().doTimeout(100, 'addClass', 'in')
+      .doTimeout timing*1000, ->
+        $(this).removeClass('in').doTimeout 300, -> $(this).alert('close').remove()
+  else
+    $("#messages").append(html).children().doTimeout(100, 'addClass', 'in')
+
+window.clearMessages = ->
+  $("#messages").children().removeClass('in').doTimeout 300, ->
+    $(this).alert('close').remove()
   true
-# END DOC READY
 
 
-
+$().alert() #applies close functionality to all alerts
 
 window.Cell = class Cell
   all = {}

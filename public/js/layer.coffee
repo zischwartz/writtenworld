@@ -51,7 +51,7 @@ getTileLocally =(absTilePoint, tile) ->
 L.DomTileLayer = L.Class.extend
   includes: L.Mixin.Events
   options:
-    minZoom: 0
+    minZoom: config.minZoom()
     maxZoom: config.maxZoom() #18
     tileSize:
       x: 256
@@ -202,7 +202,7 @@ L.DomTileLayer = L.Class.extend
     true
 
   _removeOtherTiles: (bounds) ->
-    console.log '_removeOtherTiles called'
+    # console.log '_removeOtherTiles called'
     kArr = undefined
     x = undefined
     y = undefined
@@ -220,7 +220,7 @@ L.DomTileLayer = L.Class.extend
     true
 
   _removeTile: (key) ->
-    console.log 'remove tile called yo!'
+    # console.log 'remove tile called yo!'
     tile = @_tiles[key]
     @fire "tileunload",
       tile: tile
@@ -255,7 +255,7 @@ L.DomTileLayer = L.Class.extend
     tilePoint.y = limit - tilePoint.y - 1  if @options.scheme is "tms"
     @_loadTile tile, tilePoint, zoom
     container.appendChild tile
-    console.log '_addTile called'
+    # console.log '_addTile called'
     true
 
   _getOffsetZoom: (zoom) ->
@@ -287,7 +287,7 @@ L.DomTileLayer = L.Class.extend
     @_createTile()
 
   _resetTile: (tile) ->
-    console.log '_resetTile called, and the function does nothing'
+    # console.log '_resetTile called, and the function does nothing'
     true
 
   _createTile: ->
@@ -430,6 +430,6 @@ L.DomTileLayer = L.Class.extend
     nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x)*offset, Math.floor(bounds.min.y / tileSize.y)*offset)
     seTilePoint = new L.Point( Math.ceil(bounds.max.x / tileSize.x)*offset, Math.ceil(bounds.max.y / tileSize.y)*offset)
     tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
-    console.log tileBounds
+    # console.log tileBounds
     tileBounds
 
