@@ -170,8 +170,11 @@ L.DomTileLayer = L.Class.extend
 
   getCenterTile: () ->
     bounds= @getTilePointAbsoluteBounds()
-    center = bounds.getCenter()
-    center
+    if bounds #this is always used inside a poll, as it's hard to see if our tiles really have loaded
+      center = bounds.getCenter()
+      return center
+    else
+      return false
 
   _addTilesFromCenterOut: (bounds) ->
     queue = []
@@ -414,22 +417,24 @@ L.DomTileLayer = L.Class.extend
     tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
     tileBounds
 
-  getTilePointAbsoluteBoundsTrue: -> #this version doesn't have the additional buffertile, for use with getCenterTile
-    bounds = this._map.getPixelBounds()
-    tileSize= this.options.tileSize
-    offset = Math.pow 2, state.zoomDiff()
-    nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x)*offset, Math.floor(bounds.min.y / tileSize.y)*offset)
-    seTilePoint = new L.Point( Math.floor(bounds.max.x / tileSize.x)*offset, Math.floor(bounds.max.y / tileSize.y)*offset)
-    tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
-    tileBounds
+  # getTilePointAbsoluteBoundsTrue: -> #this version doesn't have the additional buffertile, for use with getCenterTile
+  #   bounds = this._map.getPixelBounds()
+  #   tileSize= this.options.tileSize
+  #   offset = Math.pow 2, state.zoomDiff()
+  #   nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x)*offset, Math.floor(bounds.min.y / tileSize.y)*offset)
+  #   seTilePoint = new L.Point( Math.floor(bounds.max.x / tileSize.x)*offset, Math.floor(bounds.max.y / tileSize.y)*offset)
+  #   tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
+  #   tileBounds
 
   getTilePointAbsoluteBounds: ->
-    bounds = this._map.getPixelBounds()
-    tileSize= this.options.tileSize
-    offset = Math.pow 2, state.zoomDiff()
-    nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x)*offset, Math.floor(bounds.min.y / tileSize.y)*offset)
-    seTilePoint = new L.Point( Math.ceil(bounds.max.x / tileSize.x)*offset, Math.ceil(bounds.max.y / tileSize.y)*offset)
-    tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
+    if this._map
+      bounds = this._map.getPixelBounds()
+      tileSize= this.options.tileSize
+      offset = Math.pow 2, state.zoomDiff()
+      nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x)*offset, Math.floor(bounds.min.y / tileSize.y)*offset)
+      seTilePoint = new L.Point( Math.ceil(bounds.max.x / tileSize.x)*offset, Math.ceil(bounds.max.y / tileSize.y)*offset)
+      tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
     # console.log tileBounds
-    tileBounds
-
+      return tileBounds
+    else
+      return false

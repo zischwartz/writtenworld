@@ -48,10 +48,15 @@
                        i.icon-arrow-down
 
             - if (!everyauth.loggedIn)
-              p.navbar-text.pull-right
+              p.navbar-text.pull-right#navToAuth
                 a(href="#loginModal", data-toggle="modal") Login 
                 | or 
-                a(href="#registerModal", data-toggle="modal") Register
+                a(href="#registerModal", data-toggle="modal") Register  
+              p.navbar-text.pull-right
+                span#userTotalEchoes 0 
+                | echos, 
+                span#userTotalRites 0 
+                |  rites  
             - else
               ul.nav.pull-right
                 li.dropdown
@@ -68,6 +73,7 @@
                       a(href="/logout") Log out
                 li
                   p.navbar-text
-                    | #{user.totalEchoes} echos, 
+                    span#userTotalEchoes #{user.totalEchoes}
+                    | echos, 
                     span#userTotalRites #{user.totalRites} 
                     |  rites

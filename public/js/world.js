@@ -389,10 +389,15 @@
     Cell.prototype.write = function(c) {
       var cellPoint;
       dbg('Cell write  called');
-      if (this.contents) this.animateTextRemove(1);
-      this.contents = c;
-      this.span.className = 'cell ' + state.color;
-      this.animateTextInsert(2, c);
+      if (this.contents === c) {
+        console.log('echo!');
+        this.animateText(1);
+      } else {
+        if (this.contents) this.animateTextRemove(1);
+        this.contents = c;
+        this.span.className = 'cell ' + state.color;
+        this.animateTextInsert(1, c);
+      }
       cellPoint = cellKeyToXY(this.key);
       return now.writeCell(cellPoint, c);
     };
@@ -423,7 +428,7 @@
       clone.className = 'cell ' + state.color;
       clone.innerHTML = c;
       span = this.span;
-      $(clone).css('position', 'absolute').insertBefore('body').addClass('a' + animateWith);
+      $(clone).css('position', 'absolute').insertBefore('body').addClass('ai' + animateWith);
       offset = $(this.span).offset();
       dbg('clone', clone);
       $(clone).css({
@@ -438,6 +443,41 @@
       return $(clone).doTimeout(400, function() {
         span.innerHTML = c;
         $(clone).remove();
+        return false;
+      });
+    };
+
+    Cell.prototype.animateText = function(animateWith) {
+      var clone, offset, span;
+      if (animateWith == null) animateWith = 0;
+      span = this.span;
+      clone = $(this.span).clone();
+      offset = $(this.span).position();
+      $(this.span).after(clone);
+      $(clone).removeClass('selected');
+      $(clone).addClass('aa').css({
+        'position': 'absolute',
+        left: offset.left,
+        top: offset.top
+      }).hide();
+      $(clone).queue(function() {
+        $(this).show().css({
+          'fontSize': '+=90',
+          'marginTop': "-=45",
+          'marginLeft': "-=45"
+        });
+        return $(this).dequeue();
+      });
+      return $(clone).doTimeout(400, function() {
+        $(this).css({
+          'fontSize': '-=90',
+          'marginTop': 0,
+          'marginLeft': 0
+        });
+        this.doTimeout(400, function() {
+          $(span).show();
+          return $(clone).remove();
+        });
         return false;
       });
     };
@@ -459,7 +499,7 @@
       $(clone).queue(function() {
         $(this).show();
         dbg('this', this);
-        if (animateWith) $(this).addClass('a' + animateWith);
+        if (animateWith) $(this).addClass('ar' + animateWith);
         return $(this).dequeue();
       });
       return $(clone).doTimeout(800, function() {

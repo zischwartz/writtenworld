@@ -361,12 +361,16 @@ window.Cell = class Cell
 
   write: (c) ->
     dbg 'Cell write  called'
-    if @contents
-      @animateTextRemove(1)
-    @contents= c
-    @span.className = 'cell '+ state.color
+    if @contents == c #check to see if you wrote it...
+      console.log 'echo!'
+      @animateText(1)
+    else
+      if @contents
+        @animateTextRemove(1)
+      @contents= c
+      @span.className = 'cell '+ state.color
     
-    @animateTextInsert(2, c)
+      @animateTextInsert(1, c)
     cellPoint = cellKeyToXY @key
     now.writeCell(cellPoint, c)
 
@@ -392,7 +396,7 @@ window.Cell = class Cell
     clone.className='cell ' + state.color
     clone.innerHTML=c
     span=@span
-    $(clone).css('position', 'absolute').insertBefore('body').addClass('a'+animateWith)
+    $(clone).css('position', 'absolute').insertBefore('body').addClass('ai'+animateWith)
     offset= $(@span).offset()
     dbg 'clone',  clone
     $(clone).css({'opacity': '1 !important', 'font-size': '1em'})
@@ -402,6 +406,26 @@ window.Cell = class Cell
       $(clone).remove()
       return false
   
+  animateText: (animateWith=0) ->
+    span= @span #the original
+    clone=  $(@span).clone()
+    offset= $(@span).position()#offset()
+    $(@span).after(clone)
+    $(clone).removeClass('selected')
+    $(clone).addClass('aa').css({'position':'absolute', left: offset.left, top: offset.top}).hide() #?
+    $(clone).queue ->
+      # $(this).show().css({'fontSize':'+=90', 'marginTop': -state.cellHeight()/2, 'marginLeft': -state.cellWidth()/2})
+      $(this).show().css({'fontSize':'+=90' , 'marginTop': "-=45", 'marginLeft': "-=45"})
+      # $(this).addClass('aa'+animateWith)
+      $(this).dequeue()
+    $(clone).doTimeout 400, ->
+      # $(clone).removeClass('aa'+animateWith)
+      $(this).css({'fontSize':'-=90', 'marginTop': 0, 'marginLeft': 0})
+      this.doTimeout 400, ->
+        $(span).show()
+        $(clone).remove()
+      return false
+
   animateTextRemove: (animateWith=0) ->
     span= @span #the original
     clone=  $(@span).clone()
@@ -414,7 +438,7 @@ window.Cell = class Cell
       $(this).show()
       dbg 'this', this
       if animateWith
-        $(this).addClass('a'+animateWith)
+        $(this).addClass('ar'+animateWith)
       $(this).dequeue()
     $(clone).doTimeout 800, ->
       $(clone).remove()

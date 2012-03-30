@@ -6113,6 +6113,42 @@ a.direction-dropdown:hover {
   text-transform: capitalize;
   color: #0088cc !important;
 }
+#navToAuth {
+  width: 9em;
+  margin-left: 1em;
+  text-align: center;
+  background-color: #262626;
+  background-image: -moz-linear-gradient(top, #2e2e2e, #1a1a1a);
+  background-image: -ms-linear-gradient(top, #2e2e2e, #1a1a1a);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#2e2e2e), to(#1a1a1a));
+  background-image: -webkit-linear-gradient(top, #2e2e2e, #1a1a1a);
+  background-image: -o-linear-gradient(top, #2e2e2e, #1a1a1a);
+  background-image: linear-gradient(top, #2e2e2e, #1a1a1a);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#2e2e2e', endColorstr='#1a1a1a', GradientType=0);
+  background-color: #262626;
+  background-image: -moz-linear-gradient(top, #2e2e2e, #1a1a1a);
+  background-image: -ms-linear-gradient(top, #2e2e2e, #1a1a1a);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#2e2e2e), to(#1a1a1a));
+  background-image: -webkit-linear-gradient(top, #2e2e2e, #1a1a1a);
+  background-image: -o-linear-gradient(top, #2e2e2e, #1a1a1a);
+  background-image: linear-gradient(top, #2e2e2e, #1a1a1a);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#2e2e2e', endColorstr='#1a1a1a', GradientType=0);
+  -webkit-box-shadow: -2px 1px 3px rgba(0, 0, 0, 0.25);
+  -moz-box-shadow: -2px 1px 3px rgba(0, 0, 0, 0.25);
+  box-shadow: -2px 1px 3px rgba(0, 0, 0, 0.25);
+  -webkit-box-shadow: -2px 1px 3px rgba(0, 0, 0, 0.25);
+  -moz-box-shadow: -2px 1px 3px rgba(0, 0, 0, 0.25);
+  box-shadow: -2px 1px 3px rgba(0, 0, 0, 0.25);
+  -webkit-border-radius: 0px 0px 0px 15px;
+  -moz-border-radius: 0px 0px 0px 15px;
+  border-radius: 0px 0px 0px 15px;
+  -webkit-border-radius: 0px 0px 0px 15px;
+  -moz-border-radius: 0px 0px 0px 15px;
+  border-radius: 0px 0px 0px 15px;
+  margin-right: -20px;
+}
 #messages {
   position: absolute;
   margin-top: 40px;
@@ -6331,7 +6367,7 @@ a.colorOptions.c2, a.colorOptions.c0 {
   /*-webkit-animation: pulserOp 1s infinite;   */
 
 }
-.a1 {
+.ar1 {
   -webkit-transition: all ease-out 0.5s;
   -moz-transition: all ease-out 0.5s;
   -ms-transition: all ease-out 0.5s;
@@ -6367,7 +6403,7 @@ a.colorOptions.c2, a.colorOptions.c0 {
   -o-transform: skew(30deg, 35deg);
   transform: skew(30deg, 35deg);
 }
-.a2 {
+.ai1 {
   -webkit-transition: all ease-out 0.4s;
   -moz-transition: all ease-out 0.4s;
   -ms-transition: all ease-out 0.4s;
@@ -6402,6 +6438,23 @@ a.colorOptions.c2, a.colorOptions.c0 {
   -o-transform: skew(30deg, 35deg);
   transform: skew(30deg, 35deg);
   z-index: 100;
+}
+.aa {
+  -webkit-transition: all ease-in-out 0.4s;
+  -moz-transition: all ease-in-out 0.4s;
+  -ms-transition: all ease-in-out 0.4s;
+  -o-transition: all ease-in-out 0.4s;
+  transition: all ease-in-out 0.4s;
+  -webkit-transition: all ease-in-out 0.4s;
+  -moz-transition: all ease-in-out 0.4s;
+  -ms-transition: all ease-in-out 0.4s;
+  -o-transition: all ease-in-out 0.4s;
+  transition: all ease-in-out 0.4s;
+}
+.aa1 {
+  font-size: 450% ;
+  margin-top: -0.3em;
+  margin-left: -0.2em;
 }
 @-webkit-keyframes shimmer {
   0% {

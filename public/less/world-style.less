@@ -91,6 +91,18 @@ a.direction-dropdown:hover
   color: @linkColor !important;
 }
 
+#navToAuth
+{
+  width: 9em;
+  margin-left: 1em;
+  text-align: center;
+  #gradient > .vertical(lighten(@black, 18%),lighten(@black, 10%));
+  .box-shadow(-2px 1px 3px rgba(0,0,0,.25));
+  //# background-color: lighten(@black, 10%);
+  .border-radius(0px 0px 0px 15px);
+  margin-right: -20px;
+}
+
 #messages
 {
   position: absolute;
@@ -223,8 +235,8 @@ a.colorOptions
   /*-webkit-animation: pulserOp 1s infinite;   */
 }
 
-//animation classes
-.a1
+//For Animating Cells ar= animated removal, ai = animated insert, aa= just animate
+.ar1
 {
   .transition(all ease-out .5s);
   opacity: .0 !important;
@@ -234,7 +246,7 @@ a.colorOptions
   .skew(30deg,35deg);
 }
 
-.a2
+.ai1
 {
   .transition(all ease-out .4s);
   font-size: 25em ;
@@ -244,6 +256,17 @@ a.colorOptions
   z-index: 100;
 }
 
+.aa //for the below
+{
+  .transition(all ease-in-out .4s);
+}
+
+.aa1 //currently not used
+{
+  font-size: 450% ;
+  margin-top: -0.3em;
+  margin-left: -0.2em;
+}
 
 @-webkit-keyframes shimmer {
   0%   { opacity: 1; box-shadow: 0px 0px 5px white;}
