@@ -387,7 +387,7 @@
     }
 
     Cell.prototype.write = function(c) {
-      var cellPoint;
+      var cellPoint, n;
       dbg('Cell write  called');
       if (this.contents === c) {
         console.log('echo!');
@@ -396,7 +396,9 @@
         if (this.contents) this.animateTextRemove(1);
         this.contents = c;
         this.span.className = 'cell ' + state.color;
-        this.animateTextInsert(1, c);
+        n = Math.ceil(Math.random() * 10) % 2 + 1;
+        console.log(n);
+        this.animateTextInsert(n, c);
       }
       cellPoint = cellKeyToXY(this.key);
       return now.writeCell(cellPoint, c);

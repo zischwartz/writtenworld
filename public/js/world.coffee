@@ -361,16 +361,20 @@ window.Cell = class Cell
 
   write: (c) ->
     dbg 'Cell write  called'
-    if @contents == c #check to see if you wrote it...
+    if @contents == c
+      # TODO check to see if you wrote it...
       console.log 'echo!'
       @animateText(1)
+    
     else
       if @contents
         @animateTextRemove(1)
       @contents= c
       @span.className = 'cell '+ state.color
     
-      @animateTextInsert(1, c)
+      n= Math.ceil(Math.random()*10)%2+1
+      console.log n
+      @animateTextInsert(n, c)
     cellPoint = cellKeyToXY @key
     now.writeCell(cellPoint, c)
 
