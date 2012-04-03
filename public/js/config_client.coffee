@@ -1,7 +1,7 @@
 window.DEBUG = false
 # window.DEBUG = true
-window.USEMAP = false
-# window.USEMAP = true
+# window.USEMAP = false
+window.USEMAP = true
 
 
 Configuration = class Configuration

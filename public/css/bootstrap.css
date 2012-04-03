@@ -6425,7 +6425,7 @@ div.leaflet-tile-loaded {
   -o-transform: skew(30deg, 35deg);
   transform: skew(30deg, 35deg);
 }
-.ai2 {
+.ai1 {
   -webkit-transition: all ease-out 0.4s;
   -moz-transition: all ease-out 0.4s;
   -ms-transition: all ease-out 0.4s;
@@ -6459,6 +6459,78 @@ div.leaflet-tile-loaded {
   -ms-transform: skew(30deg, 35deg);
   -o-transform: skew(30deg, 35deg);
   transform: skew(30deg, 35deg);
+  z-index: 100;
+}
+.ai2 {
+  -webkit-transition: all ease-out 0.4s;
+  -moz-transition: all ease-out 0.4s;
+  -ms-transition: all ease-out 0.4s;
+  -o-transition: all ease-out 0.4s;
+  transition: all ease-out 0.4s;
+  -webkit-transition: all ease-out 0.4s;
+  -moz-transition: all ease-out 0.4s;
+  -ms-transition: all ease-out 0.4s;
+  -o-transition: all ease-out 0.4s;
+  transition: all ease-out 0.4s;
+  font-size: 30em ;
+  top: 200px;
+  left: 0px;
+  -webkit-transform: translate(40deg, 15deg);
+  -moz-transform: translate(40deg, 15deg);
+  -ms-transform: translate(40deg, 15deg);
+  -o-transform: translate(40deg, 15deg);
+  transform: translate(40deg, 15deg);
+  -webkit-transform: skew(40deg, 15deg);
+  -moz-transform: skew(40deg, 15deg);
+  -ms-transform: skew(40deg, 15deg);
+  -o-transform: skew(40deg, 15deg);
+  transform: skew(40deg, 15deg);
+  -webkit-transform: translate(40deg, 15deg);
+  -moz-transform: translate(40deg, 15deg);
+  -ms-transform: translate(40deg, 15deg);
+  -o-transform: translate(40deg, 15deg);
+  transform: translate(40deg, 15deg);
+  -webkit-transform: skew(40deg, 15deg);
+  -moz-transform: skew(40deg, 15deg);
+  -ms-transform: skew(40deg, 15deg);
+  -o-transform: skew(40deg, 15deg);
+  transform: skew(40deg, 15deg);
+  z-index: 100;
+}
+.ai3 {
+  -webkit-transition: all ease-out 0.4s;
+  -moz-transition: all ease-out 0.4s;
+  -ms-transition: all ease-out 0.4s;
+  -o-transition: all ease-out 0.4s;
+  transition: all ease-out 0.4s;
+  -webkit-transition: all ease-out 0.4s;
+  -moz-transition: all ease-out 0.4s;
+  -ms-transition: all ease-out 0.4s;
+  -o-transition: all ease-out 0.4s;
+  transition: all ease-out 0.4s;
+  font-size: 30em ;
+  top: 400px;
+  left: 50px;
+  -webkit-transform: translate(10deg, 55deg);
+  -moz-transform: translate(10deg, 55deg);
+  -ms-transform: translate(10deg, 55deg);
+  -o-transform: translate(10deg, 55deg);
+  transform: translate(10deg, 55deg);
+  -webkit-transform: skew(10deg, 55deg);
+  -moz-transform: skew(10deg, 55deg);
+  -ms-transform: skew(10deg, 55deg);
+  -o-transform: skew(10deg, 55deg);
+  transform: skew(10deg, 55deg);
+  -webkit-transform: translate(10deg, 55deg);
+  -moz-transform: translate(10deg, 55deg);
+  -ms-transform: translate(10deg, 55deg);
+  -o-transform: translate(10deg, 55deg);
+  transform: translate(10deg, 55deg);
+  -webkit-transform: skew(10deg, 55deg);
+  -moz-transform: skew(10deg, 55deg);
+  -ms-transform: skew(10deg, 55deg);
+  -o-transform: skew(10deg, 55deg);
+  transform: skew(10deg, 55deg);
   z-index: 100;
 }
 .aa {

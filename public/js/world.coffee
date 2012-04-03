@@ -365,14 +365,14 @@ window.Cell = class Cell
       # TODO check to see if you wrote it...
       console.log 'echo!'
       @animateText(1)
-    
+      $(@span).addClass('e1') 
     else
       if @contents
         @animateTextRemove(1)
       @contents= c
       @span.className = 'cell '+ state.color
     
-      n= Math.ceil(Math.random()*10)%2+1
+      n= Math.ceil(Math.random()*10)%3+1
       console.log n
       @animateTextInsert(n, c)
     cellPoint = cellKeyToXY @key

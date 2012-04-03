@@ -392,11 +392,12 @@
       if (this.contents === c) {
         console.log('echo!');
         this.animateText(1);
+        $(this.span).addClass('e1');
       } else {
         if (this.contents) this.animateTextRemove(1);
         this.contents = c;
         this.span.className = 'cell ' + state.color;
-        n = Math.ceil(Math.random() * 10) % 2 + 1;
+        n = Math.ceil(Math.random() * 10) % 3 + 1;
         console.log(n);
         this.animateTextInsert(n, c);
       }

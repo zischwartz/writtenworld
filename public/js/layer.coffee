@@ -25,6 +25,7 @@ betterBuildTile= (tile, tileData, absTilePoint)->
       tile._cells.push(cell)
   return frag
 
+# this is ridiculous TODO
 getTileLocally =(absTilePoint, tile) ->
   dbg 'getTileLocally'
   tile._cells = []
@@ -322,6 +323,8 @@ L.DomTileLayer = L.Class.extend
     #         layer.populateTile(tile, tilePoint, zoom, frag)
     #     return false #so it doesn't poll
     # else
+
+    # check index of tiles otherwise TODO
     frag=getTileLocally(absTilePoint, tile)
     if frag
       layer.populateTile(tile, tilePoint, zoom, frag)
