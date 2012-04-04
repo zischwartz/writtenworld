@@ -8,25 +8,32 @@
           a.brand(href='#') Scribver.se 
           .nav-collapse
             ul.nav
-              li.dropdown
-                a.dropdown-toggle(href='#', data-toggle='dropdown')
-                  | World
-                  b.caret
-                ul.dropdown-menu
-                  li.active
-                    a(href="#") Main World
-                  li
-                    a(href='#') Your World 
-                  li
-                    a(href='#') Pics
-                  li
-                    a(href='#') Links &amp; Files
-                  li.divider
-                  li
-                    a(href='#') More Worlds...
+              // indent one level in
+                li.dropdown
+                  a.dropdown-toggle(href='#', data-toggle='dropdown')
+                    | World
+                    b.caret
+                  ul.dropdown-menu
+                    li.active
+                      a(href="#") Main World
+                    li
+                      a(href='#') Your World 
+                    li
+                      a(href='#') Pics
+                    li
+                      a(href='#') Links &amp; Files
+                    li.divider
+                    li
+                      a(href='#') More Worlds...
+              // BLOCK COMMENTED OUT ABOVE
               li
                 a(href='#locationSearch', data-toggle="modal") 
                   i.icon-search.icon-white 
+              li.dropdown
+                a#getNearby.dropdown-toggle(href='#', data-toggle='dropdown', data-action='get', data-type='nearby')
+                  | Nearby
+                  b.caret
+                ul#nearby.dropdown-menu
               li
                 a#color(href='#colorModal', data-toggle="modal") Colors
 

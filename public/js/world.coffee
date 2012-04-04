@@ -196,7 +196,9 @@ initializeInterface = ->
     if action == 'setClientState' # unrelated to setClientStateFromServer 
       # console.log 'settingClientState', type
       state[type] = payload
+    
     #specific interfaces
+
     if type == 'color'
       # console.log 'ch color'
       $("#color").addClass(payload)
@@ -279,19 +281,21 @@ jQuery ->
         if otherSelected
           $(otherSelected.span).addClass("u#{user.cid} c#{user.color} otherSelected")
     
-    # this works, gota do something with it
-    # $.doTimeout 2000,  ->
-    #   now.getCloseUsers (closeUsers)->
-    #     cellPoint=cellKeyToXY state.selectedCell.key
-    #     for user in closeUsers
-    #       user.radians=Math.atan2(cellPoint.y-user.selected.y, cellPoint.x-user.selected.x) #y,x
-    #       user.degrees= user.radians*(180/Math.PI)
-    #       # console.log user.radians
-    #       # console.log user.degrees
-    #     console.log 'closeUsers:'
-    #     console.log closeUsers
-    #     true
-    #   false #so it won't poll
+    
+    $("#getNearby").click ->
+      now.getCloseUsers (closeUsers)->
+        $("#nearby").empty()
+        cellPoint=cellKeyToXY state.selectedCell.key
+        for user in closeUsers
+          user.radians=Math.atan2(cellPoint.y-user.selected.y, cellPoint.x-user.selected.x) #y,x
+          user.degrees= user.radians*(180/Math.PI)
+          if user.radians < 0
+            user.degrees= 360+user.degrees #this ends up with directly left =0, up being 90 and so on
+          if not user.name
+            user.name= 'Someone'
+          $("ul#nearby").append ->
+            arrow= $("<li><a><i class='icon-arrow-left' style='-moz-transform: rotate(#{user.degrees}deg);-webkit-transform: rotate(#{user.degrees}deg);'></i> #{user.name}</a></li>")
+        true
 
     now.drawEdits = (edits) ->
       # console.log edits
@@ -361,11 +365,14 @@ window.Cell = class Cell
 
   write: (c) ->
     dbg 'Cell write  called'
-    if @contents == c
-      # TODO check to see if you wrote it...
+    if (@contents == c) and (@props.youCanEcho isnt false)
       console.log 'echo!'
       @animateText(1)
-      $(@span).addClass('e1') 
+      $(@span).addClass('e1')
+    else if @props.youCanEcho is false
+      console.log 'you cant echo something you already did or wrote yourself'
+      return false
+
     else
       if @contents
         @animateTextRemove(1)
@@ -375,6 +382,8 @@ window.Cell = class Cell
       n= Math.ceil(Math.random()*10)%3+1
       console.log n
       @animateTextInsert(n, c)
+
+    @props.youCanEcho = false
     cellPoint = cellKeyToXY @key
     now.writeCell(cellPoint, c)
 

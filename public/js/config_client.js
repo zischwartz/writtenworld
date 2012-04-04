@@ -3,7 +3,7 @@
 
   window.DEBUG = false;
 
-  window.USEMAP = true;
+  window.USEMAP = false;
 
   Configuration = Configuration = (function() {
 

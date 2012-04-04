@@ -171,16 +171,16 @@
       closeUsers = [];
       cid = this.user.clientId;
       aC = cUsers[cid].selected;
-      console.log(cUsers[cid]);
-      console.log('ac', aC);
       nowjs.getGroup(this.now.currentWorldId).getUsers(function(users) {
         var distance, i, key, u, uC, value, _i, _len, _ref;
         for (_i = 0, _len = users.length; _i < _len; _i++) {
           i = users[_i];
           uC = cUsers[i].selected;
           distance = Math.sqrt((aC.x - uC.x) * (aC.x - uC.x) + (aC.y - uC.y) * (aC.y - uC.y));
+          console.log("i: " + i);
+          console.log("cid: " + cid);
           console.log(distance);
-          if (distance < 1000) {
+          if (distance < 1000 && (i !== cid)) {
             u = {};
             _ref = cUsers[i];
             for (key in _ref) {
@@ -189,9 +189,8 @@
               u[key] = value;
             }
             u.distance = distance;
-            u.direction = 0;
+            closeUsers.push(u);
           }
-          closeUsers.push(u);
         }
         return cb(closeUsers);
       });

@@ -293,6 +293,25 @@
           }
         }
       };
+      $("#getNearby").click(function() {
+        return now.getCloseUsers(function(closeUsers) {
+          var cellPoint, user, _i, _len;
+          $("#nearby").empty();
+          cellPoint = cellKeyToXY(state.selectedCell.key);
+          for (_i = 0, _len = closeUsers.length; _i < _len; _i++) {
+            user = closeUsers[_i];
+            user.radians = Math.atan2(cellPoint.y - user.selected.y, cellPoint.x - user.selected.x);
+            user.degrees = user.radians * (180 / Math.PI);
+            if (user.radians < 0) user.degrees = 360 + user.degrees;
+            if (!user.name) user.name = 'Someone';
+            $("ul#nearby").append(function() {
+              var arrow;
+              return arrow = $("<li><a><i class='icon-arrow-left' style='-moz-transform: rotate(" + user.degrees + "deg);-webkit-transform: rotate(" + user.degrees + "deg);'></i> " + user.name + "</a></li>");
+            });
+          }
+          return true;
+        });
+      });
       now.drawEdits = function(edits) {
         var c, edit, id, _results;
         _results = [];
@@ -389,10 +408,13 @@
     Cell.prototype.write = function(c) {
       var cellPoint, n;
       dbg('Cell write  called');
-      if (this.contents === c) {
+      if ((this.contents === c) && (this.props.youCanEcho !== false)) {
         console.log('echo!');
         this.animateText(1);
         $(this.span).addClass('e1');
+      } else if (this.props.youCanEcho === false) {
+        console.log('you cant echo something you already did or wrote yourself');
+        return false;
       } else {
         if (this.contents) this.animateTextRemove(1);
         this.contents = c;
@@ -401,6 +423,7 @@
         console.log(n);
         this.animateTextInsert(n, c);
       }
+      this.props.youCanEcho = false;
       cellPoint = cellKeyToXY(this.key);
       return now.writeCell(cellPoint, c);
     };

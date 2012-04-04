@@ -110,7 +110,6 @@ module.exports = (app, SessionModel) ->
           callback(results, absTilePoint)
 
   #utility for above 
-  ##small bug, likely in getTilePoint or abs version
   getWhoCanSee = (cellPoint, worldId, cb ) ->
     nowjs.getGroup(worldId).getUsers (users) ->
       # console.log 'users in group: ', users
@@ -126,19 +125,20 @@ module.exports = (app, SessionModel) ->
     closeUsers= []
     cid = this.user.clientId
     aC=cUsers[cid].selected
-    console.log cUsers[cid]
-    console.log 'ac', aC
+    # console.log cUsers[cid]
+    # console.log 'ac', aC
     nowjs.getGroup(this.now.currentWorldId).getUsers (users) ->
       for i in users
         uC = cUsers[i].selected
         distance = Math.sqrt((aC.x-uC.x)*(aC.x-uC.x)+(aC.y-uC.y)*(aC.y-uC.y))
+        console.log "i: #{i}"
+        console.log "cid: #{cid}"
         console.log distance
-        if distance < 1000
+        if distance < 1000 and (i isnt cid)
           u = {}
           u[key] = value  for own key,value of cUsers[i]
           u.distance = distance
-          u.direction= 0 # probably use Math.atan2 actually lets do it clientside
-        closeUsers.push(u)
+          closeUsers.push(u)
       cb(closeUsers)
     true
 
