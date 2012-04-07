@@ -3,7 +3,9 @@
 
   window.DEBUG = false;
 
-  window.USEMAP = true;
+  window.USEMAP = false;
+
+  window.GOOGANAL = false;
 
   Configuration = Configuration = (function() {
 

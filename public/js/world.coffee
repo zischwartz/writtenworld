@@ -1,6 +1,6 @@
 window.state =
   selectedCell: null
-  lastClickCell: null
+  lastClickCell: null #actually more about carriage return
   color: null
   # canRead: true
   # canWrite: true
@@ -66,7 +66,7 @@ moveCursor = (direction, from = state.selectedCell) ->
   else
     panIfAppropriate(direction)
     setSelected(targetCell)
-  true
+    return targetCell
 
 window.centerCursor = ->
   $.doTimeout 400, ->
@@ -156,7 +156,8 @@ initializeInterface = ->
         state.selectedCell.clear()
         setSelected(state.selectedCell)
       when 13 #enter
-        moveCursor 'down', state.lastClickCell
+        t = moveCursor 'down', state.lastClickCell
+        state.lastClickCell = t
         # panIfAppropriate('down')
       when 32 #space
         state.selectedCell.clear()

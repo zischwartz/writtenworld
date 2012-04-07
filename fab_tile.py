@@ -6,7 +6,7 @@ import os.path
 from boto.ec2.connection import EC2Connection
 
 env.user = 'ubuntu'
-env.hosts = ['ec2-107-21-165-248.compute-1.amazonaws.com']
+env.hosts = ['ec2-23-20-235-135.compute-1.amazonaws.com']
 
 conn = EC2Connection('AKIAJRCNWZLCRGKOA7FA', 'hOBw0sNx4iRurKDvXnSI+GokaeeffL1DYFJ6g95x')
 
@@ -78,6 +78,7 @@ def install():
 
 def get_repos():
     run('git clone https://github.com/migurski/TileStache.git')
+    run("svn export http://svn.openstreetmap.org/applications/rendering/mapnik") #this isn't actually mapnik, it's osm utils for mapnik !
     
     run('svn co http://svn.openstreetmap.org/applications/utils/export/osm2pgsql/')
     with cd('osm2pgsql/'):
@@ -94,8 +95,6 @@ def get_repos():
 def mount():
     sudo("mkdir /mnt/ebs")
     sudo("mount /dev/xvdf /mnt/ebs")
-    
-
 
 def reformat_and_mount():
     #first attach it with the aws console to the default ('dev/sdf') but it'll end up at 'xvdf' probably
@@ -119,6 +118,7 @@ def start_ts():
 
 # INSTALL POSTGIS
 def install_postgis():
+   
         pass
 # https://raw.github.com/gist/1481128/8493ea2971b0d69dce558d7f43bf1c799ba52ff4/gistfile1.txt
 # get that, and execute it
@@ -126,10 +126,53 @@ def install_postgis():
 # sudo TileStache/scripts/tilestache-server.py -i 0.0.0.0 -p 80 -c tilestache.cfg
 
 def link_mapnik_deps():
-    run("git clone ----------- ")
+    run("git clone https://github.com/mapnik/mapnik.git ")
     with cd("mapnik"):
-        run("python scons/scons.py PGSQL_INCLUDES=/usr/include/postgresql PROJ_INCLUDES=/usr/include PROJ_LIBS=/usr/lib XMLPARSER=libxml2"
-    
+        run("python scons/scons.py PGSQL_INCLUDES=/usr/include/postgresql PROJ_INCLUDES=/usr/include PROJ_LIBS=/usr/lib XMLPARSER=libxml2")
+
+def setup_db():
+    # stop it
+    sudo("/usr/lib/postgresql/9.1/bin/pg_ctl stop -D /var/lib/postgresql/9.1/main")
+    #init it where we want it (will want 0700 permissions)
+    sudo("/usr/lib/postgresql/9.1/bin/pg_ctl init -D /mnt/ebs/postgresql/data/") 
+    #start it
+    run("/usr/lib/postgresql/9.1/bin/pg_ctl -D /mnt/ebs/postgresql/data -l logfile start") 
+
+    # do as postgres to install postgis into the db
+    # run("psql -d gis -f /usr/share/postgresql/9.1/contrib/postgis-1.5/postgis.sql")
+
+def start_db():
+        with cd("/mnt/ebs/"):
+            sudo("/usr/lib/postgresql/9.1/bin/pg_ctl -D /mnt/ebs/postgresql/data -l logfile start", user="postgres")
+
+def install_apache():
+    sudo("sudo apt-get install apache2 apache2-threaded-dev apache2-mpm-prefork apache2-utils libagg-dev -y")
+
+def download_boundaries():
+       
+    #these are required or maybe nice to have? w/e
+        #again this mapnik dir isn't the actual mapnik src
+    with cd("mapnik"):
+        run("wget http://tile.openstreetmap.org/world_boundaries-spherical.tgz")
+        run("wget http://tile.openstreetmap.org/processed_p.tar.bz2 ") 
+        run("wget http://tile.openstreetmap.org/shoreline_300.tar.bz2")
+        run("wget http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/10m/cultural/10m-populated-places.zip")    
+        run("wget http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/110m-admin-0-boundary-lines.zip ")
+
+        run("mkdir world_boundaries")
+
+        run("tar xzf world_boundaries-spherical.tgz")
+        run("tar xjf processed_p.tar.bz2 -C world_boundaries")
+        run("tar xjf shoreline_300.tar.bz2 -C world_boundaries")
+        run("unzip 10m-populated-places.zip -d world_boundaries")
+        run("unzip 110m-admin-0-boundary-lines.zip -d world_boundaries")        
+             
+         
+def build_xml():
+        with cd('mapnik'):
+                run("./generate_xml.py --host localhost --user postgres --dbname gis --symbols ./symbols/ --world_boundaries ./world_boundaries/ --accept-none")
+
+
     #probably not neccesary with ubunut?    
     # with cd("/usr/lib"):
     #     sudo("ln -s libboost_filesystem.so libboost_filesystem-mt.so")
@@ -139,30 +182,3 @@ def link_mapnik_deps():
     #     sudo("ln -s libboost_thread.so libboost_thread-mt.so")
     #     sudo("ln -s libboost_python.so libboost_python-mt.so")
     #     sudo("ln -s libgdal1.3.2.so libgdal.so")
-
-
-def setup_db():
-    # stop it
-    sudo("/usr/lib/postgresql/9.1/bin/pg_ctl stop -D /var/lib/postgresql/9.1/main")
-    #init it where we want it (will want 0700 permissions)
-    sudo("/usr/lib/postgresql/9.1/bin/pg_ctl init -D /mnt/ebs/postgresql/data/") 
-    #start it
-    run("/usr/lib/postgresql/9.1/bin/pg_ctl -D /mnt/ebs/postgresql/data -l logfile start")
-    
-    #as postgres
-    run("psql -d gis -f /usr/share/postgresql/9.1/contrib/postgis-1.5/postgis.sql")
-
-def install_apache():
-    sudo("sudo apt-get install apache2 apache2-threaded-dev apache2-mpm-prefork apache2-utils libagg-dev -y")
-
-def download_boundaries():
-    #these are required or maybe nice to have? w/e
-    run("mkdir boundaries")
-    with cd("boundaries"):
-        run("wget http://tile.openstreetmap.org/world_boundaries-spherical.tgz")
-        run("wget http://tile.openstreetmap.org/processed_p.tar.bz2 ") 
-        run("wget http://tile.openstreetmap.org/shoreline_300.tar.bz2")
-        run("wget http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/10m/cultural/10m-populated-places.zip")    
-        run("wget http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/110m-admin-0-boundary-lines.zip ")
- 
-

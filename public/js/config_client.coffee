@@ -1,8 +1,10 @@
 window.DEBUG = false
 # window.DEBUG = true
-# window.USEMAP = false
-window.USEMAP = true
 
+window.USEMAP = false
+# window.USEMAP = true
+
+window.GOOGANAL = false
 
 Configuration = class Configuration
   constructor: (spec = {}) ->

@@ -73,8 +73,8 @@
     } else {
       panIfAppropriate(direction);
       setSelected(targetCell);
+      return targetCell;
     }
-    return true;
   };
 
   window.centerCursor = function() {
@@ -127,6 +127,7 @@
       }
     });
     inputEl.keydown(function(e) {
+      var t;
       dbg(e.which, ' keydownd');
       if (!state.belowInputRateLimit) return false;
       state.belowInputRateLimit = false;
@@ -151,7 +152,8 @@
           state.selectedCell.clear();
           return setSelected(state.selectedCell);
         case 13:
-          return moveCursor('down', state.lastClickCell);
+          t = moveCursor('down', state.lastClickCell);
+          return state.lastClickCell = t;
         case 32:
           state.selectedCell.clear();
           return moveCursor(state.writeDirection);
