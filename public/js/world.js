@@ -414,9 +414,7 @@
         console.log('echo!');
         this.animateText(1);
         $(this.span).addClass('e1');
-      }
-      if (this.props.youCanEcho === false && (this.contents === c)) {
-        console.log('you cant echo something you already did or wrote yourself');
+      } else if (this.props.youCanEcho === false && (this.contents === c)) {
         return false;
       } else {
         if (this.contents) this.animateTextRemove(1);
@@ -469,7 +467,7 @@
         left: offset.left,
         top: offset.top
       });
-      return $(clone).doTimeout(400, function() {
+      return $(clone).doTimeout(200, function() {
         span.innerHTML = c;
         $(clone).remove();
         return false;

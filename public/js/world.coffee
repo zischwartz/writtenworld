@@ -366,15 +366,15 @@ window.Cell = class Cell
 
   write: (c) ->
     dbg 'Cell write  called'
-    if (@contents == c) and (@props.youCanEcho isnt false)
+    if (@contents == c) and (@props.youCanEcho isnt false) #an echo!
       console.log 'echo!'
       @animateText(1)
       $(@span).addClass('e1')
-    if @props.youCanEcho is false and (@contents is c)
-      console.log 'you cant echo something you already did or wrote yourself'
+    else if @props.youCanEcho is false and (@contents is c) # a user echoing something they've already echoed or written themselves
+      # console.log 'you cant echo something you already did or wrote yourself'
       return false
 
-    else
+    else     #all other rites
       if @contents
         @animateTextRemove(1)
       @contents= c
@@ -415,7 +415,7 @@ window.Cell = class Cell
     dbg 'clone',  clone
     $(clone).css({'opacity': '1 !important', 'font-size': '1em'})
     $(clone).css({'position':'absolute', left: offset.left, top: offset.top})
-    $(clone).doTimeout 400, ->
+    $(clone).doTimeout 200, ->
       span.innerHTML = c
       $(clone).remove()
       return false
