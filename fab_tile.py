@@ -6,7 +6,7 @@ import os.path
 from boto.ec2.connection import EC2Connection
 
 env.user = 'ubuntu'
-env.hosts = ['ec2-23-20-235-135.compute-1.amazonaws.com']
+env.hosts = ['ec2-23-20-250-36.compute-1.amazonaws.com']
 
 conn = EC2Connection('AKIAJRCNWZLCRGKOA7FA', 'hOBw0sNx4iRurKDvXnSI+GokaeeffL1DYFJ6g95x')
 
@@ -108,7 +108,7 @@ def reformat_and_mount():
     # sudo("mount /dev/xvdf /mnt/ebs")
     
 
-def start_ts():
+def start_tilestache():
     with cd("TileStache"):
         sudo("./scripts/tilestache-server.py -i 0.0.0.0 -p  80")
 
@@ -118,7 +118,6 @@ def start_ts():
 
 # INSTALL POSTGIS
 def install_postgis():
-   
         pass
 # https://raw.github.com/gist/1481128/8493ea2971b0d69dce558d7f43bf1c799ba52ff4/gistfile1.txt
 # get that, and execute it
@@ -142,14 +141,24 @@ def setup_db():
     # run("psql -d gis -f /usr/share/postgresql/9.1/contrib/postgis-1.5/postgis.sql")
 
 def start_db():
-        with cd("/mnt/ebs/"):
-            sudo("/usr/lib/postgresql/9.1/bin/pg_ctl -D /mnt/ebs/postgresql/data -l logfile start", user="postgres")
+        sudo("sysctl -w kernel.shmmax=268435456") #should put this in the config...
+        # probably need to reload or something?  # sudo sysctl -p ?
+        
+    #DOESNOTWORK
+    # just sudo su posgres 
+    # and then /usr/lib/postgresql/9.1/bin/pg_ctl -D /mnt/ebs/postgresql/data -l /mnt/ebs/logfile start
+
+        # with settings(user="postgres"):
+        # with cd("/mnt/ebs/"):
+        # with sudo("su postgres"):
+            # run("/usr/lib/postgresql/9.1/bin/pg_ctl -D /mnt/ebs/postgresql/data -l /mnt/ebs/logfile start")
+        # sudo("su postgres -c '/usr/lib/postgresql/9.1/bin/pg_ctl -D /mnt/ebs/postgresql/data -l /mnt/ebs/logfile start'")
+            # sudo("/usr/lib/postgresql/9.1/bin/pg_ctl -D /mnt/ebs/postgresql/data -l logfile start", user="postgres")
 
 def install_apache():
     sudo("sudo apt-get install apache2 apache2-threaded-dev apache2-mpm-prefork apache2-utils libagg-dev -y")
 
 def download_boundaries():
-       
     #these are required or maybe nice to have? w/e
         #again this mapnik dir isn't the actual mapnik src
     with cd("mapnik"):
@@ -170,9 +179,40 @@ def download_boundaries():
          
 def build_xml():
         with cd('mapnik'):
-                run("./generate_xml.py --host localhost --user postgres --dbname gis --symbols ./symbols/ --world_boundaries ./world_boundaries/ --accept-none")
+                # run("./generate_xml.py --host localhost --user postgres --dbname gis --symbols ./symbols/ --world_boundaries ./world_boundaries/ --accept-none")
+                run("./generate_xml.py osm.xml my.xml  --user postgres --dbname gis --symbols ./symbols/ --world_boundaries ./world_boundaries/ --accept-none")
+def generate_tiles():
+        run("mkdir tiles")
+        with cd("mapnik"):
+                # ah, export may not work with fab
+                run("export MAPNIK_MAP_FILE='my.xml'")
+                run("export MAPNIK_TILE_DIR='tiles/'")
+                run("./generate_tiles.py")
+
+def cascade():
+        sudo("pip install cssutils")
+        sudo("pip install cascadenik")
+        with cd('src'):
+                sudo("git clone https://github.com/mapnik/Cascadenik.git")
+                # with cd('Cascadenik'): 
+                                                
+
+# f this too, it's not ready to be integrated it seems
+# def carto():
+#         sudo("apt-get install nodejs -y")
+#         sudo("curl http://npmjs.org/install.sh | sh")
+#         run("npm install carto")
+
+# fuck this, boost-spirit utree not found?
+# def carto():
+#         with cd('src'):
+#                 run("git clone https://github.com/rundel/carto-parser.git")
+#                 with cd("carto-parser/include/"):
+#                         run("ln -s ~/src/mapnik/include/mapnik/ mapnik")
 
 
+
+                
     #probably not neccesary with ubunut?    
     # with cd("/usr/lib"):
     #     sudo("ln -s libboost_filesystem.so libboost_filesystem-mt.so")

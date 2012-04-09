@@ -414,7 +414,8 @@
         console.log('echo!');
         this.animateText(1);
         $(this.span).addClass('e1');
-      } else if (this.props.youCanEcho === false) {
+      }
+      if (this.props.youCanEcho === false && (this.contents === c)) {
         console.log('you cant echo something you already did or wrote yourself');
         return false;
       } else {

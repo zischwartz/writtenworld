@@ -370,7 +370,7 @@ window.Cell = class Cell
       console.log 'echo!'
       @animateText(1)
       $(@span).addClass('e1')
-    else if @props.youCanEcho is false
+    if @props.youCanEcho is false and (@contents is c)
       console.log 'you cant echo something you already did or wrote yourself'
       return false
 
