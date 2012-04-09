@@ -408,12 +408,18 @@
     }
 
     Cell.prototype.write = function(c) {
-      var cellPoint, n;
+      var cellPoint, echoes, n;
       dbg('Cell write  called');
       if ((this.contents === c) && (this.props.youCanEcho !== false)) {
         console.log('echo!');
+        console.log(this.props);
         this.animateText(1);
-        $(this.span).addClass('e1');
+        if (this.props.echoes) {
+          echoes = this.props.echoes + 1;
+        } else {
+          echoes = 1;
+        }
+        $(this.span).addClass('e' + echoes);
       } else if (this.props.youCanEcho === false && (this.contents === c)) {
         return false;
       } else {
@@ -421,7 +427,6 @@
         this.contents = c;
         this.span.className = 'cell ' + state.color;
         n = Math.ceil(Math.random() * 10) % 3 + 1;
-        console.log(n);
         this.animateTextInsert(n, c);
       }
       this.props.youCanEcho = false;

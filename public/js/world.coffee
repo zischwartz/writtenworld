@@ -368,20 +368,24 @@ window.Cell = class Cell
     dbg 'Cell write  called'
     if (@contents == c) and (@props.youCanEcho isnt false) #an echo!
       console.log 'echo!'
+      console.log @props
       @animateText(1)
-      $(@span).addClass('e1')
+      if @props.echoes
+          echoes = @props.echoes+1
+      else
+          echoes =1
+      $(@span).addClass('e'+echoes)
+
     else if @props.youCanEcho is false and (@contents is c) # a user echoing something they've already echoed or written themselves
-      # console.log 'you cant echo something you already did or wrote yourself'
       return false
 
-    else     #all other rites
+    else  #all other rites
       if @contents
         @animateTextRemove(1)
       @contents= c
       @span.className = 'cell '+ state.color
     
-      n= Math.ceil(Math.random()*10)%3+1
-      console.log n
+      n= Math.ceil(Math.random()*10)%3+1 # console.log n
       @animateTextInsert(n, c)
 
     @props.youCanEcho = false
