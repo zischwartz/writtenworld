@@ -423,6 +423,13 @@
       } else if (this.props.youCanEcho === false && (this.contents === c)) {
         return false;
       } else {
+        console.log(this);
+        if (this.props.echoes) {
+          echoes = this.props.echoes;
+          $(this.span).removeClass('e' + echoes).addClass("e" + (echoes - 1));
+          console.log('oh shit, its been echoed');
+          return false;
+        }
         if (this.contents) this.animateTextRemove(1);
         this.contents = c;
         this.span.className = 'cell ' + state.color;
@@ -558,6 +565,25 @@
     return Cell;
 
   })();
+
+  window.shakeWindow = function(s) {
+    var b, options;
+    if (s == null) s = 1;
+    b = $('body');
+    options = {
+      x: 2 + s / 2,
+      y: 2 + s / 2,
+      rotation: s / 2,
+      speed: 18 - s * 3
+    };
+    b.jrumble(options);
+    b.trigger('startRumble');
+    b.doTimeout(500, function() {
+      b.trigger('stopRumble');
+      return false;
+    });
+    return true;
+  };
 
   pan = function(x, y) {
     var p;

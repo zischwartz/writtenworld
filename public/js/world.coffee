@@ -380,6 +380,14 @@ window.Cell = class Cell
       return false
 
     else  #all other rites
+      console.log this
+      if @props.echoes
+        echoes = @props.echoes
+        $(@span).removeClass('e'+echoes).addClass("e#{echoes-1}")
+        #remove class, add class .e minus 1, 
+        # have the server handle this independently (so don't return false.)
+        console.log 'oh shit, its been echoed'
+        return false
       if @contents
         @animateTextRemove(1)
       @contents= c
@@ -473,7 +481,20 @@ window.Cell = class Cell
       cell = new Cell row, col, tile, contents, props
       return cell
 
-    
+window.shakeWindow =(s=1) ->
+  b = $('body') #s = severity
+  options =
+    x: 2+s/2
+    y: 2+s/2
+    rotation: s/2
+    speed: 18-s*3
+
+  b.jrumble(options)
+  b.trigger('startRumble')
+  b.doTimeout 500, ->
+    b.trigger('stopRumble')
+    false
+  true
 #Having to create a point is dumb
 pan = (x, y)->
   p= new L.Point( x, y )

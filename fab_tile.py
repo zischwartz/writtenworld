@@ -6,7 +6,7 @@ import os.path
 from boto.ec2.connection import EC2Connection
 
 env.user = 'ubuntu'
-env.hosts = ['ec2-23-20-250-36.compute-1.amazonaws.com']
+env.hosts = ['ec2-204-236-202-182.compute-1.amazonaws.com']
 
 conn = EC2Connection('AKIAJRCNWZLCRGKOA7FA', 'hOBw0sNx4iRurKDvXnSI+GokaeeffL1DYFJ6g95x')
 
@@ -37,18 +37,16 @@ def install():
     sudo("apt-get install libjpeg8 libjpeg62-dev libfreetype6 libfreetype6-dev -y")
     sudo("apt-get install python-imaging -y")
 
+    #for mapnik
+    sudo("aptitude install libboost-iostreams-dev -y")
+    sudo("apt-get install libboost-thread-dev libfreetype6-dev libxml2-dev libtiff4-dev libboost-regex-dev libboost-filesystem-dev libboost-python-dev -y")
+
     # get stable mapnik
     sudo("add-apt-repository ppa:mapnik/nightly-2.0 -y")
     sudo("apt-get update")
     sudo("aptitude install pgsql-dev libboost1.37-dev libltdl7-dev proj python-cairo libcairomm-1.0-dev -y" )
     sudo("apt-get install libmapnik mapnik-utils python-mapnik -y")
 
-    #mapnik depends
-    sudo("aptitude install libboost-iostreams-dev -y")
-    sudo("apt-get install libboost-thread-dev libfreetype6-dev libxml2-dev libtiff4-dev libboost-regex-dev libboost-filesystem-dev libboost-python-dev -y")
-    # postgresql-dev supposedly, but can't find it
-    
-    # ADD libpq-dev
 
     # sudo apt-get install -y g++ cpp \
     # libicu-dev \
@@ -77,14 +75,17 @@ def install():
     # sudo easy_install psycopg2 ?
 
 def get_repos():
-    run('git clone https://github.com/migurski/TileStache.git')
-    run("svn export http://svn.openstreetmap.org/applications/rendering/mapnik") #this isn't actually mapnik, it's osm utils for mapnik !
+    run("mkdir src")
+    with cd('src'):
+        run('git clone https://github.com/migurski/TileStache.git')
+        run("svn export http://svn.openstreetmap.org/applications/rendering/mapnik") #this isn't actually mapnik, it's osm utils for mapnik !
     
-    run('svn co http://svn.openstreetmap.org/applications/utils/export/osm2pgsql/')
-    with cd('osm2pgsql/'):
-        run('./autogen.sh')
-        run('./configure')
-        run("sed -i 's/-g -O2/-O2 -march=native -fomit-frame-pointer/' Makefile")
+    #uncomment this
+        # run('svn co http://svn.openstreetmap.org/applications/utils/export/osm2pgsql/')
+        # with cd('osm2pgsql/'):
+        #     run('./autogen.sh')
+        #     run('./configure')
+        #     run("sed -i 's/-g -O2/-O2 -march=native -fomit-frame-pointer/' Makefile")
     
     # IMPORTANT   for 64 bit support 
     # IMPORTANT    
@@ -125,9 +126,10 @@ def install_postgis():
 # sudo TileStache/scripts/tilestache-server.py -i 0.0.0.0 -p 80 -c tilestache.cfg
 
 def link_mapnik_deps():
-    run("git clone https://github.com/mapnik/mapnik.git ")
-    with cd("mapnik"):
-        run("python scons/scons.py PGSQL_INCLUDES=/usr/include/postgresql PROJ_INCLUDES=/usr/include PROJ_LIBS=/usr/lib XMLPARSER=libxml2")
+    with cd('src'):
+        run("git clone https://github.com/mapnik/mapnik.git ")
+        with cd("mapnik"):
+            run("python scons/scons.py PGSQL_INCLUDES=/usr/include/postgresql PROJ_INCLUDES=/usr/include PROJ_LIBS=/usr/lib XMLPARSER=libxml2")
 
 def setup_db():
     # stop it
@@ -161,7 +163,7 @@ def install_apache():
 def download_boundaries():
     #these are required or maybe nice to have? w/e
         #again this mapnik dir isn't the actual mapnik src
-    with cd("mapnik"):
+    with cd("src/mapnik"):
         run("wget http://tile.openstreetmap.org/world_boundaries-spherical.tgz")
         run("wget http://tile.openstreetmap.org/processed_p.tar.bz2 ") 
         run("wget http://tile.openstreetmap.org/shoreline_300.tar.bz2")
@@ -181,6 +183,7 @@ def build_xml():
         with cd('mapnik'):
                 # run("./generate_xml.py --host localhost --user postgres --dbname gis --symbols ./symbols/ --world_boundaries ./world_boundaries/ --accept-none")
                 run("./generate_xml.py osm.xml my.xml  --user postgres --dbname gis --symbols ./symbols/ --world_boundaries ./world_boundaries/ --accept-none")
+
 def generate_tiles():
         run("mkdir tiles")
         with cd("mapnik"):
@@ -196,6 +199,23 @@ def cascade():
                 sudo("git clone https://github.com/mapnik/Cascadenik.git")
                 # with cd('Cascadenik'): 
                                                 
+
+# def install_tilemill():
+#     with cd('src'):
+#         run("git clone https://github.com/mapbox/tilemill.git")
+#         sudo("apt-get install build-essential curl libsqlite3-0 libsqlite3-dev libzip-dev libzip1 libgtk2.0-dev libwebkitgtk-dev")
+
+def install_tilemill():
+    sudo("apt-get install build-essential curl libsqlite3-0 libsqlite3-dev libzip-dev libzip1 libgtk2.0-dev libwebkitgtk-dev -y")
+    sudo('add-apt-repository ppa:developmentseed/mapbox')
+    sudo('apt-get update')
+    sudo("apt-get install libmapnik libmapnik-dev mapnik-utils nodejs nodejs-dev -y")
+    sudo('apt-get install tilemill -y')
+    
+    #replace this/ add port and host
+    # sudo("/etc/tilemill/tilemill.config")
+
+
 
 # f this too, it's not ready to be integrated it seems
 # def carto():
