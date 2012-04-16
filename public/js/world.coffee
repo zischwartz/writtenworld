@@ -235,13 +235,11 @@ panIfAppropriate = (direction)->
 
 jQuery ->
   # tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png'
-  tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png'
+  tileServeUrl = 'http://ec2-107-20-56-118.compute-1.amazonaws.com/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png'
+  # tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png'
   tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
   centerPoint= new L.LatLng(40.714269, -74.005972) #try adding slight randomness to this
-  if not USEMAP
-    window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom() })
-  else
-    window.map = new L.Map('map', {center: centerPoint, zoom: 17, scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom() }).addLayer(tileServeLayer)
+  window.map = new L.Map('map', {center: centerPoint, zoom: config.defZoom(), scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom() }).addLayer(tileServeLayer)
   initializeGeo()
   
   # window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
@@ -367,8 +365,6 @@ window.Cell = class Cell
   write: (c) ->
     dbg 'Cell write  called'
     if (@contents == c) and (@props.youCanEcho isnt false) #an echo!
-      console.log 'echo!'
-      console.log @props
       @animateText(1)
       if @props.echoes
           echoes = @props.echoes+1
@@ -380,10 +376,11 @@ window.Cell = class Cell
       return false
 
     else  #all other rites
-      console.log this
       if @props.echoes
+        @props.echoes-=1
         echoes = @props.echoes
-        $(@span).removeClass('e'+echoes).addClass("e#{echoes-1}")
+        $(@span).removeClass('e'+echoes).addClass("e#{echoes}")
+        
         #remove class, add class .e minus 1, 
         # have the server handle this independently (so don't return false.)
         console.log 'oh shit, its been echoed'
@@ -413,11 +410,16 @@ window.Cell = class Cell
     delete all[@key]
     
   clear: ->
+    if @contents
+      @animateTextRemove(1)
     @span.innerHTML= config.defaultChar()
     @write(config.defaultChar())
     @span.className= 'cell'
   
   animateTextInsert: (animateWith=0, c) ->
+    if not prefs.animate.writing
+      @span.innerHTML = c
+      return
     clone=  document.createElement('SPAN') #$(@span).clone().removeClass('selected')
     clone.className='cell ' + state.color
     clone.innerHTML=c

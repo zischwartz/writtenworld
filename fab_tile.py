@@ -6,7 +6,7 @@ import os.path
 from boto.ec2.connection import EC2Connection
 
 env.user = 'ubuntu'
-env.hosts = ['ec2-204-236-202-182.compute-1.amazonaws.com']
+env.hosts = ['ec2-184-73-27-234.compute-1.amazonaws.com']
 
 conn = EC2Connection('AKIAJRCNWZLCRGKOA7FA', 'hOBw0sNx4iRurKDvXnSI+GokaeeffL1DYFJ6g95x')
 
@@ -48,22 +48,7 @@ def install():
     sudo("apt-get install libmapnik mapnik-utils python-mapnik -y")
 
 
-    # sudo apt-get install -y g++ cpp \
-    # libicu-dev \
-    # libboost-filesystem-dev \
-    # libboost-program-options-dev \
-    # libboost-python-dev libboost-regex-dev \
-    # libboost-system-dev libboost-thread-dev \
-    # python-dev libxml2 libxml2-dev \
-    # libfreetype6 libfreetype6-dev \
-    # libjpeg-dev \
-    # libltdl7 libltdl-dev \
-    # libpng-dev \
-    # libgeotiff-dev libtiff-dev libtiffxx0c2 \
-    # libcairo2 libcairo2-dev python-cairo python-cairo-dev \
-    # libcairomm-1.0-1 libcairomm-1.0-dev \
-    # ttf-unifont ttf-dejavu ttf-dejavu-core ttf-dejavu-extra \
-    # git build-essential python-nose
+    # sudo apt-get install -y g++ cpp  libicu-dev  libboost-filesystem-dev libboost-program-options-dev libboost-python-dev libboost-regex-dev libboost-system-dev libboost-thread-dev python-dev libxml2 libxml2-dev libfreetype6 libfreetype6-dev libjpeg-dev libltdl7 libltdl-dev libpng-dev libgeotiff-dev libtiff-dev libtiffxx0c2 libcairo2 libcairo2-dev python-cairo python-cairo-dev libcairomm-1.0-1 libcairomm-1.0-dev ttf-unifont ttf-dejavu ttf-dejavu-core ttf-dejavu-extra git build-essential python-nose
     
     # python scons/scons.py DEBUG=y 
 
@@ -75,17 +60,17 @@ def install():
     # sudo easy_install psycopg2 ?
 
 def get_repos():
-    run("mkdir src")
+    # run("mkdir src")
     with cd('src'):
-        run('git clone https://github.com/migurski/TileStache.git')
-        run("svn export http://svn.openstreetmap.org/applications/rendering/mapnik") #this isn't actually mapnik, it's osm utils for mapnik !
+    #     run('git clone https://github.com/migurski/TileStache.git')
+    #     run("svn export http://svn.openstreetmap.org/applications/rendering/mapnik") #this isn't actually mapnik, it's osm utils for mapnik !
     
     #uncomment this
-        # run('svn co http://svn.openstreetmap.org/applications/utils/export/osm2pgsql/')
-        # with cd('osm2pgsql/'):
-        #     run('./autogen.sh')
-        #     run('./configure')
-        #     run("sed -i 's/-g -O2/-O2 -march=native -fomit-frame-pointer/' Makefile")
+        run('svn co http://svn.openstreetmap.org/applications/utils/export/osm2pgsql/')
+        with cd('osm2pgsql/'):
+            run('./autogen.sh')
+            run('./configure')
+            run("sed -i 's/-g -O2/-O2 -march=native -fomit-frame-pointer/' Makefile")
     
     # IMPORTANT   for 64 bit support 
     # IMPORTANT    
@@ -146,6 +131,9 @@ def start_db():
         sudo("sysctl -w kernel.shmmax=268435456") #should put this in the config...
         # probably need to reload or something?  # sudo sysctl -p ?
         
+        #untested here
+        sudo("sudo su postgres -c '/usr/lib/postgresql/9.1/bin/pg_ctl -D /mnt/ebs/postgresql/data -l /mnt/ebs/logfile start'")
+    
     #DOESNOTWORK
     # just sudo su posgres 
     # and then /usr/lib/postgresql/9.1/bin/pg_ctl -D /mnt/ebs/postgresql/data -l /mnt/ebs/logfile start
@@ -177,8 +165,14 @@ def download_boundaries():
         run("tar xjf shoreline_300.tar.bz2 -C world_boundaries")
         run("unzip 10m-populated-places.zip -d world_boundaries")
         run("unzip 110m-admin-0-boundary-lines.zip -d world_boundaries")        
-             
-         
+
+
+def nodecrap():
+    sudo("apt-get install libcairo2-dev libjpeg8-dev")
+    sudo("apt-get install nodejs-dev")
+        # node-waf issues
+
+
 def build_xml():
         with cd('mapnik'):
                 # run("./generate_xml.py --host localhost --user postgres --dbname gis --symbols ./symbols/ --world_boundaries ./world_boundaries/ --accept-none")

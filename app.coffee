@@ -47,7 +47,7 @@ nownow = require('./nownow.js')(app, SessionModel)
 
 app.get '/', (req, res) ->
   worldId = models.mainWorldId
-  res.render 'map_base.jade', { title: 'Scribver.se', worldId: worldId }
+  res.render 'map_base.jade', { title: 'Written World', worldId: worldId }
 
 app.get '/home', (req, res) ->
   if req.loggedIn

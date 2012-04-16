@@ -3,13 +3,14 @@
 
   window.DEBUG = false;
 
-  window.USEMAP = false;
+  window.USEMAP = true;
 
   window.GOOGANAL = false;
 
   Configuration = Configuration = (function() {
 
     function Configuration(spec) {
+      var _ref;
       if (spec == null) spec = {};
       this.tileSize = function() {
         var _ref;
@@ -42,6 +43,7 @@
         var _ref;
         return (_ref = spec.maxDistanceFromOfficial) != null ? _ref : 10000;
       };
+      this.maxJumpDistance = (_ref = spec.maxJumpDistance) != null ? _ref : 0;
     }
 
     return Configuration;
@@ -59,6 +61,13 @@
     0: {
       showLotsOfAnimations: false,
       colorsAvailable: ['c0', 'c1', 'c2', 'c3']
+    }
+  };
+
+  window.prefs = {
+    animate: {
+      ever: true,
+      writing: false
     }
   };
 

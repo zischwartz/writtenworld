@@ -235,28 +235,18 @@
 
   jQuery(function() {
     var centerPoint, tileServeLayer, tileServeUrl;
-    tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png';
+    tileServeUrl = 'http://ec2-107-20-56-118.compute-1.amazonaws.com/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png';
     tileServeLayer = new L.TileLayer(tileServeUrl, {
       maxZoom: config.maxZoom()
     });
     centerPoint = new L.LatLng(40.714269, -74.005972);
-    if (!USEMAP) {
-      window.map = new L.Map('map', {
-        center: centerPoint,
-        zoom: 17,
-        scrollWheelZoom: false,
-        minZoom: config.minZoom(),
-        maxZoom: config.maxZoom()
-      });
-    } else {
-      window.map = new L.Map('map', {
-        center: centerPoint,
-        zoom: 17,
-        scrollWheelZoom: false,
-        minZoom: config.minZoom(),
-        maxZoom: config.maxZoom()
-      }).addLayer(tileServeLayer);
-    }
+    window.map = new L.Map('map', {
+      center: centerPoint,
+      zoom: config.defZoom(),
+      scrollWheelZoom: false,
+      minZoom: config.minZoom(),
+      maxZoom: config.maxZoom()
+    }).addLayer(tileServeLayer);
     initializeGeo();
     window.domTiles = new L.DomTileLayer({
       tileSize: config.tileSize()
@@ -411,8 +401,6 @@
       var cellPoint, echoes, n;
       dbg('Cell write  called');
       if ((this.contents === c) && (this.props.youCanEcho !== false)) {
-        console.log('echo!');
-        console.log(this.props);
         this.animateText(1);
         if (this.props.echoes) {
           echoes = this.props.echoes + 1;
@@ -423,10 +411,10 @@
       } else if (this.props.youCanEcho === false && (this.contents === c)) {
         return false;
       } else {
-        console.log(this);
         if (this.props.echoes) {
+          this.props.echoes -= 1;
           echoes = this.props.echoes;
-          $(this.span).removeClass('e' + echoes).addClass("e" + (echoes - 1));
+          $(this.span).removeClass('e' + echoes).addClass("e" + echoes);
           console.log('oh shit, its been echoed');
           return false;
         }
@@ -455,6 +443,7 @@
     };
 
     Cell.prototype.clear = function() {
+      if (this.contents) this.animateTextRemove(1);
       this.span.innerHTML = config.defaultChar();
       this.write(config.defaultChar());
       return this.span.className = 'cell';
@@ -463,6 +452,10 @@
     Cell.prototype.animateTextInsert = function(animateWith, c) {
       var clone, offset, span;
       if (animateWith == null) animateWith = 0;
+      if (!prefs.animate.writing) {
+        this.span.innerHTML = c;
+        return;
+      }
       clone = document.createElement('SPAN');
       clone.className = 'cell ' + state.color;
       clone.innerHTML = c;

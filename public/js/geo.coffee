@@ -8,7 +8,7 @@ window.initializeGeo = ->
 
   if (navigator.geolocation)
       window.insertMessage 'Welcome', "If your browser asks you if it's ok to use location, please click <b> allow</b>. Otherwise, we'll try to find you based on your IP in a few seconds. <br> <a href='#' class='cancelAltGeo btn'>Or click here to stay right here</a>", 'major alert-info geoHelper', 9
-      # console.log('Geolocation is supported!')
+      console.log('Geolocation is supported!')
       navigator.geolocation.getCurrentPosition(geoSucceeded, geoFailed)
       # navigator.geolocation.watchPosition geoWatch #possibly use this for mobile
   else
@@ -17,12 +17,14 @@ window.initializeGeo = ->
   true
 
 geoFailed = (error) ->
-  # geoAlternative()
+  # $('.geoHelper').remove()
   $.doTimeout 'GeoPermissionTimer', false #cancel timer, exec the cb now
-  # console.log error.message
+  console.log error.message
+  geoAlternative()
   true
 
 geoSucceeded = (position) ->
+  console.log 'geo succeed'
   # window.clearMessages()
   $('.geoHelper').remove()
   $.doTimeout 'GeoPermissionTimer' #cancel the timer
@@ -37,6 +39,7 @@ geoWatch = (position) ->
 
 geoAlternative = ->
   $.getScript 'http://j.maxmind.com/app/geoip.js', (data, textStatus) ->
+    $('.geoHelper').remove()
     geoHasPosition {coords:{latitude: geoip_latitude(), longitude: geoip_longitude(), accuracy:-1}}
     true
 
