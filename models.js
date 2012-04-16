@@ -1,5 +1,5 @@
 (function() {
-  var CellSchema, ObjectId, Rite, RiteSchema, Schema, UserSchema, WorldSchema, events, mongoose, mongooseAuth, slugGenerator, util;
+  var CellSchema, FeedbackSchema, ObjectId, Rite, RiteSchema, Schema, UserSchema, WorldSchema, events, mongoose, mongooseAuth, slugGenerator, util;
 
   util = require('util');
 
@@ -311,6 +311,15 @@
   });
 
   exports.User = mongoose.model('User', UserSchema);
+
+  FeedbackSchema = new Schema({
+    contents: {
+      type: String,
+      "default": ' '
+    }
+  });
+
+  exports.Feedback = mongoose.model('Feedback', FeedbackSchema);
 
   exports.mongooseAuth = mongooseAuth;
 

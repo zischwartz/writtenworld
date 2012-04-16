@@ -71,9 +71,6 @@ RiteSchema.methods.getOwner= (cb)->
 
 Rite = mongoose.model('Rite', RiteSchema)
 
-
-
-
 CellSchema = new Schema
   world: ObjectId
   x: {type: Number, required: true, min: 0}
@@ -170,6 +167,14 @@ UserSchema.plugin mongooseAuth,
 
 
 exports.User= mongoose.model('User', UserSchema)
+
+
+FeedbackSchema = new Schema
+  contents: {type: String, default: ' '}
+
+exports.Feedback = mongoose.model('Feedback', FeedbackSchema)
+
+
 
 # 
 # exports.User.prototype.on 'receivedEcho', (rite) ->

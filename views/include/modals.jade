@@ -59,3 +59,17 @@ form.modal.fade.hide#loginModal(action="/login", method="POST")
     .modal-footer
       button.btn.btn-primary(type="submit") Sign in!
       a.btn(href='#', data-dismiss='modal') Nevermind 
+
+
+div.modal.fade.hide#feedbackModal
+  .modal-header
+      a.close(data-dismiss='modal') ×
+      h3 What do you think? 
+    .modal-body
+      textarea#feedback.span6(name='feedback', placeholder='Write your comment or suggestion here...') 
+    .modal-footer
+      button.btn.btn-primary.trigger(data-type='submitfeedback') Submit!
+      a.btn(href='#', data-dismiss='modal') Nevermind 
+
+
+

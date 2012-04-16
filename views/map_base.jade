@@ -45,7 +45,7 @@ body
   div(id="map")
   div(id="inputWrap")
     input(id="input", type="text", autocorrect="off", autocapitalize="off")
-  
-  div.F(data-toggle="modal", href="#thef-dialog") Feedback
+  div#feedbackButton
+    a(data-toggle="modal", href="#feedbackModal") Feedback
   include include/modals.jade
 

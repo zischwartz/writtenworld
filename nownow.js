@@ -196,6 +196,16 @@
       });
       return true;
     };
+    everyone.now.submitFeedback = function(f) {
+      var feedback;
+      this.now.insertMessage('Thanks', 'We appreciate your feedback');
+      feedback = new models.Feedback({
+        contents: f
+      });
+      return feedback.save(function(err) {
+        if (err) return console.log(err);
+      });
+    };
     everyone.now.setUserOption = function(type, payload) {
       var cid, userId,
         _this = this;

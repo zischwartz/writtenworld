@@ -190,7 +190,7 @@ initializeInterface = ->
     action= $(this).data('action')
     type= $(this).data('type')
     payload= $(this).data('payload')
-    # console.log 'trigger triggered'
+    console.log 'trigger triggered'
     if action == 'set' #change this (and setUserOption below) setServerState
       state[type]=payload
       now.setUserOption(type, payload)
@@ -209,7 +209,13 @@ initializeInterface = ->
       $('.direction-dropdown')[0].innerHTML=c
       $('.direction-dropdown i').addClass('icon-white')
       inputEl.focus()
-    return true
+    if type == 'submitfeedback'
+      f=$('#feedback').val()
+      now.submitFeedback(f)
+      $('#feedbackModal').modal('hide')
+      return false
+    return
+
 
 panIfAppropriate = (direction)->
   selectedPP= $(state.selectedEl).offset()

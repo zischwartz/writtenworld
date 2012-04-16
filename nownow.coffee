@@ -144,6 +144,12 @@ module.exports = (app, SessionModel) ->
       cb(closeUsers)
     true
 
+
+  everyone.now.submitFeedback = (f) ->
+    this.now.insertMessage 'Thanks', 'We appreciate your feedback'
+    feedback = new models.Feedback({contents: f})
+    feedback.save (err) -> console.log err if err
+
   everyone.now.setUserOption = (type, payload) ->
     console.log 'setUserOption', type, payload
     if type = 'color'

@@ -184,10 +184,11 @@
       return inputEl.focus();
     });
     return $(".trigger").live('click', function() {
-      var action, c, payload, type;
+      var action, c, f, payload, type;
       action = $(this).data('action');
       type = $(this).data('type');
       payload = $(this).data('payload');
+      console.log('trigger triggered');
       if (action === 'set') {
         state[type] = payload;
         now.setUserOption(type, payload);
@@ -203,7 +204,12 @@
         $('.direction-dropdown i').addClass('icon-white');
         inputEl.focus();
       }
-      return true;
+      if (type === 'submitfeedback') {
+        f = $('#feedback').val();
+        now.submitFeedback(f);
+        $('#feedbackModal').modal('hide');
+        return false;
+      }
     });
   };
 
