@@ -369,7 +369,6 @@ window.Cell = class Cell
       @span.className+= " e#{@props.echoes}"
 
   write: (c) ->
-    dbg 'Cell write  called'
     if (@contents == c) and (@props.youCanEcho isnt false) #an echo!
       @animateText(1)
       if @props.echoes
@@ -382,15 +381,18 @@ window.Cell = class Cell
       return false
 
     else  #all other rites
-      if @props.echoes
-        @props.echoes-=1
-        echoes = @props.echoes
-        $(@span).removeClass('e'+echoes).addClass("e#{echoes}")
-        
-        #remove class, add class .e minus 1, 
-        # have the server handle this independently (so don't return false.)
-        console.log 'oh shit, its been echoed'
-        return false
+      if @props.echoes >= 1
+        $(@span).removeClass('e'+@props.echoes)
+        @props.echoes = @props.echoes-1
+        $(@span).addClass("e#{@props.echoes}")
+        shakeWindow()
+        cellPoint = cellKeyToXY @key
+        now.writeCell(cellPoint, c)
+        @props.youCanEcho = false
+        return
+      # if @props.youCanEcho == false #this won't work, it prevents you from writing over things you've written
+        # return false
+
       if @contents
         @animateTextRemove(1)
       @contents= c

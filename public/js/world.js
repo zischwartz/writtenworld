@@ -405,7 +405,6 @@
 
     Cell.prototype.write = function(c) {
       var cellPoint, echoes, n;
-      dbg('Cell write  called');
       if ((this.contents === c) && (this.props.youCanEcho !== false)) {
         this.animateText(1);
         if (this.props.echoes) {
@@ -417,12 +416,15 @@
       } else if (this.props.youCanEcho === false && (this.contents === c)) {
         return false;
       } else {
-        if (this.props.echoes) {
-          this.props.echoes -= 1;
-          echoes = this.props.echoes;
-          $(this.span).removeClass('e' + echoes).addClass("e" + echoes);
-          console.log('oh shit, its been echoed');
-          return false;
+        if (this.props.echoes >= 1) {
+          $(this.span).removeClass('e' + this.props.echoes);
+          this.props.echoes = this.props.echoes - 1;
+          $(this.span).addClass("e" + this.props.echoes);
+          shakeWindow();
+          cellPoint = cellKeyToXY(this.key);
+          now.writeCell(cellPoint, c);
+          this.props.youCanEcho = false;
+          return;
         }
         if (this.contents) this.animateTextRemove(1);
         this.contents = c;

@@ -201,10 +201,24 @@
         });
         rite.props.isEcho = true;
         rite.markModified('props');
+      } else {
+        if (cell.current.props.echoes) {
+          cell.current.props.echoes -= 1;
+          cell.current.markModified('props');
+          cell.current.save(function(err) {
+            if (err) return console.log(err);
+          });
+          console.log('REMOVED AN ECHO');
+        }
       }
       cell.history.push(rite);
       rite.save(function(err) {
-        if (!rite.props.isEcho) cell.current = rite._id;
+        var _ref, _ref2;
+        console.log(cell != null ? (_ref = cell.current) != null ? _ref.props.echoes : void 0 : void 0);
+        if ((!rite.props.isEcho) && (!(cell != null ? (_ref2 = cell.current) != null ? _ref2.props.echoes : void 0 : void 0) > 0)) {
+          console.log('neither riting an echo or over riting an echo');
+          cell.current = rite._id;
+        }
         return cell.save(function(err) {
           if (err) return console.log(err);
         });

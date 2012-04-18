@@ -4,6 +4,8 @@ window.DEBUG = false
 # window.USEMAP = false
 window.USEMAP = true
 
+window.VARYLATLNG = false
+
 window.GOOGANAL = false #didn't impliment...
 
 Configuration = class Configuration #(spec) 

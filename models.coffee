@@ -102,9 +102,20 @@ exports.writeCellToDb = (cellPoint, contents, worldId, ownerId, isOwnerAuth, pro
           cell.current.save (err) -> console.log err if err
           rite.props.isEcho = true
           rite.markModified('props')
+      else
+        # this rite isn't an echo, but was cell.current?
+        if cell.current.props.echoes
+            cell.current.props.echoes-=1
+            cell.current.markModified('props')
+            cell.current.save (err) -> console.log err if err
+            console.log 'REMOVED AN ECHO'
       cell.history.push(rite)
       rite.save (err) ->
-        cell.current = rite._id if not rite.props.isEcho
+        console.log cell?.current?.props.echoes
+        if (not rite.props.isEcho) and (not cell?.current?.props.echoes > 0)
+          # if not cell?.current?.props
+          console.log 'neither riting an echo or over riting an echo'
+          cell.current = rite._id
         cell.save (err) ->console.log err if err
       
       exports.User.findById ownerId, (err, user)->

@@ -73,7 +73,10 @@ geoHasPosition = (position) ->
     # console.log 'we have the position, one way or the other! and yr in an official city'
   else
     console.log 'dang you arent in an official city'
-    map.setView(varyLatLng(officialCities[closest]), config.defZoom() )
+    if window.VARYLATLNG
+      map.setView(varyLatLng(officialCities[closest]), config.defZoom() )
+    else
+      map.setView(officialCities[closest], config.defZoom() )
     window.insertMessage "&quotHey, That's Not Where I Am!&quot", "Scribver.se is still in beta, so we're limiting ourselves to a few cities for now. We took you to <b>#{closest}</b>.<br><br>Want a head start writing on your actual location? It may be kinda empty.<br><br><a href='#' class='goToActualPos btn' data-dismiss='alert'>Click here to go to your location</a>", 'major alert-info', 25
   return true
 

@@ -5,6 +5,8 @@
 
   window.USEMAP = true;
 
+  window.VARYLATLNG = false;
+
   window.GOOGANAL = false;
 
   Configuration = Configuration = (function() {
