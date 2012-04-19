@@ -5,14 +5,14 @@ window.DEBUG = false
 window.USEMAP = true
 
 window.VARYLATLNG = false
-
-window.GOOGANAL = false #didn't impliment...
+window.MapBoxBadZoomOffset=3 #because mapbox can't zoom in all the way, but we use maxZoom to determine resolution
 
 Configuration = class Configuration #(spec) 
   constructor: (spec = {}) ->
     @tileSize = -> spec.tileSize ? {x: 192, y: 256} #been using THIS one
-    @maxZoom = -> spec.maxZoom ? 20 # was 18, current image tiles are only 18
-    @minZoom = -> spec.maxZoom ? 16
+    @tileServeUrl = -> spec.tileServeUrl ? "http://{s}.tiles.mapbox.com/v3/zischwartz.map-ei57zypj/{z}/{x}/{y}.png" 
+    @maxZoom = -> spec.maxZoom ? 20 # this is super important and sets the resolution. was 18, current image tiles are only 18
+    @minZoom = -> spec.maxZoom ? 15 # was 16
     @defZoom = -> spec.maxZoom ? 17
     @defaultChar = -> spec.defaultChar ? " "
     @inputRateLimit = -> spec.inputRateLimit ? 40
@@ -60,5 +60,5 @@ window.prefs =
   # @tileSize = -> spec.tileSize ? {x: 192, y: 224} #liking this one
 
 
-
+  # tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png' # tileServeUrl = 'http://ec2-107-20-56-118.compute-1.amazonaws.com/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png' # tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png'
 

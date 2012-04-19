@@ -240,9 +240,8 @@
   };
 
   jQuery(function() {
-    var centerPoint, tileServeLayer, tileServeUrl;
-    tileServeUrl = 'http://ec2-107-20-56-118.compute-1.amazonaws.com/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png';
-    tileServeLayer = new L.TileLayer(tileServeUrl, {
+    var centerPoint, tileServeLayer;
+    tileServeLayer = new L.TileLayer(config.tileServeUrl(), {
       maxZoom: config.maxZoom()
     });
     centerPoint = new L.LatLng(40.714269, -74.005972);
@@ -251,7 +250,7 @@
       zoom: config.defZoom(),
       scrollWheelZoom: false,
       minZoom: config.minZoom(),
-      maxZoom: config.maxZoom()
+      maxZoom: config.maxZoom() - window.MapBoxBadZoomOffset
     }).addLayer(tileServeLayer);
     initializeGeo();
     window.domTiles = new L.DomTileLayer({

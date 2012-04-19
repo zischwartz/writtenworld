@@ -7,7 +7,7 @@
 
   window.VARYLATLNG = false;
 
-  window.GOOGANAL = false;
+  window.MapBoxBadZoomOffset = 3;
 
   Configuration = Configuration = (function() {
 
@@ -21,13 +21,17 @@
           y: 256
         };
       };
+      this.tileServeUrl = function() {
+        var _ref;
+        return (_ref = spec.tileServeUrl) != null ? _ref : "http://{s}.tiles.mapbox.com/v3/zischwartz.map-ei57zypj/{z}/{x}/{y}.png";
+      };
       this.maxZoom = function() {
         var _ref;
         return (_ref = spec.maxZoom) != null ? _ref : 20;
       };
       this.minZoom = function() {
         var _ref;
-        return (_ref = spec.maxZoom) != null ? _ref : 16;
+        return (_ref = spec.maxZoom) != null ? _ref : 15;
       };
       this.defZoom = function() {
         var _ref;

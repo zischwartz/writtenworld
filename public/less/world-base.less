@@ -116,3 +116,35 @@ a.colorOptions
   cursor: pointer;
 }
 
+a#color
+{
+     -webkit-animation: coloryt 15s infinite !important;
+     -moz-animation: coloryt 15s infinite !important;
+  &:hover
+  { 
+     -moz-animation: none  !important;
+     -webkit-animation: none !important; 
+    color: white !important;
+  }
+}
+
+
+
+@-webkit-keyframes coloryt {
+        0%    { color: #ff0000; }
+        20%   { color: #dd01da; }
+        40%   { color: #051ae5; }
+        60%   { color: #018a45; }
+        80%   { color: #ce8e04; }  /*927502*/
+        100%  { color: #ff0000; }
+}
+
+
+@-moz-keyframes coloryt {
+        0%    { color: #ff0000; }
+        20%   { color: #dd01da; }
+        40%   { color: #051ae5; }
+        60%   { color: #018a45; }
+        80%   { color: #ce8e04; }  /*927502*/
+        100%  { color: #ff0000; }
+}

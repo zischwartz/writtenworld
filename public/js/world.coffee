@@ -240,12 +240,9 @@ panIfAppropriate = (direction)->
 
 
 jQuery ->
-  # tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png'
-  tileServeUrl = 'http://ec2-107-20-56-118.compute-1.amazonaws.com/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png'
-  # tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png'
-  tileServeLayer = new L.TileLayer(tileServeUrl, {maxZoom: config.maxZoom()})
+  tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()})
   centerPoint= new L.LatLng(40.714269, -74.005972) #try adding slight randomness to this
-  window.map = new L.Map('map', {center: centerPoint, zoom: config.defZoom(), scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom() }).addLayer(tileServeLayer)
+  window.map = new L.Map('map', {center: centerPoint, zoom: config.defZoom(), scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset }).addLayer(tileServeLayer)
   initializeGeo()
   
   # window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
