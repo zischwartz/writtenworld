@@ -179,7 +179,7 @@
 
   exports.Cell = mongoose.model('Cell', CellSchema);
 
-  exports.writeCellToDb = function(cellPoint, contents, worldId, ownerId, isOwnerAuth, props) {
+  exports.writeCellToDb = function(cellPoint, contents, worldId, riter, isOwnerAuth, props) {
     if (props == null) {
       props = {};
     }
@@ -201,7 +201,7 @@
       }
       rite = new Rite({
         contents: contents,
-        owner: ownerId,
+        owner: riter,
         props: props
       });
       rite.markModified('props');
@@ -212,14 +212,20 @@
           world: worldId
         });
       }
-      isOwner = ownerId === ((_ref = cell.current) != null ? _ref.owner.toString() : void 0);
+      isOwner = riter.toString() === ((_ref = cell.current) != null ? _ref.owner.toString() : void 0);
       isEcho = ((_ref1 = cell.current) != null ? _ref1.contents : void 0) === rite.contents;
       isLegitEcho = !isOwner && isEcho;
       isBlank = !cell.current || ((_ref2 = cell.current) != null ? _ref2.contents : void 0) === ' ';
       cEchoes = cell != null ? (_ref3 = cell.current) != null ? (_ref4 = _ref3.props) != null ? _ref4.echoes : void 0 : void 0 : void 0;
       isLegitDownrote = false;
-      console.log('cell.current', cell.current);
-      console.log('rite', rite);
+      cell.history.push(rite);
+      console.log('isOwner ', isOwner);
+      console.log('isEcho ', isEcho);
+      console.log('isLegitEcho ', isLegitEcho);
+      console.log('isBlank ', isBlank);
+      console.log('cEchoes ', cEchoes);
+      console.log('pre-echologic cell.current', cell.current);
+      console.log('------------------------------------------------------------');
       doEchoLogic = function() {
         if (isBlank) {
           console.log('WAS BLANK, ROTE');
@@ -238,16 +244,16 @@
           console.log('echoing yourself too much will make you go blind');
           return true;
         }
-        if (isOwner && echoes <= 0) {
+        if (isOwner && cEchoes <= 0) {
           console.log('OVERWROTE SELF');
           cell.current = rite;
           rite.save(function(err) {
-            return cell.current = rite._id;
-          });
-          cell.save(function(err) {
-            if (err) {
-              return console.log(err);
-            }
+            cell.current = rite._id;
+            return cell.save(function(err) {
+              if (err) {
+                return console.log(err);
+              }
+            });
           });
           return true;
         }
@@ -255,6 +261,11 @@
           console.log('DOWNVOTED SELF');
           cell.current.props.echoes -= 1;
           cell.current.markModified('props');
+          cell.current.save(function(err) {
+            if (err) {
+              return console.log(err);
+            }
+          });
           cell.save(function(err) {
             if (err) {
               return console.log(err);
@@ -278,12 +289,25 @@
           });
           return true;
         }
+        if (cEchoes <= 0 && !isOwner) {
+          console.log('OVERROTE SOMEONE ELSE');
+          cell.current = rite;
+          rite.save(function(err) {
+            cell.current = rite._id;
+            return cell.save(function(err) {
+              if (err) {
+                return console.log(err);
+              }
+            });
+          });
+          return true;
+        }
         if (!isOwner && !isEcho) {
           isLegitDownrote = true;
           console.log('legit downrote');
           cell.current.props.echoes -= 1;
           cell.current.markModified('props');
-          cell.save(function(err) {
+          cell.current.save(function(err) {
             if (err) {
               return console.log(err);
             }
@@ -298,7 +322,7 @@
       };
       doEchoLogic();
       if (isLegitEcho) {
-        exports.User.findById(ownerId, function(err, user) {
+        exports.User.findById(riter, function(err, user) {
           if (user) {
             user.totalRites += 1;
             return user.save(function(err) {
