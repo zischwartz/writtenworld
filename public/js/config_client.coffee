@@ -5,12 +5,15 @@ window.DEBUG = false
 window.USEMAP = true
 
 window.VARYLATLNG = false
-window.MapBoxBadZoomOffset=3 #because mapbox can't zoom in all the way, but we use maxZoom to determine resolution
 
+window.MapBoxBadZoomOffset=0 #because mapbox can't zoom in all the way, but we use maxZoom to determine resolution
+
+s3Url= "http://s3.amazonaws.com/ww-tiles/wwtiles/{z}/{x}/{y}.png"
+mapBoxUrl = "http://{s}.tiles.mapbox.com/v3/zischwartz.map-ei57zypj/{z}/{x}/{y}.png" # set offset to 3 if use this one
 Configuration = class Configuration #(spec) 
   constructor: (spec = {}) ->
     @tileSize = -> spec.tileSize ? {x: 192, y: 256} #been using THIS one
-    @tileServeUrl = -> spec.tileServeUrl ? "http://{s}.tiles.mapbox.com/v3/zischwartz.map-ei57zypj/{z}/{x}/{y}.png" 
+    @tileServeUrl = -> spec.tileServeUrl ? s3Url
     @maxZoom = -> spec.maxZoom ? 20 # this is super important and sets the resolution. was 18, current image tiles are only 18
     @minZoom = -> spec.maxZoom ? 15 # was 16
     @defZoom = -> spec.maxZoom ? 17

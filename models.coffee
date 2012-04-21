@@ -60,11 +60,18 @@ exports.World.findOne {name: 'main'}, (err, world)->
       console.log ' So we created the main world'
       exports.mainWorldId = world._id
 
+ritePropsDefs=
+  echoes: 0 #-1
+  echoers: []
+  downroters: []
+console.log ritePropsDefs
+
 RiteSchema = new Schema
-  contents: {type: String, default: ' '}
+  contents: {type: String, default: ' '} #conig TODO
   date: { type: Date, default: Date.now }
   owner: ObjectId
   props: {type:Schema.Types.Mixed, default:{} }
+  # props: {type:Schema.Types.Mixed, default:ritePropsDefs} #{} }
 
 RiteSchema.methods.getOwner= (cb)->
   return this.db.model('User').findById(this.owner).run(cb)
@@ -75,7 +82,7 @@ CellSchema = new Schema
   world: ObjectId
   x: {type: Number, required: true, min: 0}
   y: {type: Number, required: true, min: 0}
-  contents: {type: String, default: ' '}
+  # contents: {type: String, default: ' '}
   current: { type: Schema.ObjectId, ref: 'Rite' }
   history: [{ type: Schema.ObjectId, ref: 'Rite' }]
 
@@ -84,54 +91,144 @@ CellSchema.index {world:1, x:1, y:1}, {unique:true}
 exports.Cell = mongoose.model('Cell', CellSchema)
 
 exports.writeCellToDb = (cellPoint, contents, worldId, ownerId, isOwnerAuth, props={}) ->
-    #userId will either be a session or a real user id
-    # console.log "writing cell ownerId is : #{ownerId}"
+    #userId will either be a session or a real user id # console.log "writing cell ownerId is : #{ownerId}"
   exports.Cell
   .findOne({world: worldId, x:cellPoint.x, y: cellPoint.y})
   .populate('current')
   .run (err, cell) ->
       console.log err if err
+      # prepare our rite
+      for own key, val of ritePropsDefs
+        props[key] = val if not props?[key]
+
       rite = new Rite({contents: contents, owner:ownerId, props:props })
-      if not cell
-          cell = new exports.Cell {x:cellPoint.x, y:cellPoint.y, contents: contents, world:worldId}
-      else if (cell.current.contents == contents) and (cell.current.owner.toString() != ownerId) # and isOwnerAuth
-          if not cell.current.props.echoes
-            cell.current.props.echoes = 0
-          cell.current.props.echoes+=1
-          cell.current.markModified('props')
-          cell.current.save (err) -> console.log err if err
-          rite.props.isEcho = true
-          rite.markModified('props')
-      else
-        # this rite isn't an echo, but was cell.current?
-        if cell.current.props.echoes
+      rite.markModified('props')
+      # console.log rite
+
+      cell = new exports.Cell {x:cellPoint.x, y:cellPoint.y, world:worldId} if not cell
+
+      isOwner = ownerId == cell.current?.owner.toString()
+      isEcho = cell.current?.contents == rite.contents #change name to potentialEcho
+      isLegitEcho = not isOwner and isEcho # and not isAnEchoer 
+      isBlank = not cell.current or cell.current?.contents == ' ' # TODO  woops config.defaultChar()
+      cEchoes = cell?.current?.props?.echoes
+      isLegitDownrote = false #this is a flag, gets flipped in case 6
+      # TODO check if in echoers, downroters,
+      
+      # cell.history.push(rite) #should work even though i'm changing the rite later, it's a reference...right?
+
+      console.log 'cell.current', cell.current
+      console.log 'rite', rite
+
+      doEchoLogic = ->
+          # case 1
+          if isBlank
+            console.log 'WAS BLANK, ROTE'
+            cell.current = rite
+            rite.save (err) ->
+              cell.current = rite._id
+              cell.save (err) ->console.log err if err
+            return true
+
+          #case 2
+          if isEcho and isOwner
+            console.log 'echoing yourself too much will make you go blind'
+            return true
+          
+          # case 3
+          if isOwner and echoes<=0
+            console.log 'OVERWROTE SELF'
+            cell.current = rite
+            rite.save (err) ->
+                cell.current = rite._id
+              cell.save (err) ->console.log err if err
+            return true
+
+          # case 4
+          if isOwner and cEchoes > 0
+            console.log 'DOWNVOTED SELF'
             cell.current.props.echoes-=1
             cell.current.markModified('props')
-            cell.current.save (err) -> console.log err if err
-            console.log 'REMOVED AN ECHO'
-      cell.history.push(rite)
-      rite.save (err) ->
-        console.log cell?.current?.props.echoes
-        if (not rite.props.isEcho) and (not cell?.current?.props.echoes > 0)
-          # if not cell?.current?.props
-          console.log 'neither riting an echo or over riting an echo'
-          cell.current = rite._id
-        cell.save (err) ->console.log err if err
-      
-      exports.User.findById ownerId, (err, user)->
-        if user
-          user.totalRites+=1
-          user.save (err) -> console.log err if err
-     
-      if cell.current
-        exports.User.findById cell.current.owner, (err, user) ->
+            cell.save (err) -> console.log err if err
+            rite.save (err) -> console.log err if err
+            return true
+
+          #case 5
+          if isLegitEcho
+            console.log 'LEGIT ECHO YO'
+            cell.current.props.echoes+=1
+            cell.current.markModified('props')
+            cell.current.save (err) ->
+              console.log err if err
+            # rite.save (err) ->
+            #   console.log err if err
+            #   cell.save (err) ->console.log err if err
+            #   console.log cell.current.props
+            #add to echoers #and downroters if thats there
+            return true
+          
+          # case 6
+          if not isOwner and not isEcho #and not a downroter
+            isLegitDownrote = true #flag!
+            console.log 'legit downrote'
+            cell.current.props.echoes-=1
+            cell.current.markModified('props')
+            cell.save (err) ->console.log err if err
+            rite.save (err) -> console.log err if err
+            # add to downroters
+              #and echoers if thats there
+            return true
+
+      doEchoLogic()
+
+      # console.log cell.current, 'current, after doechologic'
+
+      if isLegitEcho
+        exports.User.findById ownerId, (err, user)->
           if user
-            if rite.props.isEcho
-              user.totalEchoes+=1
-              user.save (err)-> console.log err if err
-              user.emit('receivedEcho', rite)
-            else if user._id.toString() != ownerId and isOwnerAuth
-              user.emit('receivedOverRite', rite)
+            user.totalRites+=1
+            user.save (err) -> console.log err if err
+
+      if isLegitEcho or isLegitDownrote
+        #make this cUser based instead
+        exports.User.findById cell.current.owner, (err, user) ->
+          if isLegitEcho and user
+            # if rite.props.isEcho
+            user.totalEchoes+=1
+            user.save (err)-> console.log err if err
+            user.emit('receivedEcho', rite)
+          else if isLegitDownrote and user
+          # else if user._id.toString() != ownerId and isOwnerAuth
+            user.emit('receivedOverRite', rite)
+
+      #may be needed?  shouldn't be  
+      # rite.markModified('props')
+
+      # else if (cell.current.contents == contents) and (cell.current.owner.toString() != ownerId) # and isOwnerAuth
+      #     if not cell.current.props.echoes
+      #       cell.current.props.echoes = 0
+          # cell.current.props.echoes+=1
+          # cell.current.markModified('props')
+          # cell.current.save (err) -> console.log err if err
+          # rite.props.isEcho = true
+          # rite.markModified('props')
+      #
+      # this rite isn'ddt an echo, but was cell.current?
+      # else
+      #   if cell.current.props.echoes
+      #       cell.current.props.echoes-=1
+      #       cell.current.markModified('props')
+      #       cell.current.save (err) -> console.log err if err
+      #       console.log 'REMOVED AN ECHO'
+      # cell.history.push(rite)
+      # rite.save (err) ->
+      #   # console.log cell?.current?.props.echoes
+      #   if (not rite.props.isEcho) and (not cell?.current?.props.echoes > 0)
+      #     # if not cell?.current?.props
+      #     console.log 'neither riting an echo or over riting an echo'
+      #     cell.current = rite._id
+      #   cell.save (err) ->console.log err if err
+     
   true
 
 

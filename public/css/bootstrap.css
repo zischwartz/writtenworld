@@ -6339,6 +6339,8 @@ body, html {
   color: #ffffff;
 }
 div.leaflet-tile {
+  /*.rotate(32) !important;*/
+
   color: white;
   /*.transition(opacity ease-in 0.3s) !important;*/
 
