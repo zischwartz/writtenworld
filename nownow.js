@@ -86,21 +86,22 @@
       });
     };
     everyone.now.writeCell = function(cellPoint, content) {
-      var cid, currentWorldId, edits, isOwnerAuth, ownerId, props, sid;
+      var cid, currentWorldId, edits, isOwnerAuth, isPersonal, ownerId, props, sid;
       cid = this.user.clientId;
       currentWorldId = this.now.currentWorldId;
       sid = decodeURIComponent(this.user.cookie['connect.sid']);
       props = {};
       isOwnerAuth = false;
+      isPersonal = false;
       if (this.user.session.auth) {
         isOwnerAuth = true;
         ownerId = this.user.session.auth.userId;
         props.color = this.user.session.color;
-        models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth, props);
+        models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth, isPersonal, props);
         models.User.findById(ownerId, function(err, user) {
-          console.log(typeof user.personalWorld.toString(), currentWorldId);
           if (user.personalWorld.toString() !== currentWorldId) {
-            return models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, props);
+            isPersonal = true;
+            return models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, isPersonal, props);
           }
         });
       } else {
@@ -111,7 +112,7 @@
           data = JSON.parse(doc.data);
           ownerId = doc._id;
           props.color = data.color;
-          return models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth, props);
+          return models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth, isPersonal, props);
         });
       }
       if (this.user.session.color != null) {

@@ -2,6 +2,8 @@ express = require 'express'
 nowjs = require 'now'
 connect = require 'connect'
 
+# require 'coffee-script'
+
 mongoose = require 'mongoose'
 mongoose.connect('mongodb://localhost/mapist')
 jade = require('jade')

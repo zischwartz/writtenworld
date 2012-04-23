@@ -11,6 +11,10 @@ module.exports = (app, SessionModel) ->
   everyone.now.setCurrentWorld = (currentWorldId) ->
     group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId)
     this.now.currentWorldId = currentWorldId
+    #ugly, decided against it for the moment, was trying to store world props here 
+    # models.World.findById currentWorldId, (err, world) ->
+      # this.now.world = world
+      # console.log 'WORLD', world
     # console.log group
 
   # These are problematic, but we never iterate through them, just look ups
@@ -64,23 +68,25 @@ module.exports = (app, SessionModel) ->
     sid= decodeURIComponent this.user.cookie['connect.sid']
     props = {}
     isOwnerAuth = false
+    isPersonal= false
+
     if this.user.session.auth
       isOwnerAuth = true
       ownerId = this.user.session.auth.userId
       props.color = this.user.session.color
-      models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth,  props)
+      models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth, isPersonal, props)
 
       # Writes to your personal world.
       models.User.findById ownerId, (err, user) ->
-        console.log typeof user.personalWorld.toString() , currentWorldId
-        if user.personalWorld.toString()  isnt currentWorldId  #check if they're already in their own world (heh)
-          models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth,  props)
+        if user.personalWorld.toString() isnt currentWorldId  #check if they're already in their own world (heh)
+          isPersonal= true
+          models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, isPersonal, props)
     else
       SessionModel.findOne {'sid': sid } , (err, doc) ->
         data = JSON.parse(doc.data)
         ownerId=doc._id
         props.color = data.color
-        models.writeCellToDb(cellPoint, content, currentWorldId ,ownerId, isOwnerAuth,  props) #userId shouldbe an objectID for consistancy, either session or real user
+        models.writeCellToDb(cellPoint, content, currentWorldId ,ownerId, isOwnerAuth, isPersonal, props) #userId shouldbe an objectID for consistancy, either session or real user
     
     if this.user.session.color? # if we have it, lets use it. the above won't have it in time to send to other clients
       props.color= this.user.session.color
