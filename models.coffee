@@ -136,6 +136,9 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
       # console.log 'isOwner ', isOwner; console.log 'isEcho ', isEcho; console.log 'isLegitEcho ', isLegitEcho; console.log 'isBlank ', isBlank; console.log 'cEchoes ', cEchoes; console.log 'pre-echologic cell.current', cell.current
 
       doEchoLogic = ->
+          if isBlank and isBlankRite #case 0
+            console.log 'blank on blank action'
+            return true
           if isBlank and not isBlankRite #case 1
             console.log 'WAS CURRENT BLANK, ROTE'
             cell.current = rite
@@ -165,7 +168,7 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
             rite.save (err) -> console.log err if err
             return true
                               # just added isblankrite: no echoing blank rites
-          if isLegitEcho and not isBlankRite #case 5
+          if isLegitEcho and not isBlankRite and not isAlreadyEchoer #case 5
             console.log 'LEGIT ECHO YO'
             cell.current.props.echoes+=1
             cell.current.props.echoers.push(riter)
@@ -175,6 +178,7 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
             rite.save (err) -> console.log err if err
             return true
           
+          # it seems isAlready downroter isn't working...? print it out
           if cEchoes <= 0 and not isOwner and not isAlreadyDownroter #case 6
             console.log 'OVERROTE SOMEONE ELSE'
             cell.current= rite

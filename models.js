@@ -250,6 +250,10 @@
       cell.history.push(rite);
       doEchoLogic = function() {
         var eindex;
+        if (isBlank && isBlankRite) {
+          console.log('blank on blank action');
+          return true;
+        }
         if (isBlank && !isBlankRite) {
           console.log('WAS CURRENT BLANK, ROTE');
           cell.current = rite;
@@ -296,7 +300,7 @@
           });
           return true;
         }
-        if (isLegitEcho && !isBlankRite) {
+        if (isLegitEcho && !isBlankRite && !isAlreadyEchoer) {
           console.log('LEGIT ECHO YO');
           cell.current.props.echoes += 1;
           cell.current.props.echoers.push(riter);
