@@ -98,12 +98,6 @@
         ownerId = this.user.session.auth.userId;
         props.color = this.user.session.color;
         models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth, isPersonal, props);
-        models.User.findById(ownerId, function(err, user) {
-          if (user.personalWorld.toString() !== currentWorldId) {
-            isPersonal = true;
-            return models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, isPersonal, props);
-          }
-        });
       } else {
         SessionModel.findOne({
           'sid': sid
@@ -148,13 +142,15 @@
         if (docs.length) {
           for (_i = 0, _len = docs.length; _i < _len; _i++) {
             c = docs[_i];
-            pCell = {
-              x: c.y,
-              y: c.y,
-              contents: c.current.contents,
-              props: c.current.props
-            };
-            results["" + c.x + "x" + c.y] = pCell;
+            if (c.current) {
+              pCell = {
+                x: c.y,
+                y: c.y,
+                contents: c.current.contents,
+                props: c.current.props
+              };
+              results["" + c.x + "x" + c.y] = pCell;
+            }
           }
           return callback(results, absTilePoint);
         } else {

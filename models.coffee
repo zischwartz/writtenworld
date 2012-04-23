@@ -66,7 +66,7 @@ exports.World.findOne {name: 'main'}, (err, world)->
       exports.mainWorld
 
 ritePropsDefs=
-  echoes: 0 #-1
+  echoes: -1
   echoers: []
   downroters: []
 
@@ -94,133 +94,217 @@ CellSchema.index {world:1, x:1, y:1}, {unique:true}
 exports.Cell = mongoose.model('Cell', CellSchema)
 
 exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPersonal, props={}) ->
+  # prepare our rite
+  for own key, val of ritePropsDefs
+    if not props?[key]
+      if key=='echoers' or key=='downroters'
+        props[key]=[]
+      else
+        props[key] = val
+  rite = new Rite({contents: contents, owner:riter, props:props })
+  rite.markModified('props')
+
   exports.Cell
   .findOne({world: worldId, x:cellPoint.x, y: cellPoint.y})
   .populate('current')
   .run (err, cell) ->
       console.log err if err
-      # prepare our rite
-      for own key, val of ritePropsDefs
-        props[key] = val if not props?[key]
-
-      rite = new Rite({contents: contents, owner:riter, props:props })
-      rite.markModified('props')
 
       cell = new exports.Cell {x:cellPoint.x, y:cellPoint.y, world:worldId} if not cell
 
+      cell.history.push(rite)
+
       if isPersonal # or not  world.echoes 
-        cell.history.push(rite)
         cell.current = rite
         rite.save (err) ->
           cell.current = rite._id
           cell.save (err) ->console.log err if err
+        console.log 'personal, lets gtfo'
         return #and lets gtfo
 
-      isAlreadyEchoer=false; isAlreadyDownroter = false
-      if cell?.current?.props.echoers and riter in cell?.current?.props.echoers
-        isAlreadyEchoer=true; console.log 'ALREADY ECHOER'
-      if cell?.current?.props.downroters and riter in cell?.current?.props.downroters
-        isAlreadyDownroter=true; console.log 'ALREADY DOWNROTER'
-      
-      isOwner = riter.toString() == cell.current?.owner.toString()
-      isPotentialEcho = cell.current?.contents == rite.contents #change name to potentialEcho
-      isLegitEcho = not isOwner and isPotentialEcho  and not isAlreadyEchoer
-      isBlank = not cell.current or cell.current?.contents ==  exports.mainWorld.meta.defaultChar #' ' # TODO  woops config.defaultChar()
+      isAlreadyEchoer=false; isAlreadyDownroter = false; i=-1; alreadyDownPos= -1; alreadyEchoPos=-1; #hacktastic, because indexof doesn't work with mongoose objectIds
+      if cell?.current?.props.echoers
+        for e in cell?.current?.props.echoers
+          i+=1
+          if e.toString()==riter.toString()
+            isAlreadyEchoer = true
+            alreadyEchoPos= i
+            console.log "already echoer!!! #{alreadyEchoPos}"
+      if cell?.current?.props.downroters
+        for d in cell?.current?.props.downroters
+          i+=1
+          if d.toString()==riter.toString()
+            isAlreadyDownroter = true
+            alreadyDownPos=i
+            console.log "already downroter!!! #{alreadyDownPos}"
+      isPotentialEcho = cell.current?.contents == rite.contents
+      isLegitEcho = isPotentialEcho  and not isAlreadyEchoer
+      isBlankCurrent = not cell.current or cell.current?.contents ==  exports.mainWorld.meta.defaultChar #' ' # TODO  woops config.defaultChar()
       isBlankRite = rite.contents == exports.mainWorld.meta.defaultChar
       cEchoes = cell?.current?.props?.echoes
+
       isLegitDownrote = false #this is a flag, gets flipped in case 6
-      
-      originalOwner = cell.current?.owner
-
-      cell.history.push(rite)
-      # console.log 'isOwner ', isOwner; console.log 'isEcho ', isEcho; console.log 'isLegitEcho ', isLegitEcho; console.log 'isBlank ', isBlank; console.log 'cEchoes ', cEchoes; console.log 'pre-echologic cell.current', cell.current
-
+       
       doEchoLogic = ->
-          if isBlank and isBlankRite #case 0
-            console.log 'blank on blank action'
-            return true
-          if isBlank and not isBlankRite #case 1
-            console.log 'WAS CURRENT BLANK, ROTE'
-            cell.current = rite
-            rite.save (err) ->
-              cell.current = rite._id
-              cell.save (err) ->console.log err if err
-            return true
-
-          if isPotentialEcho and isOwner #case 2
-            # Actually stopping this on client side
-            console.log 'echoing yourself too much will make you go blind'
-            return true
+        normalRite = (cell, rite, riter) ->
+          rite.props.echoes+=1
+          rite.props.echoers.push(riter)
+          rite.save (err) ->
+            cell.current= rite._id
+            cell.save()
           
-          if isOwner and cEchoes<=0 #case 3
-            console.log 'OVERROTE SELF'
-            cell.current = rite
-            rite.save (err) ->
-              cell.current = rite._id
-              cell.save (err) ->console.log err if err
-            return true
+        echoIt = (cell, rite, riter) ->
+          cell.current.props.echoes+=1
+          cell.current.props.echoers.push(riter)
+          if isAlreadyDownroter
+            cell.current.props.downroters.splice(alreadyDownPos, 1)
+          rite.save()
+          cell.current.markModified('props')
+          cell.current.save (err) -> console.log err if err
+          return
 
-          if isOwner and cEchoes > 0 #case 4
-            console.log 'DOWNVOTED SELF'
-            cell.current.props.echoes-=1
-            cell.current.markModified('props')
-            cell.current.save (err) ->console.log err if err
-            rite.save (err) -> console.log err if err
+        downroteIt = (cell, rite, riter) ->
+          cell.current.props.echoes-=1
+          cell.current.props.downroters.push(riter)
+          if isAlreadyEchoer
+            cell.current.props.echoers.splice(alreadyEchoPos, 1)
+          rite.save()
+          cell.current.markModified('props')
+          cell.current.save (err) -> console.log err if err
+          return
+
+        overriteIt = (cell, rite, riter) ->
+          rite.props.echoes+=1
+          rite.props.echoers.push(riter)
+          rite.save (err) ->
+            cell.current = rite._id
+            cell.save (err) -> console.log err if err
+          return
+
+        if isBlankCurrent
+          console.log 'blank, just write'
+          normalRite(cell, rite, riter)
+          return true
+        if isPotentialEcho and isAlreadyEchoer
+          console.log 'Echoing yourself too much will make you go blind'
+          return false
+        if isAlreadyDownroter and not isPotentialEcho
+          console.log 'FU, you cannot downrote again'
+          return false
+        else
+          if isLegitEcho
+            console.log 'Legit echo, cool'
+            echoIt(cell, rite, riter)
             return true
-                              # just added isblankrite: no echoing blank rites
-          if isLegitEcho and not isBlankRite and not isAlreadyEchoer #case 5
-            console.log 'LEGIT ECHO YO'
-            cell.current.props.echoes+=1
-            cell.current.props.echoers.push(riter)
-            eindex=cell.current.props.downroters.indexOf(riter); cell.current.props.downroters.splice(eindex,1)
-            cell.current.markModified('props')
-            cell.current.save (err) -> console.log err if err
-            rite.save (err) -> console.log err if err
-            return true
+          else # downrote/overrite
+            if cEchoes<=0
+              overriteIt(cell, rite, riter)
+              # just rite, remove from echoers
+              console.log 'legit overrite'
+              return true
+            else if cEchoes>=1
+                if isAlreadyEchoer
+                  if cEchoes ==1
+                    overriteIt(cell, rite, riter)
+                  else
+                    downroteIt(cell, rite, riter)
+                  console.log 'yr downroting something you echoed. crazy'
+                  return true
+                else
+                  console.log 'legit downrote'
+                  downroteIt(cell, rite, riter)
+                  return true
+                  #remove, incr etc
+
           
-          # it seems isAlready downroter isn't working...? print it out
-          if cEchoes <= 0 and not isOwner and not isAlreadyDownroter #case 6
-            console.log 'OVERROTE SOMEONE ELSE'
-            cell.current= rite
-            rite.save (err) ->
-              cell.current = rite._id
-              cell.save (err) -> console.log err if err
-            return true
+          # if isBlankCurrent and isBlankRite #case 0
+          #   console.log 'blank on blank action'
+          #   return true
 
-          # case 7
-          if not isOwner and not isPotentialEcho and not isAlreadyDownroter
-            isLegitDownrote = true #flag!
-            console.log 'LEGIT DOWNROTE'
-            cell.current.props.downroters.push(riter)
-            eindex=cell.current.props.echoers.indexOf(riter); cell.current.props.echoers.splice(eindex,1)
-            cell.current.props.echoes-=1
-            cell.current.markModified('props')
-            cell.current.save (err) -> console.log err if err
-            rite.save (err) -> console.log err if err
-            return true
+          # if isPotentialEcho or isBlankCurrent and not isBlankRite
+          #   if isAlreadyEchoer
+          #     console.log 'echoing yourself too much will make you go blind'
+          #     return true
+          #   else
+          #     if isBlankCurrent
+          #       console.log 'Riting to blank'
+          #       rite.props.echoes+=1
+          #       rite.props.echoers.push(riter)
+          #       rite.save (err) ->
+          #         cell.current = rite._id
+          #         cell.save()
+          #     else
+          #       console.log 'Legit Echo'
+          #       cell.current.props.echoes+=1
+          #       cell.current.props.echoers.push(riter)
+          #       if isAlreadyDownroter
+          #         cell.current.props.downroters.splice(alreadyDownPos, 1)
+          #         console.log cell.current.props.downroters, 'downroters'
+          #       rite.save()
+          #       cell.current.markModified('props')
+          #       cell.current.save (err) -> console.log err if err
+          # else # it's a downrote or a normal overite
+          #   if isAlreadyDownroter
+          #     console.log 'you cannot downrote this again dude'
+          #     return true
+          #   else
+          #     if cell.current.props.echoes<=0 and isBlankRite
+          #       console.log 'writing blank to unechoed, setting c.c=null'
+          #       cell.current = null
+          #       cell.save()
+          #       return true
+          #     else if cell.current.props.echoes<=0
+          #       console.log 'normal overite'
+          #       rite.props.echoes+=1
+          #       rite.props.echoers.push(riter)
+          #       rite.save (err) ->
+          #         cell.current = rite._id
+          #         cell.save (err) -> console.log err if err
+          #     else if cell.current.props.echoes<=1 and isAlreadyEchoer
+          #       console.log 'overrite downvote combo from an already echoer'
+          #       cell.current.props.echoers.splice(alreadyEchoPos, 1)
+          #       cell.current.props.echoes-=1
+          #       cell.current.save() #yuck
+          #       rite.props.echoes+=1
+          #       rite.props.echoers.push(riter)
+          #       rite.save (err) ->
+          #         cell.current = rite._id
+          #         cell.save (err) -> console.log err if err
+          #     else
+          #       console.log 'legit downrote!'
+          #       cell.current.props.echoes-=1
+          #       cell.current.props.downroters.push(riter)
+          #       if isAlreadyEchoer
+          #         cell.current.props.echoers.splice(alreadyEchoPos, 1)
+          #         console.log cell.current.props.echoers, 'echoers'
+          #       rite.save()
+          #       cell.current.markModified('props')
+          #       cell.current.save (err) -> console.log err if err
+
+
         
       # Calls the above and returns
       doEchoLogic()
+      console.log '-----------'
+      # if isLegitEcho
+      #   console.log 'ADDING AN ECHO TO THAT USER if it exists yo'
+      #   exports.User.findById riter, (err, user)->
+      #     if user
+      #       user.totalRites+=1
+      #       user.save (err) -> console.log err if err
+      #       # TODO add a emit ? or use below
 
-      if isLegitEcho
-        console.log 'ADDING AN ECHO TO THAT USER if it exists yo'
-        exports.User.findById riter, (err, user)->
-          if user
-            user.totalRites+=1
-            user.save (err) -> console.log err if err
-            # TODO add a emit ? or use below
-
-      if isLegitEcho or isLegitDownrote or (cEchoes<=0 and not isOwner)
-        exports.User.findById originalOwner, (err, user) ->
-          console.log 'trying to send a message'
-          if isLegitEcho and user
-            console.log 'SENDING echo msg congrats'
-            user.totalEchoes+=1
-            user.save (err)-> console.log err if err
-            user.emit('receivedEcho', rite)
-          else if user and not isAlreadyDownroter
-            console.log 'SENDING overrite msg boo'
-            user.emit('receivedOverRite', rite)
+      # if isLegitEcho or isLegitDownrote or (cEchoes<=0 and not isOwner)
+      #   exports.User.findById originalOwner, (err, user) ->
+      #     console.log 'trying to send a message'
+      #     if isLegitEcho and user
+      #       console.log 'SENDING echo msg congrats'
+      #       user.totalEchoes+=1
+      #       user.save (err)-> console.log err if err
+      #       user.emit('receivedEcho', rite)
+      #     else if user and not isAlreadyDownroter
+      #       console.log 'SENDING overrite msg boo'
+      #       user.emit('receivedOverRite', rite)
   return true
 
 
@@ -275,6 +359,10 @@ FeedbackSchema = new Schema
 exports.Feedback = mongoose.model('Feedback', FeedbackSchema)
 
 
+#UTILITY
+# Array::remove = (e) -> @[t..t] = [] if (t = @indexOf(e)) > -1
+
+Array::filter = (func) -> x for x in @ when func(x)
 
 # 
 # exports.User.prototype.on 'receivedEcho', (rite) ->

@@ -77,10 +77,10 @@ module.exports = (app, SessionModel) ->
       models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth, isPersonal, props)
 
       # Writes to your personal world.
-      models.User.findById ownerId, (err, user) ->
-        if user.personalWorld.toString() isnt currentWorldId  #check if they're already in their own world (heh)
-          isPersonal= true
-          models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, isPersonal, props)
+      # models.User.findById ownerId, (err, user) ->
+      #   if user.personalWorld.toString() isnt currentWorldId  #check if they're already in their own world (heh)
+      #     isPersonal= true
+      #     models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, isPersonal, props)
     else
       SessionModel.findOne {'sid': sid } , (err, doc) ->
         data = JSON.parse(doc.data)
@@ -109,8 +109,9 @@ module.exports = (app, SessionModel) ->
         results = {}
         if docs.length
           for c in docs
-            pCell = {x: c.y, y: c.y, contents: c.current.contents, props: c.current.props}
-            results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
+            if c.current
+              pCell = {x: c.y, y: c.y, contents: c.current.contents, props: c.current.props}
+              results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
             # console.log results
           callback(results, absTilePoint)
         else
