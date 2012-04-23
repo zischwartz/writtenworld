@@ -2,7 +2,7 @@ express = require 'express'
 nowjs = require 'now'
 connect = require 'connect'
 
-# require 'coffee-script'
+require 'coffee-script'
 
 mongoose = require 'mongoose'
 mongoose.connect('mongodb://localhost/mapist')
@@ -12,7 +12,8 @@ jade = require('jade')
 events = require('events')
 util = require('util')
 
-models= require './models.js'
+# models= require './models.js'
+models= require './models'
 
 [sessionStore, SessionModel] = require("./mongoose-session.js")(connect) #my edited version returns the model as well because looks weren't working through the get() interface
 
@@ -45,7 +46,7 @@ app.configure 'production', ->
   app.use express.errorHandler()
   app.set 'port', 80
 
-nownow = require('./nownow.js')(app, SessionModel)
+nownow = require('./nownow')(app, SessionModel)
 
 app.get '/', (req, res) ->
   worldId = models.mainWorldId
