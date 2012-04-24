@@ -206,9 +206,10 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
                 if isAlreadyEchoer
                   if cEchoes ==1
                     overriteIt(cell, rite, riter)
+                    console.log 'overrite something you echoed!'
                   else
                     downroteIt(cell, rite, riter)
-                  console.log 'yr downroting something you echoed. crazy'
+                    console.log 'downroting something you echoed!'
                   return true
                 else
                   console.log 'legit downrote'
@@ -217,71 +218,6 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
                   #remove, incr etc
 
           
-          # if isBlankCurrent and isBlankRite #case 0
-          #   console.log 'blank on blank action'
-          #   return true
-
-          # if isPotentialEcho or isBlankCurrent and not isBlankRite
-          #   if isAlreadyEchoer
-          #     console.log 'echoing yourself too much will make you go blind'
-          #     return true
-          #   else
-          #     if isBlankCurrent
-          #       console.log 'Riting to blank'
-          #       rite.props.echoes+=1
-          #       rite.props.echoers.push(riter)
-          #       rite.save (err) ->
-          #         cell.current = rite._id
-          #         cell.save()
-          #     else
-          #       console.log 'Legit Echo'
-          #       cell.current.props.echoes+=1
-          #       cell.current.props.echoers.push(riter)
-          #       if isAlreadyDownroter
-          #         cell.current.props.downroters.splice(alreadyDownPos, 1)
-          #         console.log cell.current.props.downroters, 'downroters'
-          #       rite.save()
-          #       cell.current.markModified('props')
-          #       cell.current.save (err) -> console.log err if err
-          # else # it's a downrote or a normal overite
-          #   if isAlreadyDownroter
-          #     console.log 'you cannot downrote this again dude'
-          #     return true
-          #   else
-          #     if cell.current.props.echoes<=0 and isBlankRite
-          #       console.log 'writing blank to unechoed, setting c.c=null'
-          #       cell.current = null
-          #       cell.save()
-          #       return true
-          #     else if cell.current.props.echoes<=0
-          #       console.log 'normal overite'
-          #       rite.props.echoes+=1
-          #       rite.props.echoers.push(riter)
-          #       rite.save (err) ->
-          #         cell.current = rite._id
-          #         cell.save (err) -> console.log err if err
-          #     else if cell.current.props.echoes<=1 and isAlreadyEchoer
-          #       console.log 'overrite downvote combo from an already echoer'
-          #       cell.current.props.echoers.splice(alreadyEchoPos, 1)
-          #       cell.current.props.echoes-=1
-          #       cell.current.save() #yuck
-          #       rite.props.echoes+=1
-          #       rite.props.echoers.push(riter)
-          #       rite.save (err) ->
-          #         cell.current = rite._id
-          #         cell.save (err) -> console.log err if err
-          #     else
-          #       console.log 'legit downrote!'
-          #       cell.current.props.echoes-=1
-          #       cell.current.props.downroters.push(riter)
-          #       if isAlreadyEchoer
-          #         cell.current.props.echoers.splice(alreadyEchoPos, 1)
-          #         console.log cell.current.props.echoers, 'echoers'
-          #       rite.save()
-          #       cell.current.markModified('props')
-          #       cell.current.save (err) -> console.log err if err
-
-
         
       # Calls the above and returns
       doEchoLogic()

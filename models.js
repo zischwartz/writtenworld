@@ -345,10 +345,11 @@
               if (isAlreadyEchoer) {
                 if (cEchoes === 1) {
                   overriteIt(cell, rite, riter);
+                  console.log('overrite something you echoed!');
                 } else {
                   downroteIt(cell, rite, riter);
+                  console.log('downroting something you echoed!');
                 }
-                console.log('yr downroting something you echoed. crazy');
                 return true;
               } else {
                 console.log('legit downrote');
