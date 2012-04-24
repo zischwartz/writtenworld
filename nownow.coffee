@@ -2,8 +2,9 @@
 models= require './models.js'
 nowjs = require 'now'
 
+async = require './lib/async.js'
 
-leaflet = require './leaflet-custom-src.js'
+leaflet = require './lib/leaflet-custom-src.js'
 
 module.exports = (app, SessionModel) ->
   everyone = nowjs.initialize app
@@ -77,10 +78,10 @@ module.exports = (app, SessionModel) ->
       models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth, isPersonal, props)
 
       # Writes to your personal world.
-      # models.User.findById ownerId, (err, user) ->
-      #   if user.personalWorld.toString() isnt currentWorldId  #check if they're already in their own world (heh)
-      #     isPersonal= true
-      #     models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, isPersonal, props)
+      models.User.findById ownerId, (err, user) ->
+        if user.personalWorld.toString() isnt currentWorldId  #check if they're already in their own world (heh)
+          isPersonal= true
+          models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, isPersonal, props)
     else
       SessionModel.findOne {'sid': sid } , (err, doc) ->
         data = JSON.parse(doc.data)
@@ -91,14 +92,13 @@ module.exports = (app, SessionModel) ->
     if this.user.session.color? # if we have it, lets use it. the above won't have it in time to send to other clients
       props.color= this.user.session.color
 
-    # toUpdate = getWhoCanSee(cellPoint, this.now.currentWorldId)
     edits = {}
     getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
       for i of toUpdate
         if i !=cid
           edits[cid] = {cellPoint: cellPoint, content: content, props:props}
           nowjs.getClient i, -> this.now.drawEdits(edits)
-    true
+    return true
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
     models.Cell.where('world', this.now.currentWorldId)

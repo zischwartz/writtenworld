@@ -97,7 +97,7 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
   # prepare our rite
   for own key, val of ritePropsDefs
     if not props?[key]
-      if key=='echoers' or key=='downroters'
+      if key=='echoers' or key=='downroters' #right, arrays aren't deep copied. and we don't need them to be, but we can't have them referencing...
         props[key]=[]
       else
         props[key] = val
@@ -109,17 +109,13 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
   .populate('current')
   .run (err, cell) ->
       console.log err if err
-
       cell = new exports.Cell {x:cellPoint.x, y:cellPoint.y, world:worldId} if not cell
-
       cell.history.push(rite)
-
       if isPersonal # or not  world.echoes 
         cell.current = rite
         rite.save (err) ->
           cell.current = rite._id
           cell.save (err) ->console.log err if err
-        console.log 'personal, lets gtfo'
         return #and lets gtfo
 
       isAlreadyEchoer=false; isAlreadyDownroter = false; i=-1; alreadyDownPos= -1; alreadyEchoPos=-1; #hacktastic, because indexof doesn't work with mongoose objectIds
@@ -137,15 +133,17 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
             isAlreadyDownroter = true
             alreadyDownPos=i
             console.log "already downroter!!! #{alreadyDownPos}"
+
       isPotentialEcho = cell.current?.contents == rite.contents
       isLegitEcho = isPotentialEcho  and not isAlreadyEchoer
       isBlankCurrent = not cell.current or cell.current?.contents ==  exports.mainWorld.meta.defaultChar #' ' # TODO  woops config.defaultChar()
       isBlankRite = rite.contents == exports.mainWorld.meta.defaultChar
       cEchoes = cell?.current?.props?.echoes
-
-      isLegitDownrote = false #this is a flag, gets flipped in case 6
+      originalOwner = cell.current?.owner
+      isLegitDownrote = not isBlankCurrent and not isPotentialEcho and not isAlreadyDownroter and (riter.toString() != cell.current.owner.toString())# only used for sending message
        
       doEchoLogic = ->
+        #confusingly and perhaps stupidly, these are functions that are used in the big IF below
         normalRite = (cell, rite, riter) ->
           rite.props.echoes+=1
           rite.props.echoers.push(riter)
@@ -181,6 +179,7 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
             cell.save (err) -> console.log err if err
           return
 
+        # HERE
         if isBlankCurrent
           console.log 'blank, just write'
           normalRite(cell, rite, riter)
@@ -221,26 +220,22 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
         
       # Calls the above and returns
       doEchoLogic()
-      console.log '-----------'
-      # if isLegitEcho
-      #   console.log 'ADDING AN ECHO TO THAT USER if it exists yo'
-      #   exports.User.findById riter, (err, user)->
-      #     if user
-      #       user.totalRites+=1
-      #       user.save (err) -> console.log err if err
-      #       # TODO add a emit ? or use below
 
-      # if isLegitEcho or isLegitDownrote or (cEchoes<=0 and not isOwner)
-      #   exports.User.findById originalOwner, (err, user) ->
-      #     console.log 'trying to send a message'
-      #     if isLegitEcho and user
-      #       console.log 'SENDING echo msg congrats'
-      #       user.totalEchoes+=1
-      #       user.save (err)-> console.log err if err
-      #       user.emit('receivedEcho', rite)
-      #     else if user and not isAlreadyDownroter
-      #       console.log 'SENDING overrite msg boo'
-      #       user.emit('receivedOverRite', rite)
+      if isLegitEcho
+        exports.User.findById riter, (err, user)->
+          if user
+            user.totalRites+=1
+            user.save (err) -> console.log err if err
+            # TODO add a emit ? or use below
+
+      if isLegitEcho or isLegitDownrote
+        exports.User.findById originalOwner, (err, user) ->
+          if isLegitEcho and user and user isnt riter
+            user.totalEchoes+=1
+            user.save (err)-> console.log err if err
+            user.emit('receivedEcho', rite)
+          else if user and isLegitDownrote
+            user.emit('receivedOverRite', rite)
   return true
 
 

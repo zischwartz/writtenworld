@@ -10,7 +10,7 @@
       return false;
     });
     if (navigator.geolocation) {
-      window.insertMessage('Welcome', "If your browser asks you if it's ok to use location, please click <b> allow</b>. Otherwise, we'll try to find you based on your IP in a few seconds. <br> <a href='#' class='cancelAltGeo btn'>Or click here to stay right here</a>", 'major alert-info geoHelper', 9);
+      window.insertMessage('Welcome', "If your browser asks you if it's ok to use location, please click <b> allow</b>. Otherwise, we'll try to find you based on your IP in a few seconds. <br> <a href='#' data-dismiss='alert' class='cancelAltGeo btn'>Or click here to stay right here</a>", 'major alert-info geoHelper', 9);
       console.log('Geolocation is supported!');
       navigator.geolocation.getCurrentPosition(geoSucceeded, geoFailed);
     } else {

@@ -209,7 +209,7 @@
       x: cellPoint.x,
       y: cellPoint.y
     }).populate('current').run(function(err, cell) {
-      var alreadyDownPos, alreadyEchoPos, cEchoes, d, doEchoLogic, e, i, isAlreadyDownroter, isAlreadyEchoer, isBlankCurrent, isBlankRite, isLegitDownrote, isLegitEcho, isPotentialEcho, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+      var alreadyDownPos, alreadyEchoPos, cEchoes, d, doEchoLogic, e, i, isAlreadyDownroter, isAlreadyEchoer, isBlankCurrent, isBlankRite, isLegitDownrote, isLegitEcho, isPotentialEcho, originalOwner, _i, _j, _len, _len1, _ref, _ref1, _ref10, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
       if (err) {
         console.log(err);
       }
@@ -231,7 +231,6 @@
             }
           });
         });
-        console.log('personal, lets gtfo');
         return;
       }
       isAlreadyEchoer = false;
@@ -268,7 +267,8 @@
       isBlankCurrent = !cell.current || ((_ref7 = cell.current) != null ? _ref7.contents : void 0) === exports.mainWorld.meta.defaultChar;
       isBlankRite = rite.contents === exports.mainWorld.meta.defaultChar;
       cEchoes = cell != null ? (_ref8 = cell.current) != null ? (_ref9 = _ref8.props) != null ? _ref9.echoes : void 0 : void 0 : void 0;
-      isLegitDownrote = false;
+      originalOwner = (_ref10 = cell.current) != null ? _ref10.owner : void 0;
+      isLegitDownrote = !isBlankCurrent && !isPotentialEcho && !isAlreadyDownroter && (riter.toString() !== cell.current.owner.toString());
       doEchoLogic = function() {
         var downroteIt, echoIt, normalRite, overriteIt;
         normalRite = function(cell, rite, riter) {
@@ -361,7 +361,33 @@
         }
       };
       doEchoLogic();
-      return console.log('-----------');
+      if (isLegitEcho) {
+        exports.User.findById(riter, function(err, user) {
+          if (user) {
+            user.totalRites += 1;
+            return user.save(function(err) {
+              if (err) {
+                return console.log(err);
+              }
+            });
+          }
+        });
+      }
+      if (isLegitEcho || isLegitDownrote) {
+        return exports.User.findById(originalOwner, function(err, user) {
+          if (isLegitEcho && user && user !== riter) {
+            user.totalEchoes += 1;
+            user.save(function(err) {
+              if (err) {
+                return console.log(err);
+              }
+            });
+            return user.emit('receivedEcho', rite);
+          } else if (user && isLegitDownrote) {
+            return user.emit('receivedOverRite', rite);
+          }
+        });
+      }
     });
     return true;
   };

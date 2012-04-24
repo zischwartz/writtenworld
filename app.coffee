@@ -12,10 +12,9 @@ jade = require('jade')
 events = require('events')
 util = require('util')
 
-# models= require './models.js'
 models= require './models'
 
-[sessionStore, SessionModel] = require("./mongoose-session.js")(connect) #my edited version returns the model as well because looks weren't working through the get() interface
+[sessionStore, SessionModel] = require("./lib/mongoose-session.js")(connect) #my edited version returns the model as well because looks weren't working through the get() interface
 
 app = express.createServer()
 
