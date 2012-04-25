@@ -209,7 +209,7 @@
       x: cellPoint.x,
       y: cellPoint.y
     }).populate('current').run(function(err, cell) {
-      var alreadyDownPos, alreadyEchoPos, cEchoes, d, doEchoLogic, e, i, isAlreadyDownroter, isAlreadyEchoer, isBlankCurrent, isBlankRite, isLegitDownrote, isLegitEcho, isPotentialEcho, originalOwner, _i, _j, _len, _len1, _ref, _ref1, _ref10, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+      var doEchoLogic;
       if (err) {
         console.log(err);
       }
@@ -233,92 +233,7 @@
         });
         return;
       }
-      isAlreadyEchoer = false;
-      isAlreadyDownroter = false;
-      i = -1;
-      alreadyDownPos = -1;
-      alreadyEchoPos = -1;
-      if (cell != null ? (_ref = cell.current) != null ? _ref.props.echoers : void 0 : void 0) {
-        _ref2 = cell != null ? (_ref1 = cell.current) != null ? _ref1.props.echoers : void 0 : void 0;
-        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-          e = _ref2[_i];
-          i += 1;
-          if (e.toString() === riter.toString()) {
-            isAlreadyEchoer = true;
-            alreadyEchoPos = i;
-            console.log("already echoer!!! " + alreadyEchoPos);
-          }
-        }
-      }
-      if (cell != null ? (_ref3 = cell.current) != null ? _ref3.props.downroters : void 0 : void 0) {
-        _ref5 = cell != null ? (_ref4 = cell.current) != null ? _ref4.props.downroters : void 0 : void 0;
-        for (_j = 0, _len1 = _ref5.length; _j < _len1; _j++) {
-          d = _ref5[_j];
-          i += 1;
-          if (d.toString() === riter.toString()) {
-            isAlreadyDownroter = true;
-            alreadyDownPos = i;
-            console.log("already downroter!!! " + alreadyDownPos);
-          }
-        }
-      }
-      isPotentialEcho = ((_ref6 = cell.current) != null ? _ref6.contents : void 0) === rite.contents;
-      isLegitEcho = isPotentialEcho && !isAlreadyEchoer;
-      isBlankCurrent = !cell.current || ((_ref7 = cell.current) != null ? _ref7.contents : void 0) === exports.mainWorld.meta.defaultChar;
-      isBlankRite = rite.contents === exports.mainWorld.meta.defaultChar;
-      cEchoes = cell != null ? (_ref8 = cell.current) != null ? (_ref9 = _ref8.props) != null ? _ref9.echoes : void 0 : void 0 : void 0;
-      originalOwner = (_ref10 = cell.current) != null ? _ref10.owner : void 0;
-      isLegitDownrote = !isBlankCurrent && !isPotentialEcho && !isAlreadyDownroter && (riter.toString() !== cell.current.owner.toString());
       doEchoLogic = function() {
-        var downroteIt, echoIt, normalRite, overriteIt;
-        normalRite = function(cell, rite, riter) {
-          rite.props.echoes += 1;
-          rite.props.echoers.push(riter);
-          return rite.save(function(err) {
-            cell.current = rite._id;
-            return cell.save();
-          });
-        };
-        echoIt = function(cell, rite, riter) {
-          cell.current.props.echoes += 1;
-          cell.current.props.echoers.push(riter);
-          if (isAlreadyDownroter) {
-            cell.current.props.downroters.splice(alreadyDownPos, 1);
-          }
-          rite.save();
-          cell.current.markModified('props');
-          cell.current.save(function(err) {
-            if (err) {
-              return console.log(err);
-            }
-          });
-        };
-        downroteIt = function(cell, rite, riter) {
-          cell.current.props.echoes -= 1;
-          cell.current.props.downroters.push(riter);
-          if (isAlreadyEchoer) {
-            cell.current.props.echoers.splice(alreadyEchoPos, 1);
-          }
-          rite.save();
-          cell.current.markModified('props');
-          cell.current.save(function(err) {
-            if (err) {
-              return console.log(err);
-            }
-          });
-        };
-        overriteIt = function(cell, rite, riter) {
-          rite.props.echoes += 1;
-          rite.props.echoers.push(riter);
-          rite.save(function(err) {
-            cell.current = rite._id;
-            return cell.save(function(err) {
-              if (err) {
-                return console.log(err);
-              }
-            });
-          });
-        };
         if (isBlankCurrent) {
           console.log('blank, just write');
           normalRite(cell, rite, riter);

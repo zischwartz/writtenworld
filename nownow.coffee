@@ -2,34 +2,41 @@
 models= require './models.js'
 nowjs = require 'now'
 
-async = require './lib/async.js'
+# async = require './lib/async.js'
 
 leaflet = require './lib/leaflet-custom-src.js'
 
 module.exports = (app, SessionModel) ->
   everyone = nowjs.initialize app
+  
+  bridge = require('./bridge')(everyone, SessionModel)
+  # bridge.test()
 
   everyone.now.setCurrentWorld = (currentWorldId) ->
     group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId)
     this.now.currentWorldId = currentWorldId
-    #ugly, decided against it for the moment, was trying to store world props here 
-    # models.World.findById currentWorldId, (err, world) ->
-      # this.now.world = world
-      # console.log 'WORLD', world
-    # console.log group
 
   # These are problematic, but we never iterate through them, just look ups
   cUsers = {} #all of the connected users, by clientId (nowjs)
   aUsers = {} #all connected and auth'd users, by actual userId (mongoose _id)
+  # should use redis for these. maybe?
 
   nowjs.on 'connect', ->
     sid=decodeURIComponent(this.user.cookie['connect.sid'])
-     
+    console.log 'SID ', sid
     if this.user.session?.auth
       cUsers[this.user.clientId]={sid:sid, userId: this.user.session.auth.userId }
       aUsers[this.user.session.auth.userId]={sid:sid,cid: this.user.clientId}
     else
       cUsers[this.user.clientId]={sid:sid}
+      SessionModel.findOne {'sid': sid } , (err, doc) =>
+        data = JSON.parse(doc.data)
+        cUsers[this.user.clientId]={sid:sid, userId: doc._id}
+        this.user.soid=doc._id #not sure if this is a good idea
+
+        # console.log 'session object  id' , doc._id
+        # props.color = data.color
+
     console.log this.user.clientId, 'connected clientId: '
     true
 
@@ -63,41 +70,50 @@ module.exports = (app, SessionModel) ->
           nowjs.getClient i, -> this.now.drawCursors(update)
 
   everyone.now.writeCell = (cellPoint, content) ->
+    # bridge.test()
     # console.log 'this.user', this.user
-    cid = this.user.clientId
-    currentWorldId = this.now.currentWorldId
-    sid= decodeURIComponent this.user.cookie['connect.sid']
-    props = {}
-    isOwnerAuth = false
-    isPersonal= false
 
-    if this.user.session.auth
-      isOwnerAuth = true
-      ownerId = this.user.session.auth.userId
-      props.color = this.user.session.color
-      models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth, isPersonal, props)
+    currentWorldId = this.now.currentWorldId
+
+    bridge.processRite(cellPoint, content, this.user, currentWorldId)
+
+
+
+    # cid = this.user.clientId
+    # sid= decodeURIComponent this.user.cookie['connect.sid']
+    # isOwnerAuth = false
+    # isPersonal= false
+
+    # if this.user.session.auth
+    #   isOwnerAuth = true
+    #   ownerId = this.user.session.auth.userId
+    #   props.color = this.user.session.color
+
+      # models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth, isPersonal, props)
 
       # Writes to your personal world.
-      models.User.findById ownerId, (err, user) ->
-        if user.personalWorld.toString() isnt currentWorldId  #check if they're already in their own world (heh)
-          isPersonal= true
-          models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, isPersonal, props)
-    else
-      SessionModel.findOne {'sid': sid } , (err, doc) ->
-        data = JSON.parse(doc.data)
-        ownerId=doc._id
-        props.color = data.color
-        models.writeCellToDb(cellPoint, content, currentWorldId ,ownerId, isOwnerAuth, isPersonal, props) #userId shouldbe an objectID for consistancy, either session or real user
-    
-    if this.user.session.color? # if we have it, lets use it. the above won't have it in time to send to other clients
-      props.color= this.user.session.color
+      # models.User.findById ownerId, (err, user) ->
+      #   if user.personalWorld.toString() isnt currentWorldId  #check if they're already in their own world (heh)
+      #     isPersonal= true
+      #     models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, isPersonal, props)
+    # else
+    #   SessionModel.findOne {'sid': sid } , (err, doc) ->
+    #     data = JSON.parse(doc.data)
+    #     ownerId=doc._id
+    #     props.color = data.color
+    #     models.writeCellToDb(cellPoint, content, currentWorldId ,ownerId, isOwnerAuth, isPersonal, props) #userId shouldbe an objectID for consistancy, either session or real user
 
-    edits = {}
-    getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
-      for i of toUpdate
-        if i !=cid
-          edits[cid] = {cellPoint: cellPoint, content: content, props:props}
-          nowjs.getClient i, -> this.now.drawEdits(edits)
+    
+# 
+#     if this.user.session.color? # if we have it, lets use it. the above won't have it in time to send to other clients
+#       props.color= this.user.session.color
+# 
+#     edits = {}
+#     getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
+#       for i of toUpdate
+#         if i !=cid
+#           edits[cid] = {cellPoint: cellPoint, content: content, props:props}
+#           nowjs.getClient i, -> this.now.drawEdits(edits)
     return true
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->

@@ -114,7 +114,6 @@ initializeInterface = ->
       $("#userTotalRites").text(userTotalRites+1)
 
       cellPoint = cellKeyToXY state.selectedCell.key
-      # now.writeCell(cellPoint, c)
 
       moveCursor(state.writeDirection)
       # panIfAppropriate(state.writeDirection)
@@ -387,8 +386,6 @@ window.Cell = class Cell
         now.writeCell(cellPoint, c)
         @props.youCanEcho = false
         return
-      # if @props.youCanEcho == false #this won't work, it prevents you from writing over things you've written
-        # return false
 
       if @contents
         @animateTextRemove(1)

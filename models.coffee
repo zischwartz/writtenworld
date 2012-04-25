@@ -118,66 +118,66 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
           cell.save (err) ->console.log err if err
         return #and lets gtfo
 
-      isAlreadyEchoer=false; isAlreadyDownroter = false; i=-1; alreadyDownPos= -1; alreadyEchoPos=-1; #hacktastic, because indexof doesn't work with mongoose objectIds
-      if cell?.current?.props.echoers
-        for e in cell?.current?.props.echoers
-          i+=1
-          if e.toString()==riter.toString()
-            isAlreadyEchoer = true
-            alreadyEchoPos= i
-            console.log "already echoer!!! #{alreadyEchoPos}"
-      if cell?.current?.props.downroters
-        for d in cell?.current?.props.downroters
-          i+=1
-          if d.toString()==riter.toString()
-            isAlreadyDownroter = true
-            alreadyDownPos=i
-            console.log "already downroter!!! #{alreadyDownPos}"
+      # isAlreadyEchoer=false; isAlreadyDownroter = false; i=-1; alreadyDownPos= -1; alreadyEchoPos=-1; #hacktastic, because indexof doesn't work with mongoose objectIds
+      # if cell?.current?.props.echoers
+      #   for e in cell?.current?.props.echoers
+      #     i+=1
+      #     if e.toString()==riter.toString()
+      #       isAlreadyEchoer = true
+      #       alreadyEchoPos= i
+      #       console.log "already echoer!!! #{alreadyEchoPos}"
+      # if cell?.current?.props.downroters
+      #   for d in cell?.current?.props.downroters
+      #     i+=1
+      #     if d.toString()==riter.toString()
+      #       isAlreadyDownroter = true
+      #       alreadyDownPos=i
+      #       console.log "already downroter!!! #{alreadyDownPos}"
 
-      isPotentialEcho = cell.current?.contents == rite.contents
-      isLegitEcho = isPotentialEcho  and not isAlreadyEchoer
-      isBlankCurrent = not cell.current or cell.current?.contents ==  exports.mainWorld.meta.defaultChar #' ' # TODO  woops config.defaultChar()
-      isBlankRite = rite.contents == exports.mainWorld.meta.defaultChar
-      cEchoes = cell?.current?.props?.echoes
-      originalOwner = cell.current?.owner
-      isLegitDownrote = not isBlankCurrent and not isPotentialEcho and not isAlreadyDownroter and (riter.toString() != cell.current.owner.toString())# only used for sending message
+      # isPotentialEcho = cell.current?.contents == rite.contents
+      # isLegitEcho = isPotentialEcho  and not isAlreadyEchoer
+      # isBlankCurrent = not cell.current or cell.current?.contents ==  exports.mainWorld.meta.defaultChar #' ' # TODO  woops config.defaultChar()
+      # isBlankRite = rite.contents == exports.mainWorld.meta.defaultChar
+      # cEchoes = cell?.current?.props?.echoes
+      # originalOwner = cell.current?.owner
+      # isLegitDownrote = not isBlankCurrent and not isPotentialEcho and not isAlreadyDownroter and (riter.toString() != cell.current.owner.toString())# only used for sending message
        
       doEchoLogic = ->
         #confusingly and perhaps stupidly, these are functions that are used in the big IF below
-        normalRite = (cell, rite, riter) ->
-          rite.props.echoes+=1
-          rite.props.echoers.push(riter)
-          rite.save (err) ->
-            cell.current= rite._id
-            cell.save()
-          
-        echoIt = (cell, rite, riter) ->
-          cell.current.props.echoes+=1
-          cell.current.props.echoers.push(riter)
-          if isAlreadyDownroter
-            cell.current.props.downroters.splice(alreadyDownPos, 1)
-          rite.save()
-          cell.current.markModified('props')
-          cell.current.save (err) -> console.log err if err
-          return
+        # normalRite = (cell, rite, riter) ->
+        #   rite.props.echoes+=1
+        #   rite.props.echoers.push(riter)
+        #   rite.save (err) ->
+        #     cell.current= rite._id
+        #     cell.save()
+        #   
+        # echoIt = (cell, rite, riter) ->
+        #   cell.current.props.echoes+=1
+        #   cell.current.props.echoers.push(riter)
+        #   if isAlreadyDownroter
+        #     cell.current.props.downroters.splice(alreadyDownPos, 1)
+        #   rite.save()
+        #   cell.current.markModified('props')
+        #   cell.current.save (err) -> console.log err if err
+        #   return
 
-        downroteIt = (cell, rite, riter) ->
-          cell.current.props.echoes-=1
-          cell.current.props.downroters.push(riter)
-          if isAlreadyEchoer
-            cell.current.props.echoers.splice(alreadyEchoPos, 1)
-          rite.save()
-          cell.current.markModified('props')
-          cell.current.save (err) -> console.log err if err
-          return
+        # downroteIt = (cell, rite, riter) ->
+        #   cell.current.props.echoes-=1
+        #   cell.current.props.downroters.push(riter)
+        #   if isAlreadyEchoer
+        #     cell.current.props.echoers.splice(alreadyEchoPos, 1)
+        #   rite.save()
+        #   cell.current.markModified('props')
+        #   cell.current.save (err) -> console.log err if err
+        #   return
 
-        overriteIt = (cell, rite, riter) ->
-          rite.props.echoes+=1
-          rite.props.echoers.push(riter)
-          rite.save (err) ->
-            cell.current = rite._id
-            cell.save (err) -> console.log err if err
-          return
+        # overriteIt = (cell, rite, riter) ->
+        #   rite.props.echoes+=1
+        #   rite.props.echoers.push(riter)
+        #   rite.save (err) ->
+        #     cell.current = rite._id
+        #     cell.save (err) -> console.log err if err
+        #   return
 
         # HERE
         if isBlankCurrent
