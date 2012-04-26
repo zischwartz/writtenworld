@@ -25,7 +25,7 @@ betterBuildTile= (tile, tileData, absTilePoint)->
       tile._cells.push(cell)
   return frag
 
-# this is ridiculous TODO
+# this is ridiculous TODO fix
 getTileLocally =(absTilePoint, tile) ->
   dbg 'getTileLocally'
   tile._cells = []

@@ -10,26 +10,23 @@
             ul.nav
             
               li.dropdown
-                a.dropdown-toggle(href='#', data-toggle='dropdown')
+                a#worldLayer.dropdown-toggle(href='#', data-toggle='dropdown')
                   | World
                   b.caret
                 ul.dropdown-menu
                   li.active
-                    a(href="#") Main World
+                    a.trigger(href='#', data-payload="main", data-type='layer', data-action="setClientState") Main World 
                   if everyauth.loggedIn
                     li
-                      a(href='#') Your World 
+                      a.trigger(href='#', data-payload=personalWorldId, data-type='layer', data-action="setClientState") Your World 
                   else
                     li
                       a(href="#registerModal", data-toggle="modal") Your World  
                   li
                     a.trigger(data-payload='off', data-type='layer', data-action='setClientState') Off
-                  li
-                    a(href='#') Links &amp; Files
                   li.divider
                   li
                     a(href='#') More Worlds...
-              // BLOCK COMMENTED OUT ABOVE        // indent one level in
               li
                 a(href='#locationSearch', data-toggle="modal") 
                   i.icon-search.icon-white 

@@ -48,8 +48,11 @@ app.configure 'production', ->
 nownow = require('./nownow')(app, SessionModel)
 
 app.get '/', (req, res) ->
-  worldId = models.mainWorldId
-  res.render 'map_base.jade', { title: 'Written World', worldId: worldId }
+  initialWorldId = models.mainWorldId
+  if req.loggedIn
+    personalWorldId = req.user.personalWorld
+
+  res.render 'map_base.jade', { title: 'Written World', mainWorldId: models.mainWorldId, initialWorldId:models.mainWorldId, personalWorldId:personalWorldId }
 
 app.get '/home', (req, res) ->
   if req.loggedIn
@@ -66,7 +69,7 @@ app.get '/uw/:slug', (req, res)->
     models.World.findOne {slug: req.params.slug},(err,world) ->
       if world.personal
         if world.owner.toString() is req.user._id.toString()
-          res.render 'map_base.jade', {title: world.name, worldId: world._id}
+          res.render 'map_base.jade', {title: world.name, initialWorldId: world._id, mainWorldId: models.mainWorldId, personalWorldId: world._id}
         else
           res.write 'error'
           res.end()

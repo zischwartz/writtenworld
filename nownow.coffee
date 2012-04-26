@@ -10,11 +10,13 @@ module.exports = (app, SessionModel) ->
   everyone = nowjs.initialize app
   
   bridge = require('./bridge')(everyone, SessionModel)
-  # bridge.test()
 
   everyone.now.setCurrentWorld = (currentWorldId) ->
-    group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId)
-    this.now.currentWorldId = currentWorldId
+    if currentWorldId
+      group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId)
+      this.now.currentWorldId = currentWorldId
+    else
+      this.now.currentWorldId = false
 
   # These are problematic, but we never iterate through them, just look ups
   cUsers = {} #all of the connected users, by clientId (nowjs)
@@ -49,8 +51,6 @@ module.exports = (app, SessionModel) ->
 
   everyone.now.setBounds = (bounds) ->
     b = new leaflet.L.Bounds bounds.max, bounds.min
-    console.log 'bounds set'
-    console.log b
     cUsers[this.user.clientId].bounds = b
 
   everyone.now.setClientStateFromServer = (callback) ->
@@ -58,6 +58,8 @@ module.exports = (app, SessionModel) ->
       callback(this.user.session)
 
   everyone.now.setSelectedCell = (cellPoint) ->
+    if not this.now.currentWorldId
+      return false
     cid = this.user.clientId
     cUsers[cid].selected = cellPoint
     user = this.user
@@ -70,7 +72,8 @@ module.exports = (app, SessionModel) ->
           nowjs.getClient i, -> this.now.drawCursors(update)
 
   everyone.now.writeCell = (cellPoint, content) ->
-
+    if not this.now.currentWorldId
+      return false
     currentWorldId = this.now.currentWorldId
     cid = this.user.clientId
 
@@ -85,6 +88,8 @@ module.exports = (app, SessionModel) ->
     return true
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
+    if not this.now.currentWorldId
+      return false
     models.Cell.where('world', this.now.currentWorldId)
       .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows) #numrows for both, numcol == numrows
       .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows) #lt or lte??
@@ -105,14 +110,20 @@ module.exports = (app, SessionModel) ->
   #utility for above 
   getWhoCanSee = (cellPoint, worldId, cb ) ->
     nowjs.getGroup(worldId).getUsers (users) ->
-      # console.log 'users in group: ', users
       toUpdate = {}
-      for i in users
-        if cUsers[i].bounds.contains(cellPoint)
-          toUpdate[i] = cUsers[i]
+      console.log 'worldId', worldId
+      console.log 'cellPoint', cellPoint
+      if worldId
+        for i in users
+            
+            # console.log 'bounds',  cUsers[i].bounds
+            if cUsers[i].bounds.contains(cellPoint)
+              toUpdate[i] = cUsers[i]
       cb(toUpdate)
 
   everyone.now.getCloseUsers= (cb)->
+    if not this.now.currentWorldId
+      return false
     console.log 'getCloseUsers called'
     # console.log this.user
     closeUsers= []

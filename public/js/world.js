@@ -91,7 +91,7 @@
   window.centerCursor = function() {
     return $.doTimeout(400, function() {
       var key, target, targetCell;
-      target = window.domTiles.getCenterTile();
+      target = state.topLayer.getCenterTile();
       key = "c" + target.x + "x" + target.y;
       targetCell = Cell.all()[key];
       if (!targetCell) {
@@ -197,10 +197,14 @@
       return inputEl.focus();
     });
     return $(".trigger").live('click', function() {
-      var action, c, f, payload, type;
+      var action, c, domTiles, f, payload, text, type;
       action = $(this).data('action');
       type = $(this).data('type');
       payload = $(this).data('payload');
+      text = $(this).text();
+      console.log(text);
+      $(this).parent().parent().find('.active').removeClass('active');
+      $(this).parent().addClass('active');
       console.log('trigger triggered');
       if (action === 'set') {
         state[type] = payload;
@@ -210,9 +214,38 @@
         state[type] = payload;
       }
       if (type === 'layer') {
-        if (payload === 'off') {
-          console.log('turn off the damn layer');
+        $("#worldLayer").html(text + '<b class="caret"></b>');
+        if (payload === 'off' && state.topLayer) {
+          Cell.killAll();
           map.removeLayer(state.topLayer);
+          state.topLayer = null;
+          now.setCurrentWorld(null);
+        } else if (payload === 'main') {
+          Cell.killAll();
+          if (state.topLayer) {
+            map.removeLayer(state.topLayer);
+          }
+          now.setCurrentWorld(mainWorldId);
+          domTiles = new L.DomTileLayer({
+            tileSize: config.tileSize()
+          });
+          map.addLayer(domTiles);
+          state.topLayer = domTiles;
+          now.setBounds(state.topLayer.getTilePointAbsoluteBounds());
+          inputEl.focus();
+        } else {
+          Cell.killAll();
+          if (state.topLayer) {
+            map.removeLayer(state.topLayer);
+          }
+          now.setCurrentWorld(payload);
+          domTiles = new L.DomTileLayer({
+            tileSize: config.tileSize()
+          });
+          map.addLayer(domTiles);
+          state.topLayer = domTiles;
+          now.setBounds(domTiles.getTilePointAbsoluteBounds());
+          inputEl.focus();
         }
       }
       if (type === 'color') {
@@ -286,7 +319,7 @@
     });
     state.topLayer = domTiles;
     now.ready(function() {
-      now.setCurrentWorld(currentWorldId);
+      now.setCurrentWorld(initialWorldId);
       map.addLayer(domTiles);
       setTileStyle();
       map.on('zoomend', function() {
@@ -295,10 +328,14 @@
       initializeInterface();
       now.setBounds(domTiles.getTilePointAbsoluteBounds());
       map.on('moveend', function(e) {
-        return now.setBounds(domTiles.getTilePointAbsoluteBounds());
+        if (state.topLayer) {
+          return now.setBounds(state.topLayer.getTilePointAbsoluteBounds());
+        }
       });
       map.on('zoomend', function(e) {
-        return now.setBounds(domTiles.getTilePointAbsoluteBounds());
+        if (state.topLayer) {
+          return now.setBounds(state.topLayer.getTilePointAbsoluteBounds());
+        }
       });
       now.setClientStateFromServer(function(s) {
         if (s.color) {
@@ -323,6 +360,12 @@
         return now.getCloseUsers(function(closeUsers) {
           var cellPoint, user, _i, _len;
           $("#nearby").empty();
+          if (closeUsers.length === 0) {
+            $("ul#nearby").append(function() {
+              return $('<li> <a>Sorry, no one is nearby. </a></li>');
+            });
+            return false;
+          }
           cellPoint = cellKeyToXY(state.selectedCell.key);
           for (_i = 0, _len = closeUsers.length; _i < _len; _i++) {
             user = closeUsers[_i];
@@ -397,6 +440,10 @@
 
     Cell.get = function(x, y) {
       return all["c" + x + "x" + y];
+    };
+
+    Cell.killAll = function() {
+      return all = {};
     };
 
     Cell.count = function() {

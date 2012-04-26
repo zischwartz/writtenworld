@@ -21,8 +21,20 @@ module.exports = (everyone, SessionModel) ->
     if nowUser.session.auth
       riter=nowUser.session.auth.userId
       models.User.findById riter, (err, user) ->
-        if user.personalWorld.toString() isnt currentWorldId  #check if they're already in their own world (heh)
+        # if user.personalWorld.toString() isnt currentWorldId  #check if they're already in their own world (heh)
           console.log 'write to their world' #write to personal world here
+          models.Cell .findOne({world: user.personalWorld, x:cellPoint.x, y: cellPoint.y}) .populate('current')
+          .run (err, cell) ->
+              console.log err if err
+              cell = new models.Cell {x:cellPoint.x, y:cellPoint.y, world:user.personalWorld} if not cell
+              rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], echoes:-1, downroters:[], color: color}})
+              cell.history.push(rite)
+              rite.save (err) ->
+                cell.current= rite._id
+                cell.save()
+              if user.personalWorld.toString() is currentWorldId  #check if they're already in their own world (heh)
+                console.log 'was actually writing directly to yr world'
+                return true
     else # Not logged in
       riter = nowUser.soid #session object id
 
@@ -99,7 +111,6 @@ module.exports = (everyone, SessionModel) ->
         if logic.riteToHistory
           cell.history.push(rite)
           cell.save()
-          console.log 'cell saved at the end yo'
   # end processRite
 
             

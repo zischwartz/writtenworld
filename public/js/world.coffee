@@ -71,7 +71,8 @@ moveCursor = (direction, from = state.selectedCell) ->
 
 window.centerCursor = ->
   $.doTimeout 400, ->
-    target = window.domTiles.getCenterTile()
+    # target = window.domTiles.getCenterTile()
+    target=state.topLayer.getCenterTile()
     # console.log('center cursor poll')
     key = "c#{target.x}x#{target.y}"
     targetCell=Cell.all()[key]
@@ -184,6 +185,10 @@ initializeInterface = ->
     action= $(this).data('action')
     type= $(this).data('type')
     payload= $(this).data('payload')
+    text = $(this).text()
+    console.log text
+    $(this).parent().parent().find('.active').removeClass('active')
+    $(this).parent().addClass('active')
     console.log 'trigger triggered'
 
     if action == 'set' #change this (and setUserOption below) setServerState
@@ -198,10 +203,30 @@ initializeInterface = ->
 
     #todo put layer switch 
     if type=='layer'
-      if payload=='off'
-        console.log 'turn off the damn layer'
+      $("#worldLayer").html(text+'<b class="caret"></b>' )
+      if payload=='off' and state.topLayer
+        Cell.killAll()
         map.removeLayer(state.topLayer)
-
+        state.topLayer = null
+        now.setCurrentWorld(null)
+      else if payload=='main'
+        Cell.killAll()
+        map.removeLayer(state.topLayer) if state.topLayer
+        now.setCurrentWorld(mainWorldId)
+        domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+        map.addLayer(domTiles)
+        state.topLayer = domTiles
+        now.setBounds state.topLayer.getTilePointAbsoluteBounds()
+        inputEl.focus()
+      else
+        Cell.killAll()
+        map.removeLayer(state.topLayer) if state.topLayer
+        now.setCurrentWorld(payload)
+        domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+        map.addLayer(domTiles)
+        state.topLayer = domTiles
+        now.setBounds domTiles.getTilePointAbsoluteBounds()
+        inputEl.focus()
 
     if type == 'color'
       # console.log 'ch color'
@@ -255,19 +280,19 @@ jQuery ->
   state.topLayer = domTiles
 
   now.ready ->
-    now.setCurrentWorld(currentWorldId)
+    now.setCurrentWorld(initialWorldId)
     map.addLayer(domTiles)
     setTileStyle() #set initial
     map.on 'zoomend', ->
       setTileStyle()
     initializeInterface()
 
-    now.setBounds domTiles.getTilePointAbsoluteBounds() 
+    now.setBounds domTiles.getTilePointAbsoluteBounds()
     
     map.on 'moveend', (e)->
-      now.setBounds domTiles.getTilePointAbsoluteBounds()
+      now.setBounds state.topLayer.getTilePointAbsoluteBounds() if state.topLayer
     map.on 'zoomend', (e)->
-      now.setBounds domTiles.getTilePointAbsoluteBounds()
+      now.setBounds state.topLayer.getTilePointAbsoluteBounds() if state.topLayer
 
     now.setClientStateFromServer (s)->
       if s.color # s is session
@@ -293,6 +318,9 @@ jQuery ->
     $("#getNearby").click ->
       now.getCloseUsers (closeUsers)->
         $("#nearby").empty()
+        if closeUsers.length is 0
+          $("ul#nearby").append -> $ '<li> <a>Sorry, no one is nearby. </a></li>'
+          return false
         cellPoint=cellKeyToXY state.selectedCell.key
         for user in closeUsers
           user.radians=Math.atan2(cellPoint.y-user.selected.y, cellPoint.x-user.selected.x) #y,x
@@ -341,6 +369,9 @@ window.Cell = class Cell
   @all: -> all
   @get: (x,y) ->
     return all["c#{x}x#{y}"]
+
+  @killAll: ->
+    all={}
 
   @count:->
     i=0

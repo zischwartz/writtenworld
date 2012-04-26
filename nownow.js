@@ -15,8 +15,12 @@
     bridge = require('./bridge')(everyone, SessionModel);
     everyone.now.setCurrentWorld = function(currentWorldId) {
       var group;
-      group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId);
-      return this.now.currentWorldId = currentWorldId;
+      if (currentWorldId) {
+        group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId);
+        return this.now.currentWorldId = currentWorldId;
+      } else {
+        return this.now.currentWorldId = false;
+      }
     };
     cUsers = {};
     aUsers = {};
@@ -65,8 +69,6 @@
     everyone.now.setBounds = function(bounds) {
       var b;
       b = new leaflet.L.Bounds(bounds.max, bounds.min);
-      console.log('bounds set');
-      console.log(b);
       return cUsers[this.user.clientId].bounds = b;
     };
     everyone.now.setClientStateFromServer = function(callback) {
@@ -76,6 +78,9 @@
     };
     everyone.now.setSelectedCell = function(cellPoint) {
       var cid, user;
+      if (!this.now.currentWorldId) {
+        return false;
+      }
       cid = this.user.clientId;
       cUsers[cid].selected = cellPoint;
       user = this.user;
@@ -101,6 +106,9 @@
     };
     everyone.now.writeCell = function(cellPoint, content) {
       var cid, currentWorldId;
+      if (!this.now.currentWorldId) {
+        return false;
+      }
       currentWorldId = this.now.currentWorldId;
       cid = this.user.clientId;
       bridge.processRite(cellPoint, content, this.user, currentWorldId, function(commandType, rite, cellPoint) {
@@ -133,6 +141,9 @@
     };
     everyone.now.getTile = function(absTilePoint, numRows, callback) {
       var _this = this;
+      if (!this.now.currentWorldId) {
+        return false;
+      }
       return models.Cell.where('world', this.now.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
         var c, pCell, results, _i, _len;
         results = {};
@@ -159,10 +170,14 @@
       return nowjs.getGroup(worldId).getUsers(function(users) {
         var i, toUpdate, _i, _len;
         toUpdate = {};
-        for (_i = 0, _len = users.length; _i < _len; _i++) {
-          i = users[_i];
-          if (cUsers[i].bounds.contains(cellPoint)) {
-            toUpdate[i] = cUsers[i];
+        console.log('worldId', worldId);
+        console.log('cellPoint', cellPoint);
+        if (worldId) {
+          for (_i = 0, _len = users.length; _i < _len; _i++) {
+            i = users[_i];
+            if (cUsers[i].bounds.contains(cellPoint)) {
+              toUpdate[i] = cUsers[i];
+            }
           }
         }
         return cb(toUpdate);
@@ -170,6 +185,9 @@
     };
     everyone.now.getCloseUsers = function(cb) {
       var aC, cid, closeUsers;
+      if (!this.now.currentWorldId) {
+        return false;
+      }
       console.log('getCloseUsers called');
       closeUsers = [];
       cid = this.user.clientId;
