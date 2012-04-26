@@ -8,8 +8,8 @@ leaflet = require './lib/leaflet-custom-src.js'
 module.exports = (everyone, SessionModel) ->
 
   processRite = (cellPoint, contents, nowUser, currentWorldId, callback) ->
-    # nowUser is this.user with everyone.now
-    console.log 'processRite Called !!!!!', nowUser
+    # nowUser is this.user within  everyone.now
+    # console.log 'processRite Called !!!!!', nowUser
 
     cid = nowUser.clientId
     sid= decodeURIComponent nowUser.cookie['connect.sid']
@@ -53,9 +53,9 @@ module.exports = (everyone, SessionModel) ->
 
         logic.legitEcho = already != 'echoer' and logic.potentialEcho
         logic.legitDownrote= not logic.blankCurrently and not logic.potentialEcho and already != 'downroter'
-        for k, v of logic
-         console.log "#{k} : #{v}"
-        console.log ' '
+        # for k, v of logic
+        #  console.log "#{k} : #{v}"
+        # console.log ' '
         
         rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], echoes:-1, downroters:[], color: color}})
 
@@ -127,9 +127,7 @@ determineStatus = (cell, riter) ->
         isAlreadyEchoer = true
         alreadyEchoPos= i
         console.log "already echoer!!! #{alreadyEchoPos}"
-        toReturn= ['echoer', i]
-        console.log toReturn
-        return toReturn
+        return ['echoer', i]
   if cell?.current?.props.downroters
     for d in cell?.current?.props.downroters
       i+=1

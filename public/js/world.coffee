@@ -19,7 +19,6 @@ window.state =
     config.tileSize().y/state.numRows()
   belowInputRateLimit: true
 
-#NOTE: Scroll Timer Code to get rid of address bar on mobile/ios is in client_config
 
 setTileStyle = ->
  width = state.cellWidth()
@@ -29,6 +28,7 @@ setTileStyle = ->
  rules.push("div.leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
  $("#dynamicStyles").text rules.join("\n")
 
+# TODO rewrite with command pattern, and big otherUsers object
 window.setSelected = (cell) ->  # takes the object, not the dom element
   dbg 'selecting', cell
   if state.selectedEl
@@ -116,7 +116,6 @@ initializeInterface = ->
       cellPoint = cellKeyToXY state.selectedCell.key
 
       moveCursor(state.writeDirection)
-      # panIfAppropriate(state.writeDirection)
 
     # inp = String.fromCharCode(event.keyCode)
     # if (/[a-zA-Z0-9-_ ]/.test(inp))
@@ -139,30 +138,25 @@ initializeInterface = ->
         return false
       when 38
         moveCursor('up')
-        # panIfAppropriate('up')
       when 40
         moveCursor('down')
-        # panIfAppropriate('down')
       when 39
         moveCursor('right')
-        # panIfAppropriate('right')
       when 37
         moveCursor('left')
-        # panIfAppropriate('left')
-      when 8
+      when 8 # delete
         moveCursor('left')
-        # panIfAppropriate('left')
         state.selectedCell.clear()
         setSelected(state.selectedCell)
       when 13 #enter
         t = moveCursor 'down', state.lastClickCell
         state.lastClickCell = t
-        # panIfAppropriate('down')
       when 32 #space
         state.selectedCell.clear()
         moveCursor state.writeDirection
     # return false
 
+  # todo limit 
   $("#locationSearch").submit ->
     locationString= $("#locationSearchInput").val()
     $.ajax
@@ -244,7 +238,6 @@ jQuery ->
   window.map = new L.Map('map', {center: centerPoint, zoom: config.defZoom(), scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset }).addLayer(tileServeLayer)
   initializeGeo()
   
-  # window.domTiles = new L.TileLayer.Dom {tileSize: config.tileSize()}
   window.domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
  
   now.ready ->
@@ -255,7 +248,7 @@ jQuery ->
       setTileStyle()
     initializeInterface()
 
-    now.setBounds domTiles.getTilePointAbsoluteBounds() #this seems to be buggy on iOS
+    now.setBounds domTiles.getTilePointAbsoluteBounds() 
     
     map.on 'moveend', (e)->
       now.setBounds domTiles.getTilePointAbsoluteBounds()
@@ -263,7 +256,7 @@ jQuery ->
       now.setBounds domTiles.getTilePointAbsoluteBounds()
 
     now.setClientStateFromServer (s)->
-      if s.color
+      if s.color # s is session
         state.color= s.color
       else
         #easy fix for override issue, set default color. this could be random.
@@ -298,12 +291,10 @@ jQuery ->
             arrow= $("<li><a><i class='icon-arrow-left' style='-moz-transform: rotate(#{user.degrees}deg);-webkit-transform: rotate(#{user.degrees}deg);'></i> #{user.name}</a></li>")
         true
 
-    now.drawEdits = (edits) ->
-      # console.log edits
-      for id, edit of  edits
-        c=Cell.get(edit.cellPoint.x, edit.cellPoint.y)
-        if c
-          c.update(edit.content, edit.props)
+    now.drawRite = (commandType, rite, cellPoint) ->
+      # console.log(commandType, rite, cellPoint)
+      c=Cell.get(cellPoint.x, cellPoint.y)
+      c[commandType](rite)
 
     now.insertMessage = (heading, message, cssclass) ->
       insertMessage(heading, message, cssclass)
@@ -351,8 +342,6 @@ window.Cell = class Cell
   constructor: (@row, @col, @tile, @contents = config.defaultChar(), @props={}, @events=null) ->
     # dbg 'Cell constructor called'
     
-    # @history = {}
-    @timestamp = null #just use servertime
     @key = this.generateKey()
     all[@key]=this
     @span = document.createElement('span')
@@ -398,13 +387,32 @@ window.Cell = class Cell
     @props.youCanEcho = false
     cellPoint = cellKeyToXY @key
     now.writeCell(cellPoint, c)
-
-  #for updating from other users, above is for local user
-  update: (contents, props)->
-    dbg 'Cell update called'
-    @contents= contents
+  
+  # COMMAND PATTERN
+  normalRite: (rite) ->
+    console.log 'normal rite yo'
+    @contents = rite.contents
     @span.innerHTML = contents
-    @span.className = 'cell '+ props.color
+    @span.className = 'cell ' + rite.props.color
+
+  echo: (rite) ->
+    console.log 'echooo'
+    @props.echoes = rite.props.echoes
+    @animateText(1)
+    $(@span).addClass('e'+rite.props.echoes)
+
+  overrite: (rite) ->
+    console.log 'ovverite'
+    @animateTextRemove(1)
+    @contents = rite.contents
+    @span.innerHTML = rite.contents
+    @span.className = 'cell ' + rite.props.color
+
+  downrote: (rite) ->
+    console.log 'downroteddd'
+    $(@span).removeClass('e'+@props.echoes)
+    @props.echoes-=1
+    $(@span).addClass("e#{@props.echoes}")
 
   kill: ->
     dbg 'killing a cell'#, @key
@@ -412,11 +420,11 @@ window.Cell = class Cell
     delete all[@key]
     
   clear: ->
-    if @contents
-      @animateTextRemove(1)
-    @span.innerHTML= config.defaultChar()
     @write(config.defaultChar())
-    @span.className= 'cell'
+    # if @contents
+      # @animateTextRemove(1)
+    # @span.innerHTML= config.defaultChar()
+    # @span.className= 'cell'
   
   animateTextInsert: (animateWith=0, c) ->
     if not prefs.animate.writing

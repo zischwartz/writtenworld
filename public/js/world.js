@@ -332,19 +332,10 @@
           return true;
         });
       });
-      now.drawEdits = function(edits) {
-        var c, edit, id, _results;
-        _results = [];
-        for (id in edits) {
-          edit = edits[id];
-          c = Cell.get(edit.cellPoint.x, edit.cellPoint.y);
-          if (c) {
-            _results.push(c.update(edit.content, edit.props));
-          } else {
-            _results.push(void 0);
-          }
-        }
-        return _results;
+      now.drawRite = function(commandType, rite, cellPoint) {
+        var c;
+        c = Cell.get(cellPoint.x, cellPoint.y);
+        return c[commandType](rite);
       };
       now.insertMessage = function(heading, message, cssclass) {
         return insertMessage(heading, message, cssclass);
@@ -420,7 +411,6 @@
       this.contents = contents != null ? contents : config.defaultChar();
       this.props = props != null ? props : {};
       this.events = events != null ? events : null;
-      this.timestamp = null;
       this.key = this.generateKey();
       all[this.key] = this;
       this.span = document.createElement('span');
@@ -471,11 +461,33 @@
       return now.writeCell(cellPoint, c);
     };
 
-    Cell.prototype.update = function(contents, props) {
-      dbg('Cell update called');
-      this.contents = contents;
+    Cell.prototype.normalRite = function(rite) {
+      console.log('normal rite yo');
+      this.contents = rite.contents;
       this.span.innerHTML = contents;
-      return this.span.className = 'cell ' + props.color;
+      return this.span.className = 'cell ' + rite.props.color;
+    };
+
+    Cell.prototype.echo = function(rite) {
+      console.log('echooo');
+      this.props.echoes = rite.props.echoes;
+      this.animateText(1);
+      return $(this.span).addClass('e' + rite.props.echoes);
+    };
+
+    Cell.prototype.overrite = function(rite) {
+      console.log('ovverite');
+      this.animateTextRemove(1);
+      this.contents = rite.contents;
+      this.span.innerHTML = rite.contents;
+      return this.span.className = 'cell ' + rite.props.color;
+    };
+
+    Cell.prototype.downrote = function(rite) {
+      console.log('downroteddd');
+      $(this.span).removeClass('e' + this.props.echoes);
+      this.props.echoes -= 1;
+      return $(this.span).addClass("e" + this.props.echoes);
     };
 
     Cell.prototype.kill = function() {
@@ -485,12 +497,7 @@
     };
 
     Cell.prototype.clear = function() {
-      if (this.contents) {
-        this.animateTextRemove(1);
-      }
-      this.span.innerHTML = config.defaultChar();
-      this.write(config.defaultChar());
-      return this.span.className = 'cell';
+      return this.write(config.defaultChar());
     };
 
     Cell.prototype.animateTextInsert = function(animateWith, c) {

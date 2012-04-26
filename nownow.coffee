@@ -72,17 +72,16 @@ module.exports = (app, SessionModel) ->
   everyone.now.writeCell = (cellPoint, content) ->
 
     currentWorldId = this.now.currentWorldId
+    cid = this.user.clientId
 
     bridge.processRite cellPoint, content, this.user, currentWorldId, (commandType, rite=false, cellPoint=false)->
-      console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
-
-
-#     edits = {}
-#     getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
-#       for i of toUpdate
-#         if i !=cid
-#           edits[cid] = {cellPoint: cellPoint, content: content, props:props}
-#           nowjs.getClient i, -> this.now.drawEdits(edits)
+      # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
+      getWhoCanSee cellPoint, currentWorldId, (toUpdate)->
+        for i of toUpdate
+          if i !=cid # ie not you
+            if rite # it was a legit rite
+              nowjs.getClient i, ->
+                this.now.drawRite(commandType, rite, cellPoint)
     return true
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->

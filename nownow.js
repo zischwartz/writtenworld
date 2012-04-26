@@ -100,8 +100,9 @@
       });
     };
     everyone.now.writeCell = function(cellPoint, content) {
-      var currentWorldId;
+      var cid, currentWorldId;
       currentWorldId = this.now.currentWorldId;
+      cid = this.user.clientId;
       bridge.processRite(cellPoint, content, this.user, currentWorldId, function(commandType, rite, cellPoint) {
         if (rite == null) {
           rite = false;
@@ -109,7 +110,24 @@
         if (cellPoint == null) {
           cellPoint = false;
         }
-        return console.log("CALL BACK! " + commandType + " - " + rite + " " + cellPoint);
+        return getWhoCanSee(cellPoint, currentWorldId, function(toUpdate) {
+          var i, _results;
+          _results = [];
+          for (i in toUpdate) {
+            if (i !== cid) {
+              if (rite) {
+                _results.push(nowjs.getClient(i, function() {
+                  return this.now.drawRite(commandType, rite, cellPoint);
+                }));
+              } else {
+                _results.push(void 0);
+              }
+            } else {
+              _results.push(void 0);
+            }
+          }
+          return _results;
+        });
       });
       return true;
     };
