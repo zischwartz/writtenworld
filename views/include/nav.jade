@@ -8,24 +8,28 @@
               a.brand(href='#') #{title} 
           .nav-collapse
             ul.nav
-              // indent one level in
-                li.dropdown
-                  a.dropdown-toggle(href='#', data-toggle='dropdown')
-                    | World
-                    b.caret
-                  ul.dropdown-menu
-                    li.active
-                      a(href="#") Main World
+            
+              li.dropdown
+                a.dropdown-toggle(href='#', data-toggle='dropdown')
+                  | World
+                  b.caret
+                ul.dropdown-menu
+                  li.active
+                    a(href="#") Main World
+                  if everyauth.loggedIn
                     li
                       a(href='#') Your World 
+                  else
                     li
-                      a(href='#') Pics
-                    li
-                      a(href='#') Links &amp; Files
-                    li.divider
-                    li
-                      a(href='#') More Worlds...
-              // BLOCK COMMENTED OUT ABOVE
+                      a(href="#registerModal", data-toggle="modal") Your World  
+                  li
+                    a.trigger(data-payload='off', data-type='layer', data-action='setClientState') Off
+                  li
+                    a(href='#') Links &amp; Files
+                  li.divider
+                  li
+                    a(href='#') More Worlds...
+              // BLOCK COMMENTED OUT ABOVE        // indent one level in
               li
                 a(href='#locationSearch', data-toggle="modal") 
                   i.icon-search.icon-white 

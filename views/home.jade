@@ -1,48 +1,87 @@
-- if (!everyauth.loggedIn)
-  h2 Not Authenticated
-  #register
-    a(href='/register') Register
-  #password-login
-    a(href='/login', style='border: 0px') Login with Password
-  #fb-login(style='float: left; margin-left: 5px')
-    a(href='/auth/facebook', style='border: 0px')
-      img(style='border: 0px', src='http://github.com/intridea/authbuttons/raw/master/png/facebook_64.png')
-  #twitter-login(style='float: left; margin-left: 5px')
-    a(href='/auth/twitter', style='border: 0px')
-      img(style='border: 0px', src='http://github.com/intridea/authbuttons/raw/master/png/twitter_64.png')
-  #github-login(style='float: left; margin-left: 5px')
-    a(href='/auth/github', style='border: 0px')
-      img(style='border: 0px', src='http://github.com/intridea/authbuttons/raw/master/png/github_64.png')
-  #google-login(style='float: left; margin-left: 5px')
-    a(href='/auth/google', style='border: 0px')
-      img(style='border: 0px', src='http://github.com/intridea/authbuttons/raw/master/png/google_64.png')
-  #instagram-login(style='float: left; margin-left: 5px')
-    a(href='/auth/instagram', style='border: 0px')
-      img(style='border: 0px', src='https://instagram.com/static/images/headerWithTitle.png')
-- else
-  h2 Authenticated
-  #user-id Logged in with `user.id` #{user.id} - aka `everyauth.user.id` #{everyauth.user.id}
-  - if (everyauth.facebook)
-    h3 Facebook User Data
-    p= JSON.stringify(everyauth.facebook.user)
-  - if (everyauth.twitter)
-    h3 Twitter User Data
-    p= JSON.stringify(everyauth.twitter.user)
-  - if (everyauth.github)
-    h3 GitHub User Data
-    p= JSON.stringify(everyauth.github.user)
-  - if (everyauth.google)
-    h3 Google User Data
-    p= JSON.stringify(everyauth.google.user)
-  - if (everyauth.instagram)
-    h3 Instagram User Data
-    p= JSON.stringify(everyauth.instagram.user)
-  h3
-    a(href='/logout') Logout
-  h2 User: 
-  p #{user}
-  h2 Your Worlds
-  for world in worlds
-    li
-     a(href='/uw/'+world.slug) #{world.name}
+!!! 5
+html(lang="en")
+  head
+    title= title 
+    link(rel="stylesheet", href="/css/bootstrap.css")
+    
+    // meta(name = "viewport", content = "width = device-width, initial-scale = 1.0,  user-scalable = no")
+    meta(name="apple-mobile-web-app-capable", content="yes") 
+
+    script(src="/js/libs/async.min.js")
+    script(src="/js/libs/jquery-1.7.js")
+    script(src="/js/libs/bootstrap-dropdown.js")
+    script(src="/js/libs/bootstrap-collapse.js")
+    script(src="/js/libs/bootstrap-modal.js")
+    script(src="/js/libs/bootstrap-transition.js")
+    script(src="/js/libs/bootstrap-alert.js")
+    script(src="/js/libs/dotimeout.js")
+    script(src="/js/libs/jquery.jrumble.min.js")
+    script(src="/js/leaflet-src.js")
+    script(src="/js/config_client.js")
+    script(src="/js/geo.js")
+    script(src="/js/layer.js")
+    script(src="/js/world.js")
+      
+    //script(src="/nowjs/now.js")
+    
+    //style(id="dynamicStyles")
+      
+    script(type="text/javascript")
+      var _gaq = _gaq || []; _gaq.push(['_setAccount', 'UA-30418262-1']); _gaq.push(['_setDomainName', 'scribver.se']); _gaq.push(['_setAllowLinker', true]); _gaq.push(['_trackPageview']);
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); })();
+
+body
+  //include include/nav_site.jade
+  div(id="messages") 
+  div(class="row-fluid")
+     div(class="span2")  .  
+     div(class="span6") 
+      - if (!everyauth.loggedIn)
+        h6 If you had an account, you could be /home right now.  
+        #register
+          h3
+            a(href='/register') Register
+        #password-login
+          h3
+            a(href='/login', style='border: 0px') Login 
+        //#fb-login(style='float: left; margin-left: 5px')
+        //  a(href='/auth/facebook', style='border: 0px')
+        //    img(style='border: 0px', src='http://github.com/intridea/authbuttons/raw/master/png/facebook_64.png')
+        #twitter-login(style='float: left; margin-left: 5px')
+          a(href='/auth/twitter', style='border: 0px')
+            img(style='border: 0px', src='http://github.com/intridea/authbuttons/raw/master/png/twitter_64.png')
+        #github-login(style='float: left; margin-left: 5px')
+          a(href='/auth/github', style='border: 0px')
+            img(style='border: 0px', src='http://github.com/intridea/authbuttons/raw/master/png/github_64.png')
+        #google-login(style='float: left; margin-left: 5px')
+          a(href='/auth/google', style='border: 0px')
+            img(style='border: 0px', src='http://github.com/intridea/authbuttons/raw/master/png/google_64.png')
+      - else
+        h2 Logged in as:  
+        #user-id Logged in with `user.id` #{user.id} - aka `everyauth.user.id` #{everyauth.user.id}
+        - if (everyauth.facebook)
+          h3 Facebook User Data
+          p= JSON.stringify(everyauth.facebook.user)
+        - if (everyauth.twitter)
+          h3 Twitter User Data
+          p= JSON.stringify(everyauth.twitter.user)
+        - if (everyauth.github)
+          h3 GitHub User Data
+          p= JSON.stringify(everyauth.github.user)
+        - if (everyauth.google)
+          h3 Google User Data
+          p= JSON.stringify(everyauth.google.user)
+        - if (everyauth.instagram)
+          h3 Instagram User Data
+          p= JSON.stringify(everyauth.instagram.user)
+        h3
+          a(href='/logout') Logout
+
+        h2 User: 
+        p #{user}
+        h2 Your Worlds
+        for world in worlds
+          li
+           a(href='/uw/'+world.slug) #{world.name}
 

@@ -184,6 +184,7 @@ initializeInterface = ->
     type= $(this).data('type')
     payload= $(this).data('payload')
     console.log 'trigger triggered'
+
     if action == 'set' #change this (and setUserOption below) setServerState
       state[type]=payload
       now.setUserOption(type, payload)
@@ -191,22 +192,30 @@ initializeInterface = ->
       # console.log 'settingClientState', type
       state[type] = payload
     
+    
     #specific interfaces
+
+    #todo put layer switch 
+
+    if type=='layer'
+      if payload=='off'
+        console.log 'turn off the damn layer'
+
 
     if type == 'color'
       # console.log 'ch color'
       $("#color").addClass(payload)
-      inputEl.focus()
     if type == 'writeDirection'
       c= this.innerHTML
       $('.direction-dropdown')[0].innerHTML=c
       $('.direction-dropdown i').addClass('icon-white')
-      inputEl.focus()
     if type == 'submitfeedback'
       f=$('#feedback').val()
       now.submitFeedback(f)
       $('#feedbackModal').modal('hide')
+      inputEl.focus()
       return false
+    inputEl.focus()
     return
 
 
