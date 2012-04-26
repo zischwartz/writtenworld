@@ -80,6 +80,8 @@ RiteSchema.methods.getOwner= (cb)->
   return this.db.model('User').findById(this.owner).run(cb)
 
 Rite = mongoose.model('Rite', RiteSchema)
+exports.Rite = Rite
+
 
 CellSchema = new Schema
   world: ObjectId
@@ -93,30 +95,30 @@ CellSchema.index {world:1, x:1, y:1}, {unique:true}
 
 exports.Cell = mongoose.model('Cell', CellSchema)
 
-exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPersonal, props={}) ->
-  # prepare our rite
-  for own key, val of ritePropsDefs
-    if not props?[key]
-      if key=='echoers' or key=='downroters' #right, arrays aren't deep copied. and we don't need them to be, but we can't have them referencing...
-        props[key]=[]
-      else
-        props[key] = val
-  rite = new Rite({contents: contents, owner:riter, props:props })
-  rite.markModified('props')
-
-  exports.Cell
-  .findOne({world: worldId, x:cellPoint.x, y: cellPoint.y})
-  .populate('current')
-  .run (err, cell) ->
-      console.log err if err
-      cell = new exports.Cell {x:cellPoint.x, y:cellPoint.y, world:worldId} if not cell
-      cell.history.push(rite)
-      if isPersonal # or not  world.echoes 
-        cell.current = rite
-        rite.save (err) ->
-          cell.current = rite._id
-          cell.save (err) ->console.log err if err
-        return #and lets gtfo
+# exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPersonal, props={}) ->
+#   # prepare our rite
+#   for own key, val of ritePropsDefs
+#     if not props?[key]
+#       if key=='echoers' or key=='downroters' #right, arrays aren't deep copied. and we don't need them to be, but we can't have them referencing...
+#         props[key]=[]
+#       else
+#         props[key] = val
+#   rite = new Rite({contents: contents, owner:riter, props:props })
+#   rite.markModified('props')
+# 
+#   exports.Cell
+#   .findOne({world: worldId, x:cellPoint.x, y: cellPoint.y})
+#   .populate('current')
+#   .run (err, cell) ->
+#       console.log err if err
+#       cell = new exports.Cell {x:cellPoint.x, y:cellPoint.y, world:worldId} if not cell
+#       cell.history.push(rite)
+#       if isPersonal # or not  world.echoes 
+#         cell.current = rite
+#         rite.save (err) ->
+#           cell.current = rite._id
+#           cell.save (err) ->console.log err if err
+#         return #and lets gtfo
 
       # isAlreadyEchoer=false; isAlreadyDownroter = false; i=-1; alreadyDownPos= -1; alreadyEchoPos=-1; #hacktastic, because indexof doesn't work with mongoose objectIds
       # if cell?.current?.props.echoers
@@ -142,7 +144,7 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
       # originalOwner = cell.current?.owner
       # isLegitDownrote = not isBlankCurrent and not isPotentialEcho and not isAlreadyDownroter and (riter.toString() != cell.current.owner.toString())# only used for sending message
        
-      doEchoLogic = ->
+      # doEchoLogic = ->
         #confusingly and perhaps stupidly, these are functions that are used in the big IF below
         # normalRite = (cell, rite, riter) ->
         #   rite.props.echoes+=1
@@ -180,63 +182,63 @@ exports.writeCellToDb = (cellPoint, contents, worldId, riter, isOwnerAuth, isPer
         #   return
 
         # HERE
-        if isBlankCurrent
-          console.log 'blank, just write'
-          normalRite(cell, rite, riter)
-          return true
-        if isPotentialEcho and isAlreadyEchoer
-          console.log 'Echoing yourself too much will make you go blind'
-          return false
-        if isAlreadyDownroter and not isPotentialEcho
-          console.log 'FU, you cannot downrote again'
-          return false
-        else
-          if isLegitEcho
-            console.log 'Legit echo, cool'
-            echoIt(cell, rite, riter)
-            return true
-          else # downrote/overrite
-            if cEchoes<=0
-              overriteIt(cell, rite, riter)
-              # just rite, remove from echoers
-              console.log 'legit overrite'
-              return true
-            else if cEchoes>=1
-                if isAlreadyEchoer
-                  if cEchoes ==1
-                    overriteIt(cell, rite, riter)
-                    console.log 'overrite something you echoed!'
-                  else
-                    downroteIt(cell, rite, riter)
-                    console.log 'downroting something you echoed!'
-                  return true
-                else
-                  console.log 'legit downrote'
-                  downroteIt(cell, rite, riter)
-                  return true
+        # if isBlankCurrent
+        #   console.log 'blank, just write'
+        #   normalRite(cell, rite, riter)
+        #   return true
+        # if isPotentialEcho and isAlreadyEchoer
+        #   console.log 'Echoing yourself too much will make you go blind'
+        #   return false
+        # if isAlreadyDownroter and not isPotentialEcho
+        #   console.log 'FU, you cannot downrote again'
+        #   return false
+        # else
+        #   if isLegitEcho
+        #     console.log 'Legit echo, cool'
+        #     echoIt(cell, rite, riter)
+        #     return true
+        #   else # downrote/overrite
+        #     if cEchoes<=0
+        #       overriteIt(cell, rite, riter)
+        #       # just rite, remove from echoers
+        #       console.log 'legit overrite'
+        #       return true
+        #     else if cEchoes>=1
+        #         if isAlreadyEchoer
+        #           if cEchoes ==1
+        #             overriteIt(cell, rite, riter)
+        #             console.log 'overrite something you echoed!'
+        #           else
+        #             downroteIt(cell, rite, riter)
+        #             console.log 'downroting something you echoed!'
+        #           return true
+        #         else
+        #           console.log 'legit downrote'
+        #           downroteIt(cell, rite, riter)
+        #           return true
                   #remove, incr etc
 
           
         
       # Calls the above and returns
-      doEchoLogic()
+  #     doEchoLogic()
 
-      if isLegitEcho
-        exports.User.findById riter, (err, user)->
-          if user
-            user.totalRites+=1
-            user.save (err) -> console.log err if err
-            # TODO add a emit ? or use below
+  #     if isLegitEcho
+  #       exports.User.findById riter, (err, user)->
+  #         if user
+  #           user.totalRites+=1
+  #           user.save (err) -> console.log err if err
+  #           # TODO add a emit ? or use below
 
-      if isLegitEcho or isLegitDownrote
-        exports.User.findById originalOwner, (err, user) ->
-          if isLegitEcho and user and user isnt riter
-            user.totalEchoes+=1
-            user.save (err)-> console.log err if err
-            user.emit('receivedEcho', rite)
-          else if user and isLegitDownrote
-            user.emit('receivedOverRite', rite)
-  return true
+  #     if isLegitEcho or isLegitDownrote
+  #       exports.User.findById originalOwner, (err, user) ->
+  #         if isLegitEcho and user and user isnt riter
+  #           user.totalEchoes+=1
+  #           user.save (err)-> console.log err if err
+  #           user.emit('receivedEcho', rite)
+  #         else if user and isLegitDownrote
+  #           user.emit('receivedOverRite', rite)
+  # return true
 
 
 mongooseAuth=require('mongoose-auth')

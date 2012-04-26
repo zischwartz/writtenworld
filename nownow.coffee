@@ -70,44 +70,13 @@ module.exports = (app, SessionModel) ->
           nowjs.getClient i, -> this.now.drawCursors(update)
 
   everyone.now.writeCell = (cellPoint, content) ->
-    # bridge.test()
-    # console.log 'this.user', this.user
 
     currentWorldId = this.now.currentWorldId
 
-    bridge.processRite(cellPoint, content, this.user, currentWorldId)
+    bridge.processRite cellPoint, content, this.user, currentWorldId, (commandType, rite=false, cellPoint=false)->
+      console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
 
 
-
-    # cid = this.user.clientId
-    # sid= decodeURIComponent this.user.cookie['connect.sid']
-    # isOwnerAuth = false
-    # isPersonal= false
-
-    # if this.user.session.auth
-    #   isOwnerAuth = true
-    #   ownerId = this.user.session.auth.userId
-    #   props.color = this.user.session.color
-
-      # models.writeCellToDb(cellPoint, content, currentWorldId, ownerId, isOwnerAuth, isPersonal, props)
-
-      # Writes to your personal world.
-      # models.User.findById ownerId, (err, user) ->
-      #   if user.personalWorld.toString() isnt currentWorldId  #check if they're already in their own world (heh)
-      #     isPersonal= true
-      #     models.writeCellToDb(cellPoint, content, user.personalWorld, ownerId, isOwnerAuth, isPersonal, props)
-    # else
-    #   SessionModel.findOne {'sid': sid } , (err, doc) ->
-    #     data = JSON.parse(doc.data)
-    #     ownerId=doc._id
-    #     props.color = data.color
-    #     models.writeCellToDb(cellPoint, content, currentWorldId ,ownerId, isOwnerAuth, isPersonal, props) #userId shouldbe an objectID for consistancy, either session or real user
-
-    
-# 
-#     if this.user.session.color? # if we have it, lets use it. the above won't have it in time to send to other clients
-#       props.color= this.user.session.color
-# 
 #     edits = {}
 #     getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
 #       for i of toUpdate

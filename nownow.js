@@ -102,7 +102,15 @@
     everyone.now.writeCell = function(cellPoint, content) {
       var currentWorldId;
       currentWorldId = this.now.currentWorldId;
-      bridge.processRite(cellPoint, content, this.user, currentWorldId);
+      bridge.processRite(cellPoint, content, this.user, currentWorldId, function(commandType, rite, cellPoint) {
+        if (rite == null) {
+          rite = false;
+        }
+        if (cellPoint == null) {
+          cellPoint = false;
+        }
+        return console.log("CALL BACK! " + commandType + " - " + rite + " " + cellPoint);
+      });
       return true;
     };
     everyone.now.getTile = function(absTilePoint, numRows, callback) {
