@@ -25,7 +25,9 @@
     cellHeight: function() {
       return config.tileSize().y / state.numRows();
     },
-    belowInputRateLimit: true
+    belowInputRateLimit: true,
+    topLayer: null,
+    baseLayer: null
   };
 
   setTileStyle = function() {
@@ -210,6 +212,7 @@
       if (type === 'layer') {
         if (payload === 'off') {
           console.log('turn off the damn layer');
+          map.removeLayer(state.topLayer);
         }
       }
       if (type === 'color') {
@@ -264,10 +267,11 @@
   };
 
   jQuery(function() {
-    var centerPoint, tileServeLayer;
+    var centerPoint, domTiles, tileServeLayer;
     tileServeLayer = new L.TileLayer(config.tileServeUrl(), {
       maxZoom: config.maxZoom()
     });
+    state.baseLayer = tileServeLayer;
     centerPoint = new L.LatLng(40.714269, -74.005972);
     window.map = new L.Map('map', {
       center: centerPoint,
@@ -277,9 +281,10 @@
       maxZoom: config.maxZoom() - window.MapBoxBadZoomOffset
     }).addLayer(tileServeLayer);
     initializeGeo();
-    window.domTiles = new L.DomTileLayer({
+    domTiles = new L.DomTileLayer({
       tileSize: config.tileSize()
     });
+    state.topLayer = domTiles;
     now.ready(function() {
       now.setCurrentWorld(currentWorldId);
       map.addLayer(domTiles);

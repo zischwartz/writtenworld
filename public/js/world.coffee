@@ -18,7 +18,8 @@ window.state =
   cellHeight: ->
     config.tileSize().y/state.numRows()
   belowInputRateLimit: true
-
+  topLayer: null
+  baseLayer: null
 
 setTileStyle = ->
  width = state.cellWidth()
@@ -196,10 +197,10 @@ initializeInterface = ->
     #specific interfaces
 
     #todo put layer switch 
-
     if type=='layer'
       if payload=='off'
         console.log 'turn off the damn layer'
+        map.removeLayer(state.topLayer)
 
 
     if type == 'color'
@@ -243,12 +244,16 @@ panIfAppropriate = (direction)->
 
 jQuery ->
   tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()})
+  state.baseLayer= tileServeLayer
+
   centerPoint= new L.LatLng(40.714269, -74.005972) #try adding slight randomness to this
   window.map = new L.Map('map', {center: centerPoint, zoom: config.defZoom(), scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset }).addLayer(tileServeLayer)
   initializeGeo()
   
-  window.domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
- 
+  #this was window.domTiles 
+  domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+  state.topLayer = domTiles
+
   now.ready ->
     now.setCurrentWorld(currentWorldId)
     map.addLayer(domTiles)

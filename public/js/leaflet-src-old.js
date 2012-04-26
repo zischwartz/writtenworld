@@ -559,12 +559,6 @@ L.DomUtil = {
 					L.DomUtil.getStyle(el, 'position') === 'absolute') {
 				break;
 			}
-			if (L.DomUtil.getStyle(el, 'position') === 'fixed'){
-                    		top += docBody.scrollTop || 0;
-                    		left += docBody.scrollLeft || 0;
-                    		break;
-                	}
-
 			el = el.offsetParent;
 		} while (el);
 
@@ -630,7 +624,7 @@ L.DomUtil = {
 
 	setOpacity: function (el, value) {
 		if (L.Browser.ie) {
-		    el.style.filter = value !== 1 ? 'alpha(opacity=' + Math.round(value * 100) + ')' : '';
+			el.style.filter = 'alpha(opacity=' + Math.round(value * 100) + ')';
 		} else {
 			el.style.opacity = value;
 		}
@@ -2058,6 +2052,737 @@ L.ImageOverlay = L.Class.extend({
 });
 
 
+L.Icon = L.Class.extend({
+	options: {
+		/*
+		iconUrl: (String) (required)
+		iconSize: (Point) (can be set through CSS)
+		iconAnchor: (Point) (centered by default if size is specified, can be set in CSS with negative margins)
+		popupAnchor: (Point) (if not specified, popup opens in the anchor point)
+		shadowUrl: (Point) (no shadow by default)
+		shadowSize: (Point)
+		*/
+		className: ''
+	},
+
+	initialize: function (options) {
+		L.Util.setOptions(this, options);
+	},
+
+	createIcon: function () {
+		return this._createIcon('icon');
+	},
+
+	createShadow: function () {
+		return this.options.shadowUrl ? this._createIcon('shadow') : null;
+	},
+
+	_createIcon: function (name) {
+		var img = this._createImg(this.options[name + 'Url']);
+		this._setIconStyles(img, name);
+		return img;
+	},
+
+	_setIconStyles: function (img, name) {
+		var options = this.options,
+			size = options[name + 'Size'],
+			anchor = options.iconAnchor;
+
+		if (!anchor && size) {
+			anchor = size.divideBy(2, true);
+		}
+
+		if (name === 'shadow' && anchor && options.shadowOffset) {
+			anchor._add(options.shadowOffset);
+		}
+
+		img.className = 'leaflet-marker-' + name + ' ' + options.className;
+
+		if (anchor) {
+			img.style.marginLeft = (-anchor.x) + 'px';
+			img.style.marginTop  = (-anchor.y) + 'px';
+		}
+
+		if (size) {
+			img.style.width  = size.x + 'px';
+			img.style.height = size.y + 'px';
+		}
+	},
+
+	_createImg: function (src) {
+		var el;
+		if (!L.Browser.ie6) {
+			el = document.createElement('img');
+			el.src = src;
+		} else {
+			el = document.createElement('div');
+			el.style.filter = 'progid:DXImageTransform.Microsoft.AlphaImageLoader(src="' + src + '")';
+		}
+		return el;
+	}
+});
+
+L.Icon.Default = L.Icon.extend({
+	options: {
+		iconUrl: L.ROOT_URL + 'images/marker.png',
+		iconSize: new L.Point(25, 41),
+		iconAnchor: new L.Point(13, 41),
+		popupAnchor: new L.Point(0, -33),
+
+		shadowUrl: L.ROOT_URL + 'images/marker-shadow.png',
+		shadowSize: new L.Point(41, 41)
+	}
+});
+
+
+/*
+ * L.Marker is used to display clickable/draggable icons on the map.
+ */
+
+L.Marker = L.Class.extend({
+
+	includes: L.Mixin.Events,
+
+	options: {
+		icon: new L.Icon.Default(),
+		title: '',
+		clickable: true,
+		draggable: false,
+		zIndexOffset: 0,
+		opacity: 1
+	},
+
+	initialize: function (latlng, options) {
+		L.Util.setOptions(this, options);
+		this._latlng = latlng;
+	},
+
+	onAdd: function (map) {
+		this._map = map;
+
+		map.on('viewreset', this._reset, this);
+
+		this._initIcon();
+		this._reset();
+	},
+
+	onRemove: function (map) {
+		this._removeIcon();
+
+		// TODO move to Marker.Popup.js
+		if (this.closePopup) {
+			this.closePopup();
+		}
+
+		map.off('viewreset', this._reset, this);
+
+		this._map = null;
+	},
+
+	getLatLng: function () {
+		return this._latlng;
+	},
+
+	setLatLng: function (latlng) {
+		this._latlng = latlng;
+
+		this._reset();
+
+		if (this._popup) {
+			this._popup.setLatLng(latlng);
+		}
+	},
+
+	setZIndexOffset: function (offset) {
+		this.options.zIndexOffset = offset;
+		this._reset();
+	},
+
+	setIcon: function (icon) {
+		if (this._map) {
+			this._removeIcon();
+		}
+
+		this.options.icon = icon;
+
+		if (this._map) {
+			this._initIcon();
+			this._reset();
+		}
+	},
+
+	_initIcon: function () {
+		var options = this.options;
+
+		if (!this._icon) {
+			this._icon = options.icon.createIcon();
+
+			if (options.title) {
+				this._icon.title = options.title;
+			}
+
+			this._initInteraction();
+			this._updateOpacity();
+		}
+		if (!this._shadow) {
+			this._shadow = options.icon.createShadow();
+		}
+
+		var panes = this._map._panes;
+
+		panes.markerPane.appendChild(this._icon);
+
+		if (this._shadow) {
+			panes.shadowPane.appendChild(this._shadow);
+		}
+	},
+
+	_removeIcon: function () {
+		var panes = this._map._panes;
+
+		panes.markerPane.removeChild(this._icon);
+
+		if (this._shadow) {
+			panes.shadowPane.removeChild(this._shadow);
+		}
+
+		this._icon = this._shadow = null;
+	},
+
+	_reset: function () {
+		var icon = this._icon;
+
+		if (!icon) {
+			return;
+		}
+
+		var pos = this._map.latLngToLayerPoint(this._latlng).round();
+
+		L.DomUtil.setPosition(icon, pos);
+
+		if (this._shadow) {
+			L.DomUtil.setPosition(this._shadow, pos);
+		}
+
+		icon.style.zIndex = pos.y + this.options.zIndexOffset;
+	},
+
+	_initInteraction: function () {
+		if (!this.options.clickable) {
+			return;
+		}
+
+		var icon = this._icon,
+			events = ['dblclick', 'mousedown', 'mouseover', 'mouseout'];
+
+		icon.className += ' leaflet-clickable';
+		L.DomEvent.addListener(icon, 'click', this._onMouseClick, this);
+
+		for (var i = 0; i < events.length; i++) {
+			L.DomEvent.addListener(icon, events[i], this._fireMouseEvent, this);
+		}
+
+		if (L.Handler.MarkerDrag) {
+			this.dragging = new L.Handler.MarkerDrag(this);
+
+			if (this.options.draggable) {
+				this.dragging.enable();
+			}
+		}
+	},
+
+	_onMouseClick: function (e) {
+		L.DomEvent.stopPropagation(e);
+		if (this.dragging && this.dragging.moved()) { return; }
+		if (this._map.dragging && this._map.dragging.moved()) { return; }
+		this.fire(e.type, {
+			originalEvent: e
+		});
+	},
+
+	_fireMouseEvent: function (e) {
+		this.fire(e.type, {
+			originalEvent: e
+		});
+		if (e.type !== 'mousedown') {
+			L.DomEvent.stopPropagation(e);
+		}
+	},
+
+	setOpacity: function (opacity) {
+		this.options.opacity = opacity;
+		if (this._map) {
+			this._updateOpacity();
+		}
+	},
+
+	_updateOpacity: function (opacity) {
+		L.DomUtil.setOpacity(this._icon, this.options.opacity);
+	}
+});
+
+
+L.DivIcon = L.Icon.extend({
+	options: {
+		iconSize: new L.Point(12, 12), // also can be set through CSS
+		/*
+		iconAnchor: (Point)
+		popupAnchor: (Point)
+		*/
+		className: 'leaflet-div-icon'
+	},
+
+	createIcon: function () {
+		var div = document.createElement('div');
+		this._setIconStyles(div, 'icon');
+		return div;
+	},
+
+	createShadow: function () {
+		return null;
+	}
+});
+
+
+/*
+ * L.LayerGroup is a class to combine several layers so you can manipulate the group (e.g. add/remove it) as one layer.
+ */
+
+L.LayerGroup = L.Class.extend({
+	initialize: function (layers) {
+		this._layers = {};
+
+		var i, len;
+
+		if (layers) {
+			for (i = 0, len = layers.length; i < len; i++) {
+				this.addLayer(layers[i]);
+			}
+		}
+	},
+
+	addLayer: function (layer) {
+		var id = L.Util.stamp(layer);
+
+		this._layers[id] = layer;
+
+		if (this._map) {
+			this._map.addLayer(layer);
+		}
+
+		return this;
+	},
+
+	removeLayer: function (layer) {
+		var id = L.Util.stamp(layer);
+
+		delete this._layers[id];
+
+		if (this._map) {
+			this._map.removeLayer(layer);
+		}
+
+		return this;
+	},
+
+	clearLayers: function () {
+		this._iterateLayers(this.removeLayer, this);
+		return this;
+	},
+
+	invoke: function (methodName) {
+		var args = Array.prototype.slice.call(arguments, 1),
+			i, layer;
+
+		for (i in this._layers) {
+			if (this._layers.hasOwnProperty(i)) {
+				layer = this._layers[i];
+
+				if (layer[methodName]) {
+					layer[methodName].apply(layer, args);
+				}
+			}
+		}
+
+		return this;
+	},
+
+	onAdd: function (map) {
+		this._map = map;
+		this._iterateLayers(map.addLayer, map);
+	},
+
+	onRemove: function (map) {
+		this._iterateLayers(map.removeLayer, map);
+		this._map = null;
+	},
+
+	_iterateLayers: function (method, context) {
+		for (var i in this._layers) {
+			if (this._layers.hasOwnProperty(i)) {
+				method.call(context, this._layers[i]);
+			}
+		}
+	}
+});
+
+
+/*
+ * L.Path is a base class for rendering vector paths on a map. It's inherited by Polyline, Circle, etc.
+ */
+
+L.Path = L.Class.extend({
+	includes: [L.Mixin.Events],
+
+	statics: {
+		// how much to extend the clip area around the map view
+		// (relative to its size, e.g. 0.5 is half the screen in each direction)
+		CLIP_PADDING: 0.5
+	},
+
+	options: {
+		stroke: true,
+		color: '#0033ff',
+		weight: 5,
+		opacity: 0.5,
+
+		fill: false,
+		fillColor: null, //same as color by default
+		fillOpacity: 0.2,
+
+		clickable: true
+	},
+
+	initialize: function (options) {
+		L.Util.setOptions(this, options);
+	},
+
+	onAdd: function (map) {
+		this._map = map;
+
+		this._initElements();
+		this._initEvents();
+		this.projectLatlngs();
+		this._updatePath();
+
+		map
+			.on('viewreset', this.projectLatlngs, this)
+			.on('moveend', this._updatePath, this);
+	},
+
+	onRemove: function (map) {
+		this._map = null;
+
+		map._pathRoot.removeChild(this._container);
+
+		map
+			.off('viewreset', this.projectLatlngs, this)
+			.off('moveend', this._updatePath, this);
+	},
+
+	projectLatlngs: function () {
+		// do all projection stuff here
+	},
+
+	setStyle: function (style) {
+		L.Util.setOptions(this, style);
+
+		if (this._container) {
+			this._updateStyle();
+		}
+
+		return this;
+	},
+
+	redraw: function () {
+		if (this._map) {
+			this.projectLatlngs();
+			this._updatePath();
+		}
+		return this;
+	}
+});
+
+L.Map.include({
+	_updatePathViewport: function () {
+		var p = L.Path.CLIP_PADDING,
+			size = this.getSize(),
+			panePos = L.DomUtil.getPosition(this._mapPane),
+			min = panePos.multiplyBy(-1)._subtract(size.multiplyBy(p)),
+			max = min.add(size.multiplyBy(1 + p * 2));
+
+		this._pathViewport = new L.Bounds(min, max);
+	}
+});
+
+
+L.Path.SVG_NS = 'http://www.w3.org/2000/svg';
+
+L.Browser.svg = !!(document.createElementNS && document.createElementNS(L.Path.SVG_NS, 'svg').createSVGRect);
+
+L.Path = L.Path.extend({
+	statics: {
+		SVG: L.Browser.svg
+	},
+
+	getPathString: function () {
+		// form path string here
+	},
+
+	_createElement: function (name) {
+		return document.createElementNS(L.Path.SVG_NS, name);
+	},
+
+	_initElements: function () {
+		this._map._initPathRoot();
+		this._initPath();
+		this._initStyle();
+	},
+
+	_initPath: function () {
+		this._container = this._createElement('g');
+
+		this._path = this._createElement('path');
+		this._container.appendChild(this._path);
+
+		this._map._pathRoot.appendChild(this._container);
+	},
+
+	_initStyle: function () {
+		if (this.options.stroke) {
+			this._path.setAttribute('stroke-linejoin', 'round');
+			this._path.setAttribute('stroke-linecap', 'round');
+		}
+		if (this.options.fill) {
+			this._path.setAttribute('fill-rule', 'evenodd');
+		}
+		this._updateStyle();
+	},
+
+	_updateStyle: function () {
+		if (this.options.stroke) {
+			this._path.setAttribute('stroke', this.options.color);
+			this._path.setAttribute('stroke-opacity', this.options.opacity);
+			this._path.setAttribute('stroke-width', this.options.weight);
+		} else {
+			this._path.setAttribute('stroke', 'none');
+		}
+		if (this.options.fill) {
+			this._path.setAttribute('fill', this.options.fillColor || this.options.color);
+			this._path.setAttribute('fill-opacity', this.options.fillOpacity);
+		} else {
+			this._path.setAttribute('fill', 'none');
+		}
+	},
+
+	_updatePath: function () {
+		var str = this.getPathString();
+		if (!str) {
+			// fix webkit empty string parsing bug
+			str = 'M0 0';
+		}
+		this._path.setAttribute('d', str);
+	},
+
+	// TODO remove duplication with L.Map
+	_initEvents: function () {
+		if (this.options.clickable) {
+			if (!L.Browser.vml) {
+				this._path.setAttribute('class', 'leaflet-clickable');
+			}
+
+			L.DomEvent.addListener(this._container, 'click', this._onMouseClick, this);
+
+			var events = ['dblclick', 'mousedown', 'mouseover', 'mouseout', 'mousemove', 'contextmenu'];
+			for (var i = 0; i < events.length; i++) {
+				L.DomEvent.addListener(this._container, events[i], this._fireMouseEvent, this);
+			}
+		}
+	},
+
+	_onMouseClick: function (e) {
+		if (this._map.dragging && this._map.dragging.moved()) {
+			return;
+		}
+
+		if (e.type === 'contextmenu') {
+			L.DomEvent.preventDefault(e);
+		}
+
+		this._fireMouseEvent(e);
+	},
+
+	_fireMouseEvent: function (e) {
+		if (!this.hasEventListeners(e.type)) {
+			return;
+		}
+		var map = this._map,
+			containerPoint = map.mouseEventToContainerPoint(e),
+			layerPoint = map.containerPointToLayerPoint(containerPoint),
+			latlng = map.layerPointToLatLng(layerPoint);
+
+		this.fire(e.type, {
+			latlng: latlng,
+			layerPoint: layerPoint,
+			containerPoint: containerPoint,
+			originalEvent: e
+		});
+
+		L.DomEvent.stopPropagation(e);
+	}
+});
+
+L.Map.include({
+	_initPathRoot: function () {
+		if (!this._pathRoot) {
+			this._pathRoot = L.Path.prototype._createElement('svg');
+			this._panes.overlayPane.appendChild(this._pathRoot);
+
+			this.on('moveend', this._updateSvgViewport);
+			this._updateSvgViewport();
+		}
+	},
+
+	_updateSvgViewport: function () {
+		this._updatePathViewport();
+
+		var vp = this._pathViewport,
+			min = vp.min,
+			max = vp.max,
+			width = max.x - min.x,
+			height = max.y - min.y,
+			root = this._pathRoot,
+			pane = this._panes.overlayPane;
+
+		// Hack to make flicker on drag end on mobile webkit less irritating
+		// Unfortunately I haven't found a good workaround for this yet
+		if (L.Browser.webkit) {
+			pane.removeChild(root);
+		}
+
+		L.DomUtil.setPosition(root, min);
+		root.setAttribute('width', width);
+		root.setAttribute('height', height);
+		root.setAttribute('viewBox', [min.x, min.y, width, height].join(' '));
+
+		if (L.Browser.webkit) {
+			pane.appendChild(root);
+		}
+	}
+});
+
+
+/*
+ * Popup extension to L.Path (polylines, polygons, circles), adding bindPopup method.
+ */
+
+L.Path.include({
+	bindPopup: function (content, options) {
+		if (!this._popup || this._popup.options !== options) {
+			this._popup = new L.Popup(options, this);
+		}
+		this._popup.setContent(content);
+
+		if (!this._openPopupAdded) {
+			this.on('click', this._openPopup, this);
+			this._openPopupAdded = true;
+		}
+
+		return this;
+	},
+
+	_openPopup: function (e) {
+		this._popup.setLatLng(e.latlng);
+		this._map.openPopup(this._popup);
+	}
+});
+
+
+/*
+ * L.Circle is a circle overlay (with a certain radius in meters).
+ */
+
+L.Circle = L.Path.extend({
+	initialize: function (latlng, radius, options) {
+		L.Path.prototype.initialize.call(this, options);
+
+		this._latlng = latlng;
+		this._mRadius = radius;
+	},
+
+	options: {
+		fill: true
+	},
+
+	setLatLng: function (latlng) {
+		this._latlng = latlng;
+		return this.redraw();
+	},
+
+	setRadius: function (radius) {
+		this._mRadius = radius;
+		return this.redraw();
+	},
+
+	projectLatlngs: function () {
+		var lngRadius = this._getLngRadius(),
+			latlng2 = new L.LatLng(this._latlng.lat, this._latlng.lng - lngRadius, true),
+			point2 = this._map.latLngToLayerPoint(latlng2);
+
+		this._point = this._map.latLngToLayerPoint(this._latlng);
+		this._radius = Math.round(this._point.x - point2.x);
+	},
+
+	getBounds: function () {
+		var map = this._map,
+			delta = this._radius * Math.cos(Math.PI / 4),
+			point = map.project(this._latlng),
+			swPoint = new L.Point(point.x - delta, point.y + delta),
+			nePoint = new L.Point(point.x + delta, point.y - delta),
+			zoom = map.getZoom(),
+			sw = map.unproject(swPoint, zoom, true),
+			ne = map.unproject(nePoint, zoom, true);
+
+		return new L.LatLngBounds(sw, ne);
+	},
+
+	getPathString: function () {
+		var p = this._point,
+			r = this._radius;
+
+		if (this._checkIfEmpty()) {
+			return '';
+		}
+
+		if (L.Browser.svg) {
+			return "M" + p.x + "," + (p.y - r) +
+					"A" + r + "," + r + ",0,1,1," +
+					(p.x - 0.1) + "," + (p.y - r) + " z";
+		} else {
+			p._round();
+			r = Math.round(r);
+			return "AL " + p.x + "," + p.y + " " + r + "," + r + " 0," + (65535 * 360);
+		}
+	},
+
+	_getLngRadius: function () {
+		var equatorLength = 40075017,
+			hLength = equatorLength * Math.cos(L.LatLng.DEG_TO_RAD * this._latlng.lat);
+
+		return (this._mRadius / hLength) * 360;
+	},
+
+	_checkIfEmpty: function () {
+		var vp = this._map._pathViewport,
+			r = this._radius,
+			p = this._point;
+
+		return p.x - r > vp.max.x || p.y - r > vp.max.y ||
+			p.x + r < vp.min.x || p.y + r < vp.min.y;
+	}
+});
+
+
 /*
  * L.DomEvent contains functions for working with DOM events.
  */
@@ -2788,6 +3513,96 @@ L.Map.TouchZoom = L.Handler.extend({
 });
 
 L.Map.addInitHook('addHandler', 'touchZoom', L.Map.TouchZoom);
+
+/*
+ * L.Handler.ShiftDragZoom is used internally by L.Map to add shift-drag zoom (zoom to a selected bounding box).
+ */
+
+L.Map.mergeOptions({
+	boxZoom: true
+});
+
+L.Map.BoxZoom = L.Handler.extend({
+	initialize: function (map) {
+		this._map = map;
+		this._container = map._container;
+		this._pane = map._panes.overlayPane;
+	},
+
+	addHooks: function () {
+		L.DomEvent.addListener(this._container, 'mousedown', this._onMouseDown, this);
+	},
+
+	removeHooks: function () {
+		L.DomEvent.removeListener(this._container, 'mousedown', this._onMouseDown);
+	},
+
+	_onMouseDown: function (e) {
+		if (!e.shiftKey || ((e.which !== 1) && (e.button !== 1))) { return false; }
+
+		L.DomUtil.disableTextSelection();
+
+		this._startLayerPoint = this._map.mouseEventToLayerPoint(e);
+
+		this._box = L.DomUtil.create('div', 'leaflet-zoom-box', this._pane);
+		L.DomUtil.setPosition(this._box, this._startLayerPoint);
+
+		//TODO refactor: move cursor to styles
+		this._container.style.cursor = 'crosshair';
+
+		L.DomEvent
+			.addListener(document, 'mousemove', this._onMouseMove, this)
+			.addListener(document, 'mouseup', this._onMouseUp, this)
+			.preventDefault(e);
+			
+		this._map.fire("boxzoomstart");
+	},
+
+	_onMouseMove: function (e) {
+		var startPoint = this._startLayerPoint,
+			box = this._box,
+
+			layerPoint = this._map.mouseEventToLayerPoint(e),
+			offset = layerPoint.subtract(startPoint),
+
+			newPos = new L.Point(
+				Math.min(layerPoint.x, startPoint.x),
+				Math.min(layerPoint.y, startPoint.y));
+
+		L.DomUtil.setPosition(box, newPos);
+
+		// TODO refactor: remove hardcoded 4 pixels
+		box.style.width  = (Math.abs(offset.x) - 4) + 'px';
+		box.style.height = (Math.abs(offset.y) - 4) + 'px';
+	},
+
+	_onMouseUp: function (e) {
+		this._pane.removeChild(this._box);
+		this._container.style.cursor = '';
+
+		L.DomUtil.enableTextSelection();
+
+		L.DomEvent
+			.removeListener(document, 'mousemove', this._onMouseMove)
+			.removeListener(document, 'mouseup', this._onMouseUp);
+
+		var map = this._map,
+			layerPoint = map.mouseEventToLayerPoint(e);
+
+		var bounds = new L.LatLngBounds(
+				map.layerPointToLatLng(this._startLayerPoint),
+				map.layerPointToLatLng(layerPoint));
+
+		map.fitBounds(bounds);
+		
+		map.fire("boxzoomend", {
+			boxZoomBounds: bounds
+		});
+	}
+});
+
+L.Map.addInitHook('addHandler', 'boxZoom', L.Map.BoxZoom);
+
 
 
 L.Control = L.Class.extend({
