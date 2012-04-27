@@ -25,7 +25,7 @@ module.exports = (app, SessionModel) ->
 
   nowjs.on 'connect', ->
     sid=decodeURIComponent(this.user.cookie['connect.sid'])
-    console.log 'SID ', sid
+    # console.log 'SID ', sid
     if this.user.session?.auth
       cUsers[this.user.clientId]={sid:sid, userId: this.user.session.auth.userId }
       aUsers[this.user.session.auth.userId]={sid:sid,cid: this.user.clientId}
@@ -39,7 +39,7 @@ module.exports = (app, SessionModel) ->
         # console.log 'session object  id' , doc._id
         # props.color = data.color
 
-    console.log this.user.clientId, 'connected clientId: '
+    # console.log this.user.clientId, 'connected clientId: '
     true
 
   nowjs.on 'disconnect', ->
@@ -111,8 +111,8 @@ module.exports = (app, SessionModel) ->
   getWhoCanSee = (cellPoint, worldId, cb ) ->
     nowjs.getGroup(worldId).getUsers (users) ->
       toUpdate = {}
-      console.log 'worldId', worldId
-      console.log 'cellPoint', cellPoint
+      # console.log 'worldId', worldId
+      # console.log 'cellPoint', cellPoint
       if worldId
         for i in users
             

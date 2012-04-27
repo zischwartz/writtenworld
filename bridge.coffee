@@ -53,10 +53,11 @@ module.exports = (everyone, SessionModel) ->
           console.log 'cell found w/ current'
           console.log determineStatus(cell, riter)
           [already, alreadyPos] = determineStatus(cell, riter)
-        
+       
+        #todo load the world, outside of this function, it its not main or personal
         logic=
-          blankCurrently : not cell?.current or cell?.current?.contents == models.mainWorld.meta.defaultChar #TODO make this a config
-          blankRite: contents == models.mainWorld.meta.defaultChar
+          blankCurrently : not cell?.current or cell?.current?.contents == models.mainWorld.config.defaultChar #TODO make this a config
+          blankRite: contents == models.mainWorld.config.defaultChar
           potentialEcho : cell?.current?.contents == contents
           cEchoes : cell?.current?.props?.echoes
           already: already #echoer or downroter --string

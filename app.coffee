@@ -51,8 +51,16 @@ app.get '/', (req, res) ->
   initialWorldId = models.mainWorldId
   if req.loggedIn
     personalWorldId = req.user.personalWorld
+  else
+    personalWorldId = null
 
-  res.render 'map_base.jade', { title: 'Written World', mainWorldId: models.mainWorldId, initialWorldId:models.mainWorldId, personalWorldId:personalWorldId }
+  res.render 'map_base.jade',
+    title: 'Written World'
+    mainWorldId: models.mainWorldId
+    initialWorldId:models.mainWorldId
+    personalWorldId:personalWorldId
+    worldSpec: JSON.stringify(models.mainWorld.config)
+
 
 app.get '/home', (req, res) ->
   if req.loggedIn

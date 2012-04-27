@@ -201,7 +201,7 @@ initializeInterface = ->
     
     #specific interfaces
 
-    #todo put layer switch 
+    # Layer Switching
     if type=='layer'
       $("#worldLayer").html(text+'<b class="caret"></b>' )
       if payload=='off' and state.topLayer

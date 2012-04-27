@@ -28,7 +28,6 @@
       var sid, _ref,
         _this = this;
       sid = decodeURIComponent(this.user.cookie['connect.sid']);
-      console.log('SID ', sid);
       if ((_ref = this.user.session) != null ? _ref.auth : void 0) {
         cUsers[this.user.clientId] = {
           sid: sid,
@@ -54,7 +53,6 @@
           return _this.user.soid = doc._id;
         });
       }
-      console.log(this.user.clientId, 'connected clientId: ');
       return true;
     });
     nowjs.on('disconnect', function() {
@@ -170,8 +168,6 @@
       return nowjs.getGroup(worldId).getUsers(function(users) {
         var i, toUpdate, _i, _len;
         toUpdate = {};
-        console.log('worldId', worldId);
-        console.log('cellPoint', cellPoint);
         if (worldId) {
           for (_i = 0, _len = users.length; _i < _len; _i++) {
             i = users[_i];

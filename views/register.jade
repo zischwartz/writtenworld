@@ -1,23 +1,29 @@
-h2 Register
-- if ('undefined' !== typeof errors && errors.length)
-  ul#errors
-    - each error in errors
-      li.error= error
-form(action='/register', method='POST')
-  #login
-    label(for=everyauth.password.loginFormFieldName) Login
-    input(type='text', name=everyauth.password.loginFormFieldName, value=userParams[everyauth.password.loginFormFieldName])
-  #password
-    label(for=everyauth.password.passwordFormFieldName) Password
-    input(type='password', name=everyauth.password.passwordFormFieldName)
-  #phone
-    label(for='phone') Phone
-    input(type='text', name='phone')
-  #first-name
-    label(for='name.first') First Name
-    input(type='text', name='name.first')
-  #last-name
-    label(for='name.last') Last Name
-    input(type='text', name='name.last')
-  #submit
-    input(type='submit') Register
+extends home
+
+block contents
+  div(class="row-fluid")
+    div(class="span3")  .  
+    div(class="span6") 
+      h2 Register
+      - if ('undefined' !== typeof errors && errors.length)
+        ul#errors
+          - each error in errors
+            li.error= error
+      form(action='/register', method='POST')
+          p Sign up and get: echoes, a private world + history, more color options, notifications, and more crap like that.
+          .well 
+            label User name
+            input.span6(type='text', name='login')
+            span.help-inline Your public name on Mapist
+            label Password 
+            input.span6(type='password', name='password') 
+            span.help-inline Shhhh, it's a secret
+            label Email 
+             i (Optional) 
+            input.span6(type='email', name='email') 
+            span.help-inline Optional. We hate spam too. 
+            div
+              input.button.btn.btn-primary(type="submit") Sign up!
+              a.btn(href='/', data-dismiss='modal') Nevermind 
+            //input(type='submit') Register
+    div(class="span3") .

@@ -40,11 +40,11 @@
       };
       this.minZoom = function() {
         var _ref;
-        return (_ref = spec.maxZoom) != null ? _ref : 15;
+        return (_ref = spec.minZoom) != null ? _ref : 15;
       };
       this.defZoom = function() {
         var _ref;
-        return (_ref = spec.maxZoom) != null ? _ref : 17;
+        return (_ref = spec.defZoom) != null ? _ref : 17;
       };
       this.defaultChar = function() {
         var _ref;
@@ -65,7 +65,7 @@
 
   })();
 
-  window.config = new Configuration;
+  window.config = new Configuration(window.worldSpec);
 
   window.officialCities = {
     'New York City': new L.LatLng(40.73037270272987, -73.99361729621887),
