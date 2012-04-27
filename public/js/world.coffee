@@ -104,12 +104,12 @@ initializeInterface = ->
 
   inputEl.keypress (e) ->
     dbg  e.which, 'pressed'
-    if e.which in [0, 13, 32, 9, 38, 40, 39, 8]
+    if e.which in [0, 13, 32, 9, 38, 40, 8] #39 was here, but that seems to be single quote?
       # console.log 'SPECIAL KEY, screw this keypress'
       return false
     else #it's a normal character which we should actually write
       c = String.fromCharCode e.which
-      # console.log  c,  'Pressed!!!!'
+      console.log  c,  'Pressed!!!!'
       state.selectedCell.write( c)
       
       userTotalRites=parseInt($("#userTotalRites").text())
@@ -147,7 +147,7 @@ initializeInterface = ->
       when 37
         moveCursor('left')
       when 8 # delete
-        moveCursor('left')
+        moveCursor 'left' 
         state.selectedCell.clear()
         setSelected(state.selectedCell)
       when 13 #enter
@@ -333,10 +333,10 @@ jQuery ->
             arrow= $("<li><a><i class='icon-arrow-left' style='-moz-transform: rotate(#{user.degrees}deg);-webkit-transform: rotate(#{user.degrees}deg);'></i> #{user.name}</a></li>")
         true
 
-    now.drawRite = (commandType, rite, cellPoint) ->
+    now.drawRite = (commandType, rite, cellPoint, cellProps) ->
       # console.log(commandType, rite, cellPoint)
       c=Cell.get(cellPoint.x, cellPoint.y)
-      c[commandType](rite)
+      c[commandType](rite, cellProps)
 
     now.insertMessage = (heading, message, cssclass) ->
       insertMessage(heading, message, cssclass)
@@ -392,68 +392,40 @@ window.Cell = class Cell
     @span = document.createElement('span')
     @span.innerHTML= @contents
     @span.id= @key
+    $(@span).addClass('cell')
     if not @props.color
       @props.color = 'c0'
-    @span.className='cell '+ @props.color
+    $(@span).addClass(@props.color)
     if @props.echoes
-      @span.className+= " e#{@props.echoes}"
+      $(@span).addClass("e#{@props.echoes}")
 
   write: (c) ->
-    if (@contents == c) and (@props.youCanEcho isnt false) #an echo!
-      @animateText(1)
-      if @props.echoes
-          echoes = @props.echoes+1
-      else
-          echoes =1
-      $(@span).addClass('e'+echoes)
-
-    else if @props.youCanEcho is false and (@contents is c) # a user echoing something they've already echoed or written themselves
-      return false
-
-    else  #all other rites
-      if @props.echoes >= 1
-        $(@span).removeClass('e'+@props.echoes)
-        @props.echoes = @props.echoes-1
-        $(@span).addClass("e#{@props.echoes}")
-        shakeWindow()
-        cellPoint = cellKeyToXY @key
-        now.writeCell(cellPoint, c)
-        @props.youCanEcho = false
-        return
-
-      if @contents
-        @animateTextRemove(1)
-      @contents= c
-      @span.className = 'cell '+ state.color
-    
-      n= Math.ceil(Math.random()*10)%3+1 # console.log n
-      @animateTextInsert(n, c)
-
-    @props.youCanEcho = false
     cellPoint = cellKeyToXY @key
-    now.writeCell(cellPoint, c)
-  
+    now.writeCell(cellPoint,c)
+    # TODO this is so simple, but really we should be handling this client side. lag will be frustrating.
+
   # COMMAND PATTERN
   normalRite: (rite) ->
     console.log 'normal rite yo'
     @contents = rite.contents
-    @span.innerHTML = contents
-    @span.className = 'cell ' + rite.props.color
+    @span.innerHTML = @contents
+    $(@span).addClass rite.props.color
 
-  echo: (rite) ->
+  echo: (rite, cellProps) ->
     console.log 'echooo'
-    @props.echoes = rite.props.echoes
+    @props.echoes = cellProps.echoes
     @animateText(1)
-    $(@span).addClass('e'+rite.props.echoes)
+    console.log cellProps
+    $(@span).addClass('e'+cellProps.echoes)
 
-  overrite: (rite) ->
+  overrite: (rite, cellProps) ->
     console.log 'ovverite'
     @animateTextRemove(1)
     @contents = rite.contents
     @span.innerHTML = rite.contents
-    @span.className = 'cell ' + rite.props.color
+    $(@span).addClass rite.props.color
 
-  downrote: (rite) ->
+  downrote: (rite, cellProps) ->
     console.log 'downroteddd'
     $(@span).removeClass('e'+@props.echoes)
     @props.echoes-=1

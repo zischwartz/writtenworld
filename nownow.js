@@ -109,25 +109,24 @@
       }
       currentWorldId = this.now.currentWorldId;
       cid = this.user.clientId;
-      bridge.processRite(cellPoint, content, this.user, currentWorldId, function(commandType, rite, cellPoint) {
+      bridge.processRite(cellPoint, content, this.user, currentWorldId, function(commandType, rite, cellPoint, cellProps) {
         if (rite == null) {
           rite = false;
         }
         if (cellPoint == null) {
           cellPoint = false;
         }
+        if (cellProps == null) {
+          cellProps = false;
+        }
         return getWhoCanSee(cellPoint, currentWorldId, function(toUpdate) {
           var i, _results;
           _results = [];
           for (i in toUpdate) {
-            if (i !== cid) {
-              if (rite) {
-                _results.push(nowjs.getClient(i, function() {
-                  return this.now.drawRite(commandType, rite, cellPoint);
-                }));
-              } else {
-                _results.push(void 0);
-              }
+            if (rite) {
+              _results.push(nowjs.getClient(i, function() {
+                return this.now.drawRite(commandType, rite, cellPoint, cellProps);
+              }));
             } else {
               _results.push(void 0);
             }
@@ -171,6 +170,7 @@
         if (worldId) {
           for (_i = 0, _len = users.length; _i < _len; _i++) {
             i = users[_i];
+            console.log('        bounds', cUsers[i].bounds);
             if (cUsers[i].bounds.contains(cellPoint)) {
               toUpdate[i] = cUsers[i];
             }

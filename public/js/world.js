@@ -126,10 +126,11 @@
     inputEl.keypress(function(e) {
       var c, cellPoint, userTotalRites, _ref;
       dbg(e.which, 'pressed');
-      if ((_ref = e.which) === 0 || _ref === 13 || _ref === 32 || _ref === 9 || _ref === 38 || _ref === 40 || _ref === 39 || _ref === 8) {
+      if ((_ref = e.which) === 0 || _ref === 13 || _ref === 32 || _ref === 9 || _ref === 38 || _ref === 40 || _ref === 8) {
         return false;
       } else {
         c = String.fromCharCode(e.which);
+        console.log(c, 'Pressed!!!!');
         state.selectedCell.write(c);
         userTotalRites = parseInt($("#userTotalRites").text());
         $("#userTotalRites").text(userTotalRites + 1);
@@ -385,10 +386,10 @@
           return true;
         });
       });
-      now.drawRite = function(commandType, rite, cellPoint) {
+      now.drawRite = function(commandType, rite, cellPoint, cellProps) {
         var c;
         c = Cell.get(cellPoint.x, cellPoint.y);
-        return c[commandType](rite);
+        return c[commandType](rite, cellProps);
       };
       now.insertMessage = function(heading, message, cssclass) {
         return insertMessage(heading, message, cssclass);
@@ -473,47 +474,18 @@
       this.span = document.createElement('span');
       this.span.innerHTML = this.contents;
       this.span.id = this.key;
+      $(this.span).addClass('cell');
       if (!this.props.color) {
         this.props.color = 'c0';
       }
-      this.span.className = 'cell ' + this.props.color;
+      $(this.span).addClass(this.props.color);
       if (this.props.echoes) {
-        this.span.className += " e" + this.props.echoes;
+        $(this.span).addClass("e" + this.props.echoes);
       }
     }
 
     Cell.prototype.write = function(c) {
-      var cellPoint, echoes, n;
-      if ((this.contents === c) && (this.props.youCanEcho !== false)) {
-        this.animateText(1);
-        if (this.props.echoes) {
-          echoes = this.props.echoes + 1;
-        } else {
-          echoes = 1;
-        }
-        $(this.span).addClass('e' + echoes);
-      } else if (this.props.youCanEcho === false && (this.contents === c)) {
-        return false;
-      } else {
-        if (this.props.echoes >= 1) {
-          $(this.span).removeClass('e' + this.props.echoes);
-          this.props.echoes = this.props.echoes - 1;
-          $(this.span).addClass("e" + this.props.echoes);
-          shakeWindow();
-          cellPoint = cellKeyToXY(this.key);
-          now.writeCell(cellPoint, c);
-          this.props.youCanEcho = false;
-          return;
-        }
-        if (this.contents) {
-          this.animateTextRemove(1);
-        }
-        this.contents = c;
-        this.span.className = 'cell ' + state.color;
-        n = Math.ceil(Math.random() * 10) % 3 + 1;
-        this.animateTextInsert(n, c);
-      }
-      this.props.youCanEcho = false;
+      var cellPoint;
       cellPoint = cellKeyToXY(this.key);
       return now.writeCell(cellPoint, c);
     };
@@ -521,26 +493,27 @@
     Cell.prototype.normalRite = function(rite) {
       console.log('normal rite yo');
       this.contents = rite.contents;
-      this.span.innerHTML = contents;
-      return this.span.className = 'cell ' + rite.props.color;
+      this.span.innerHTML = this.contents;
+      return $(this.span).addClass(rite.props.color);
     };
 
-    Cell.prototype.echo = function(rite) {
+    Cell.prototype.echo = function(rite, cellProps) {
       console.log('echooo');
-      this.props.echoes = rite.props.echoes;
+      this.props.echoes = cellProps.echoes;
       this.animateText(1);
-      return $(this.span).addClass('e' + rite.props.echoes);
+      console.log(cellProps);
+      return $(this.span).addClass('e' + cellProps.echoes);
     };
 
-    Cell.prototype.overrite = function(rite) {
+    Cell.prototype.overrite = function(rite, cellProps) {
       console.log('ovverite');
       this.animateTextRemove(1);
       this.contents = rite.contents;
       this.span.innerHTML = rite.contents;
-      return this.span.className = 'cell ' + rite.props.color;
+      return $(this.span).addClass(rite.props.color);
     };
 
-    Cell.prototype.downrote = function(rite) {
+    Cell.prototype.downrote = function(rite, cellProps) {
       console.log('downroteddd');
       $(this.span).removeClass('e' + this.props.echoes);
       this.props.echoes -= 1;

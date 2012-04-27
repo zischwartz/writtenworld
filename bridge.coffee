@@ -86,43 +86,43 @@ module.exports = (everyone, SessionModel) ->
           console.log 'You cannot downrote again '
         else if logic.legitEcho
             console.log 'Legit echo, cool'
-            callback('echo', rite, cellPoint)
             echoIt(cell, rite, riter, logic)
+            callback('echo', rite, cellPoint, cell.current.props)
         else if logic.cEchoes<=0
-            callback('overrite', rite, cellPoint)
             overriteIt(cell, rite, riter, logic) # this changes c.current to the rite
+            callback('overrite', rite, cellPoint, cell.current.props)
             console.log 'Legit overrite, there were no echoes'
         else if logic.cEchoes>=1
             if logic.already == 'echoer'
               if logic.cEchoes ==1
-                callback('overrite', rite, cellPoint)
                 overriteIt(cell, rite, riter, logic)
+                callback('overrite', rite, cellPoint, cell.current.props)
                 console.log 'overrite something you echoed!'
               else
-                callback('downrote', rite, cellPoint)
                 downroteIt(cell, rite, riter, logic)
+                callback('downrote', rite, cellPoint, cell.current.props)
                 console.log 'downroting something you echoed!'
             else if not logic.already == 'downroter' #not neccesary, for readability
-              callback('downrote', rite, cellPoint)
               console.log 'legit downrote'
               downroteIt(cell, rite, riter, logic)
+              callback('downrote', rite, cellPoint, cell.current.props)
         else
-          console.log 'well shit this shouldnt have happened'
+          console.log 'WELL SHIT THIS SHOULDNT HAVE HAPPENED'
         
         if logic.riteToHistory
           cell.history.push(rite)
           cell.save()
-  # end processRite
+  # END processRite
 
             
-  broadcastRite= ->
-    console.log 'broadcastrite called'
+  # broadcastRite= ->
+  #   console.log 'broadcastrite called'
 
 
 
   # Externally Accessible
   module.processRite = processRite
-  module.broadcastRite = broadcastRite
+  # module.broadcastRite = broadcastRite
   
   return module
 

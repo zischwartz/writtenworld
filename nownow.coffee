@@ -77,14 +77,14 @@ module.exports = (app, SessionModel) ->
     currentWorldId = this.now.currentWorldId
     cid = this.user.clientId
 
-    bridge.processRite cellPoint, content, this.user, currentWorldId, (commandType, rite=false, cellPoint=false)->
+    bridge.processRite cellPoint, content, this.user, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
       getWhoCanSee cellPoint, currentWorldId, (toUpdate)->
         for i of toUpdate
-          if i !=cid # ie not you
+          # if i !=cid # ie not you, removed for my hack 
             if rite # it was a legit rite
               nowjs.getClient i, ->
-                this.now.drawRite(commandType, rite, cellPoint)
+                this.now.drawRite(commandType, rite, cellPoint, cellProps)
     return true
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
@@ -111,12 +111,10 @@ module.exports = (app, SessionModel) ->
   getWhoCanSee = (cellPoint, worldId, cb ) ->
     nowjs.getGroup(worldId).getUsers (users) ->
       toUpdate = {}
-      # console.log 'worldId', worldId
-      # console.log 'cellPoint', cellPoint
+      # console.log 'worldId', worldId # console.log 'cellPoint', cellPoint
       if worldId
         for i in users
-            
-            # console.log 'bounds',  cUsers[i].bounds
+            console.log '        bounds',  cUsers[i].bounds
             if cUsers[i].bounds.contains(cellPoint)
               toUpdate[i] = cUsers[i]
       cb(toUpdate)
