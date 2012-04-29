@@ -488,6 +488,11 @@
         $span.addClass('e' + newval);
         return newval;
       });
+      this.props.watch("color", function(id, oldval, newval) {
+        $span.removeClass(oldval);
+        $span.addClass(newval);
+        return newval;
+      });
     }
 
     Cell.prototype.write = function(c) {
@@ -498,24 +503,26 @@
 
     Cell.prototype.normalRite = function(rite) {
       this.contents = rite.contents;
-      return $(this.span).addClass(rite.props.color);
+      return this.props.color = rite.props.color;
     };
 
     Cell.prototype.echo = function(rite, cellProps) {
       this.props.echoes = cellProps.echoes;
-      return this.animateText(1);
+      this.animateText(1);
+      return this.props.color = cellProps.color;
     };
 
     Cell.prototype.overrite = function(rite, cellProps) {
       this.animateTextRemove(1);
       this.contents = rite.contents;
       this.props.echoes = 0;
-      return $(this.span).addClass(rite.props.color);
+      return this.props.color = rite.props.color;
     };
 
     Cell.prototype.downrote = function(rite, cellProps) {
       $(this.span).removeClass('e' + this.props.echoes);
       this.props.echoes -= 1;
+      this.props.color = cellProps.color;
       return shakeWindow(1);
     };
 

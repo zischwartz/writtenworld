@@ -276,8 +276,8 @@ jQuery ->
   window.map = new L.Map('map', {center: centerPoint, zoom: config.defZoom(), scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset }).addLayer(tileServeLayer)
   initializeGeo()
   
-  #this was window.domTiles 
   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+
   state.topLayer = domTiles
 
   now.ready ->
@@ -290,7 +290,6 @@ jQuery ->
     $("#loadingIndicator").fadeOut('slow')
     
     now.setBounds domTiles.getTilePointAbsoluteBounds()
-    
    
       
     map.on 'moveend', (e)->
@@ -419,6 +418,13 @@ window.Cell = class Cell
       $span.addClass('e'+newval)
       return newval
 
+    @props.watch "color", (id, oldval, newval) ->
+      # console.log "color changed, #{oldval} to #{newval}"
+      # console.log $span 
+      $span.removeClass(oldval)
+      $span.addClass(newval)
+      return newval
+
   write: (c) ->
     cellPoint = cellKeyToXY @key
     now.writeCell(cellPoint,c)
@@ -427,21 +433,23 @@ window.Cell = class Cell
   # COMMAND PATTERN
   normalRite: (rite) ->
     @contents = rite.contents
-    $(@span).addClass rite.props.color
+    @props.color= rite.props.color
 
   echo: (rite, cellProps) ->
     @props.echoes = cellProps.echoes
     @animateText(1)
+    @props.color= cellProps.color
 
   overrite: (rite, cellProps) ->
     @animateTextRemove(1)
     @contents = rite.contents
     @props.echoes =0
-    $(@span).addClass rite.props.color
+    @props.color= rite.props.color
 
   downrote: (rite, cellProps) ->
     $(@span).removeClass('e'+@props.echoes)
     @props.echoes-=1
+    @props.color= cellProps.color
     shakeWindow(1)
 
   kill: ->
@@ -524,6 +532,10 @@ window.Cell = class Cell
 # HELPER FUNCTIONS
 turnOffLayerHack = ->
   Cell.killAll()
+  #
+  # Instead use the Stamp
+  # Also, try adding a timeout?
+  #
   # this is a ridiculously hacky solution, I blame leaflet 
   # map.removeLayer(map._layers[l])
   # map.removeLayer(l)
