@@ -18,7 +18,7 @@ window.state =
   cellHeight: ->
     config.tileSize().y/state.numRows()
   belowInputRateLimit: true
-  topLayer: null
+  topLayerStamp: null
   baseLayer: null
 
 setTileStyle = ->
@@ -72,7 +72,8 @@ moveCursor = (direction, from = state.selectedCell) ->
 window.centerCursor = ->
   $.doTimeout 400, ->
     # target = window.domTiles.getCenterTile()
-    target=state.topLayer.getCenterTile()
+    console.log state.topLayerStamp
+    target=getLayer(state.topLayerStamp).getCenterTile()
     # console.log('center cursor poll')
     key = "c#{target.x}x#{target.y}"
     targetCell=Cell.all()[key]
@@ -106,9 +107,10 @@ initializeInterface = ->
   map.on 'viewreset', (e) ->
     # console.log 'viewreset'
     $("#loadingIndicator").fadeIn('fast')
-    if map.getZoom() < config.minLayerZoom() and state.topLayer
-      turnOffLayerHack()
-    if map.getZoom() >= config.minLayerZoom() and not state.topLayer
+    if map.getZoom() < config.minLayerZoom() and state.topLayerStamp
+      turnOffLayer()
+      # turnOffLayerHack()
+    if map.getZoom() >= config.minLayerZoom() and not state.topLayerStamp
       turnOnMainLayer() #should be turnOnLastLayer
   
   map.on 'dblclick', (e) ->
@@ -221,7 +223,7 @@ initializeInterface = ->
     # Layer Switching
     if type=='layer'
       $("#worldLayer").html(text+'<b class="caret"></b>' )
-      if payload=='off' and state.topLayer
+      if payload=='off' and state.topLayerStamp
         turnOffLayer()
       else if payload=='main'
         turnOnMainLayer()
@@ -278,7 +280,8 @@ jQuery ->
   
   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
 
-  state.topLayer = domTiles
+  # state.topLayer = domTiles
+  state.topLayerStamp = L.Util.stamp domTiles
 
   now.ready ->
     now.setCurrentWorld(initialWorldId)
@@ -293,10 +296,12 @@ jQuery ->
    
       
     map.on 'moveend', (e)->
-      now.setBounds state.topLayer.getTilePointAbsoluteBounds() if state.topLayer
+      # now.setBounds state.topLayer.getTilePointAbsoluteBounds() if state.topLayer
+      now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
       $("#loadingIndicator").fadeOut('slow')
     map.on 'zoomend', (e)->
-      now.setBounds state.topLayer.getTilePointAbsoluteBounds() if state.topLayer
+      # now.setBounds state.topLayer.getTilePointAbsoluteBounds() if state.topLayer
+      now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
       $("#loadingIndicator").fadeOut('slow')
 
     now.setClientStateFromServer (s)->
@@ -543,33 +548,48 @@ turnOffLayerHack = ->
   now.setCurrentWorld(null)
 
 turnOffLayer = ->
+  #hide the layer first, with css?
   Cell.killAll()
-  map.removeLayer(state.topLayer) if state.topLayer
-  state.topLayer = 0
-  now.setCurrentWorld(null)
+  $.doTimeout 200, ->
+    console.log 'turn off layer'
+    # console.log state.topLayerStamp
+    layer= map._layers[state.topLayerStamp]
+    # console.log layer
+    map.removeLayer(layer) if state.topLayerStamp
+    state.topLayerStamp = 0
+    now.setCurrentWorld(null)
+    return false
+  return
 
 turnOnMainLayer= ->
+  console.log 'turn on layer'
   Cell.killAll()
   # map.removeLayer(state.topLayer) if state.topLayer
   now.setCurrentWorld(mainWorldId)
   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
   map.addLayer(domTiles)
-  state.topLayer = domTiles
-  now.setBounds state.topLayer.getTilePointAbsoluteBounds()
+  stamp= L.Util.stamp(domTiles)
+  console.log 'stamp', stamp
+  state.topLayerStamp = stamp
+  now.setBounds domTiles.getTilePointAbsoluteBounds()
   inputEl.focus()
   centerCursor()
 
 switchToLayer= (worldId) ->
   #todo load ruleset/config from now
   Cell.killAll()
-  map.removeLayer(state.topLayer) if state.topLayer
+  map.removeLayer(getLayer(state.topLayerStamp)) if state.topLayerStamp
   now.setCurrentWorld(worldId)
   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
   map.addLayer(domTiles)
-  state.topLayer = domTiles
+  state.topLayerStamp = L.Util.stamp domTiles
   now.setBounds domTiles.getTilePointAbsoluteBounds()
   inputEl.focus()
   centerCursor()
+
+getLayer = (stamp) ->
+  return map._layers[stamp]
+
 
 window.shakeWindow =(s=1) ->
   b = $('body') #s = severity

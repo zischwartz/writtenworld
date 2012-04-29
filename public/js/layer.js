@@ -107,6 +107,7 @@
       this._update();
     },
     onRemove: function(map) {
+      console.log('onRemove called');
       map._panes.tilePane.removeChild(this._container);
       map.off("viewreset", this._resetCallback, this);
       map.off("moveend", this._update, this);

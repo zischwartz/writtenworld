@@ -108,7 +108,7 @@ L.DomTileLayer = L.Class.extend
     # console.log @_container
 
     # $(@_container).remove()
-    # console.log 'onRemove called'
+    console.log 'onRemove called'
     map._panes.tilePane.removeChild @_container
     map.off "viewreset", @_resetCallback, this
     map.off "moveend", @_update, this
