@@ -61,7 +61,6 @@ app.get '/', (req, res) ->
     personalWorldId:personalWorldId
     worldSpec: JSON.stringify(models.mainWorld.config)
 
-
 app.get '/home', (req, res) ->
   if req.loggedIn
     personalWorldId= req.user.personalWorld

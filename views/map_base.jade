@@ -39,12 +39,12 @@ html(lang="en")
       (function() {
         var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); })();
 
-    //script(src='http://127.0.0.1:8000/static/test.js')
-    //link(rel="stylesheet", href="http://127.0.0.1:8000/static/thef.css", type="text/css")
-
 body
   include include/nav.jade
   div(id="messages") 
+  div#loadingIndicator
+    div.progress.progress-striped.active
+      div.bar LOADING
   div(id="map")
   div(id="inputWrap")
     input(id="input", type="text", autocorrect="off", autocapitalize="off")

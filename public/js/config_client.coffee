@@ -18,6 +18,7 @@ Configuration = class Configuration
     @maxZoom = -> spec.maxZoom ? 20 # this is super important and sets the resolution. was 18, current image tiles are only 18
     @minZoom = -> spec.minZoom ? 15 # was 16
     @defZoom = -> spec.defZoom ? 17
+    @minLayerZoom = -> spec.minLayerZoom ? 16 #turn off the layer at this zoom
     @defaultChar = -> spec.defaultChar ? " "
     @inputRateLimit = -> spec.inputRateLimit ? 40
     @maxDistanceFromOfficial = -> spec.maxDistanceFromOfficial ? 10000 # from official City, for rollout, see below

@@ -66,7 +66,14 @@ div.modal.fade.hide#feedbackModal
       a.close(data-dismiss='modal') ×
       h3 What do you think? 
     .modal-body
-      textarea#feedback.span6(name='feedback', placeholder='Write your comment or suggestion here...') 
+      .well 
+        textarea#feedback.span5(name='feedback', placeholder='Write your comment or suggestion here...') 
+        select#t
+          option Type of Feedback
+          option Bug Report
+          option Feature Idea
+          option Just Saying Hi
+          option Other 
     .modal-footer
       button.btn.btn-primary.trigger(data-type='submitfeedback') Submit!
       a.btn(href='#', data-dismiss='modal') Nevermind 

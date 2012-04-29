@@ -107,7 +107,7 @@
         "public": true,
         config: {
           maxZoom: 20,
-          minZoom: 15,
+          minZoom: 10,
           tileSize: {
             x: 192,
             y: 256
@@ -268,6 +268,10 @@
 
   FeedbackSchema = new Schema({
     contents: {
+      type: String,
+      "default": ' '
+    },
+    t: {
       type: String,
       "default": ' '
     }

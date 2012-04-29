@@ -54,7 +54,7 @@ exports.World.findOne {name: 'main'}, (err, world)->
       public: true
       config:
         maxZoom:20
-        minZoom:15
+        minZoom:10
         tileSize:
           x: 192
           y: 256
@@ -144,6 +144,7 @@ exports.User= mongoose.model('User', UserSchema)
 
 FeedbackSchema = new Schema
   contents: {type: String, default: ' '}
+  t: {type: String, default: ' '}
 
 exports.Feedback = mongoose.model('Feedback', FeedbackSchema)
 

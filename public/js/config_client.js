@@ -46,6 +46,10 @@
         var _ref;
         return (_ref = spec.defZoom) != null ? _ref : 17;
       };
+      this.minLayerZoom = function() {
+        var _ref;
+        return (_ref = spec.minLayerZoom) != null ? _ref : 16;
+      };
       this.defaultChar = function() {
         var _ref;
         return (_ref = spec.defaultChar) != null ? _ref : " ";

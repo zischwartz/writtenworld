@@ -6124,6 +6124,31 @@ a.direction-dropdown:hover {
   z-index: 10;
   width: 100%;
 }
+#loadingIndicator {
+  position: absolute;
+  height: 50px;
+  width: 100%;
+  bottom: 0px;
+  /*margin-top: @navbarHeight;*/
+
+  z-index: 10;
+}
+#loadingIndicator .progress {
+  -webkit-border-radius: 0px !important;
+  -moz-border-radius: 0px !important;
+  border-radius: 0px !important;
+  -webkit-border-radius: 0px !important;
+  -moz-border-radius: 0px !important;
+  border-radius: 0px !important;
+  height: 50px;
+}
+#loadingIndicator .bar {
+  height: 50px;
+  width: 100%;
+  color: #333333;
+  padding-top: 15px;
+  font-size: 2em;
+}
 .alert {
   width: 20%;
   left: 74%;
@@ -6254,9 +6279,14 @@ a.colorOptions.c2 {
   left: 0px;
   padding: 5px;
   font-size: 1.3em;
-  background-color: rgba(0, 0, 0, 0.5);
-  background-color: rgba(0, 0, 0, 0.5);
+  /*#translucent > .background(@black, .5);*/
+
+  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
+}
+#feedbackButton a {
+  color: #9d261d;
 }
 a#color {
   -webkit-animation: coloryt 15s infinite !important;

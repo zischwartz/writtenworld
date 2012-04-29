@@ -15,14 +15,14 @@ module.exports = (everyone, SessionModel) ->
     sid= decodeURIComponent nowUser.cookie['connect.sid']
     
     color= nowUser.session?.color
-    console.log 'color', color
+    # console.log 'color', color
 
     # If user has an account and is logged in
     if nowUser.session.auth
       riter=nowUser.session.auth.userId
       models.User.findById riter, (err, user) ->
         # if user.personalWorld.toString() isnt currentWorldId  #check if they're already in their own world (heh)
-          console.log 'write to their world' #write to personal world here
+          # console.log 'write to their world' #write to personal world here
           models.Cell .findOne({world: user.personalWorld, x:cellPoint.x, y: cellPoint.y}) .populate('current')
           .run (err, cell) ->
               console.log err if err
@@ -33,7 +33,7 @@ module.exports = (everyone, SessionModel) ->
                 cell.current= rite._id
                 cell.save()
               if user.personalWorld.toString() is currentWorldId  #check if they're already in their own world (heh)
-                console.log 'was actually writing directly to yr world'
+                # console.log 'was actually writing directly to yr world, so skip the echo behavior below'
                 return true
     else # Not logged in
       riter = nowUser.soid #session object id
@@ -45,13 +45,13 @@ module.exports = (everyone, SessionModel) ->
         console.log err if err
 
         if not cell or not cell.current
-          console.log 'no cell or blank cell'
+          # console.log 'no cell or blank cell'
           cell = new models.Cell {x:cellPoint.x, y:cellPoint.y, world:currentWorldId}
           [already, alreadyPos] = [false, -1]
 
         if cell and cell.current
-          console.log 'cell found w/ current'
-          console.log determineStatus(cell, riter)
+          # console.log 'cell found w/ current'
+          # console.log determineStatus(cell, riter)
           [already, alreadyPos] = determineStatus(cell, riter)
        
         #todo load the world, outside of this function, it its not main or personal
@@ -66,46 +66,52 @@ module.exports = (everyone, SessionModel) ->
 
         logic.legitEcho = already != 'echoer' and logic.potentialEcho
         logic.legitDownrote= not logic.blankCurrently and not logic.potentialEcho and already != 'downroter'
-        # for k, v of logic
-        #  console.log "#{k} : #{v}"
-        # console.log ' '
+        
+        debug = ' '
+        for k, v of logic
+         debug+="#{k} : #{v}  .  "
         
         rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], echoes:-1, downroters:[], color: color}})
+        console.log ' '
+        console.log ' '
+        console.log 'riter ', riter
+        console.log debug
 
         if logic.blankCurrently
           console.log 'Blank, just write'
           normalRite(cell, rite, riter, logic)
           callback('normalRite', rite, cellPoint)
         else if logic.potentialEcho and logic.already == 'echoer'
-          logic.riteToHistory=false
           console.log 'Echoing yourself too much will make you go blind'
+          logic.riteToHistory=false
           callback('alreadyEchoed')
         else if logic.already=='downroter' and not logic.potentialEcho
+          console.log 'You cannot downrote again '
           logic.riteToHistory=false
           callback('alreadyDownroted')
-          console.log 'You cannot downrote again '
         else if logic.legitEcho
             console.log 'Legit echo, cool'
             echoIt(cell, rite, riter, logic)
             callback('echo', rite, cellPoint, cell.current.props)
         else if logic.cEchoes<=0
+            console.log 'Legit overrite, there were no echoes'
             overriteIt(cell, rite, riter, logic) # this changes c.current to the rite
             callback('overrite', rite, cellPoint, cell.current.props)
-            console.log 'Legit overrite, there were no echoes'
         else if logic.cEchoes>=1
-            if logic.already == 'echoer'
-              if logic.cEchoes ==1
-                overriteIt(cell, rite, riter, logic)
-                callback('overrite', rite, cellPoint, cell.current.props)
-                console.log 'overrite something you echoed!'
-              else
-                downroteIt(cell, rite, riter, logic)
-                callback('downrote', rite, cellPoint, cell.current.props)
-                console.log 'downroting something you echoed!'
-            else if not logic.already == 'downroter' #not neccesary, for readability
-              console.log 'legit downrote'
+            console.log '.'
+            if logic.already isnt 'echoer'
+              console.log 'Legit Downrote'
               downroteIt(cell, rite, riter, logic)
               callback('downrote', rite, cellPoint, cell.current.props)
+            else if logic.already == 'echoer'
+              if logic.cEchoes ==1
+                console.log 'Overrite something you echoed!'
+                overriteIt(cell, rite, riter, logic)
+                callback('overrite', rite, cellPoint, cell.current.props)
+              else
+                console.log 'Downroting something you echoed!'
+                downroteIt(cell, rite, riter, logic)
+                callback('downrote', rite, cellPoint, cell.current.props)
         else
           console.log 'WELL SHIT THIS SHOULDNT HAVE HAPPENED'
         
@@ -114,15 +120,9 @@ module.exports = (everyone, SessionModel) ->
           cell.save()
   # END processRite
 
-            
-  # broadcastRite= ->
-  #   console.log 'broadcastrite called'
-
-
 
   # Externally Accessible
   module.processRite = processRite
-  # module.broadcastRite = broadcastRite
   
   return module
 
@@ -138,7 +138,7 @@ determineStatus = (cell, riter) ->
       if e.toString()==riter.toString()
         isAlreadyEchoer = true
         alreadyEchoPos= i
-        console.log "already echoer!!! #{alreadyEchoPos}"
+        # console.log "already echoer!!! #{alreadyEchoPos}"
         return ['echoer', i]
   if cell?.current?.props.downroters
     for d in cell?.current?.props.downroters
@@ -146,9 +146,9 @@ determineStatus = (cell, riter) ->
       if d.toString()==riter.toString()
         isAlreadyDownroter = true
         alreadyDownPos=i
-        console.log "already downroter!!! #{alreadyDownPos}"
+        # console.log "already downroter!!! #{alreadyDownPos}"
         return ['downroter', i]
-  console.log 'returning false from determine status'
+  # console.log 'returning false from determine status'
   return [false, -1]
 
 normalRite = (cell, rite, riter, logic) ->

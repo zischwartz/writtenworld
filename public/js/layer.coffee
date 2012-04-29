@@ -67,6 +67,7 @@ L.DomTileLayer = L.Class.extend
     zoomOffset: 0
     zoomReverse: false
     unloadInvisibleTiles: true #  L.Browser.mobile # these should maybe be True
+    # updateWhenIdle: false # L.Browser.mobile
     updateWhenIdle: true # L.Browser.mobile
     reuseTiles: false
 
@@ -97,9 +98,17 @@ L.DomTileLayer = L.Class.extend
       map.on "move", @_limitedUpdate, this
     @_reset()
     @_update()
-    true
+    return
 
   onRemove: (map) ->
+    # XXX
+    # console.log 'tilePane'
+    # console.log map._panes.tilePane
+    # console.log '@_container'
+    # console.log @_container
+
+    # $(@_container).remove()
+    # console.log 'onRemove called'
     map._panes.tilePane.removeChild @_container
     map.off "viewreset", @_resetCallback, this
     map.off "moveend", @_update, this
@@ -128,11 +137,15 @@ L.DomTileLayer = L.Class.extend
   _initContainer: ->
     tilePane = @_map._panes.tilePane
     first = tilePane.firstChild
+    # console.log tilePane
+    # console.log @_container
     if not @_container or tilePane.empty
       @_container = L.DomUtil.create("div", "leaflet-layer")
       if @_insertAtTheBottom and first
+        # console.log 'inserted at bottom'
         tilePane.insertBefore @_container, first
       else
+        # console.log 'appended child'
         tilePane.appendChild @_container
       @_updateOpacity()  if @options.opacity < 1
     true
@@ -409,8 +422,9 @@ L.DomTileLayer = L.Class.extend
     true
 
   _removeCellsFromTile: (tile) ->
-    for c in tile._cells
-      c.kill
+    if tile._cells
+      for c in tile._cells
+        c.kill
 
   getTilePointBounds: ->
     bounds = this._map.getPixelBounds()

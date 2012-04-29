@@ -165,13 +165,12 @@
     };
     getWhoCanSee = function(cellPoint, worldId, cb) {
       return nowjs.getGroup(worldId).getUsers(function(users) {
-        var i, toUpdate, _i, _len;
+        var i, toUpdate, _i, _len, _ref, _ref1;
         toUpdate = {};
         if (worldId) {
           for (_i = 0, _len = users.length; _i < _len; _i++) {
             i = users[_i];
-            console.log('        bounds', cUsers[i].bounds);
-            if (cUsers[i].bounds.contains(cellPoint)) {
+            if ((_ref = cUsers[i]) != null ? (_ref1 = _ref.bounds) != null ? _ref1.contains(cellPoint) : void 0 : void 0) {
               toUpdate[i] = cUsers[i];
             }
           }
@@ -213,11 +212,12 @@
       });
       return true;
     };
-    everyone.now.submitFeedback = function(f) {
+    everyone.now.submitFeedback = function(f, t) {
       var feedback;
       this.now.insertMessage('Thanks', 'We appreciate your feedback');
       feedback = new models.Feedback({
-        contents: f
+        contents: f,
+        t: t
       });
       return feedback.save(function(err) {
         if (err) {

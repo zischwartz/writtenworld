@@ -114,8 +114,8 @@ module.exports = (app, SessionModel) ->
       # console.log 'worldId', worldId # console.log 'cellPoint', cellPoint
       if worldId
         for i in users
-            console.log '        bounds',  cUsers[i].bounds
-            if cUsers[i].bounds.contains(cellPoint)
+            # console.log '   bounds',  cUsers[i].bounds
+            if cUsers[i]?.bounds?.contains(cellPoint) # added the ? 
               toUpdate[i] = cUsers[i]
       cb(toUpdate)
 
@@ -145,9 +145,9 @@ module.exports = (app, SessionModel) ->
     true
 
 
-  everyone.now.submitFeedback = (f) ->
+  everyone.now.submitFeedback = (f, t) ->
     this.now.insertMessage 'Thanks', 'We appreciate your feedback'
-    feedback = new models.Feedback({contents: f})
+    feedback = new models.Feedback({contents: f, t:t})
     feedback.save (err) -> console.log err if err
 
   everyone.now.setUserOption = (type, payload) ->

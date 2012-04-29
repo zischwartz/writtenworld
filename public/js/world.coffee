@@ -99,8 +99,24 @@ initializeInterface = ->
 
   window.inputEl = $ "#input"
   inputEl.focus()
+
   map.on 'zoomend', ->
     inputEl.focus()
+  
+  map.on 'viewreset', (e) ->
+    # console.log 'viewreset'
+    $("#loadingIndicator").fadeIn('fast')
+    if map.getZoom() < config.minLayerZoom() and state.topLayer
+      turnOffLayerHack()
+    if map.getZoom() >= config.minLayerZoom() and not state.topLayer
+      turnOnMainLayer() #should be turnOnLastLayer
+  
+  map.on 'dblclick', (e) ->
+    $("#loadingIndicator").fadeIn('fast')
+
+  $(".leaflet-control-zoom-in, .leaflet-control-zoom-out").click (e) ->
+    $("#loadingIndicator").fadeIn('fast')
+    # console.log 'zoomoutin'
 
   inputEl.keypress (e) ->
     dbg  e.which, 'pressed'
@@ -109,7 +125,7 @@ initializeInterface = ->
       return false
     else #it's a normal character which we should actually write
       c = String.fromCharCode e.which
-      console.log  c,  'Pressed!!!!'
+      dbg  c,  'Pressed!!!!'
       state.selectedCell.write( c)
       
       userTotalRites=parseInt($("#userTotalRites").text())
@@ -147,7 +163,7 @@ initializeInterface = ->
       when 37
         moveCursor('left')
       when 8 # delete
-        moveCursor 'left' 
+        moveCursor 'left'
         state.selectedCell.clear()
         setSelected(state.selectedCell)
       when 13 #enter
@@ -164,6 +180,7 @@ initializeInterface = ->
     $.ajax
       url: "http://where.yahooapis.com/geocode?location=#{locationString}&flags=JC&appid=a6mq7d30"
       success: (data)->
+        console.log data
         result =  data['ResultSet']['Results'][0]
         latlng = new L.LatLng parseFloat(result.latitude), parseFloat(result.longitude)
         dbg 'go to, ',  latlng
@@ -205,28 +222,11 @@ initializeInterface = ->
     if type=='layer'
       $("#worldLayer").html(text+'<b class="caret"></b>' )
       if payload=='off' and state.topLayer
-        Cell.killAll()
-        map.removeLayer(state.topLayer)
-        state.topLayer = null
-        now.setCurrentWorld(null)
+        turnOffLayer()
       else if payload=='main'
-        Cell.killAll()
-        map.removeLayer(state.topLayer) if state.topLayer
-        now.setCurrentWorld(mainWorldId)
-        domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
-        map.addLayer(domTiles)
-        state.topLayer = domTiles
-        now.setBounds state.topLayer.getTilePointAbsoluteBounds()
-        inputEl.focus()
+        turnOnMainLayer()
       else
-        Cell.killAll()
-        map.removeLayer(state.topLayer) if state.topLayer
-        now.setCurrentWorld(payload)
-        domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
-        map.addLayer(domTiles)
-        state.topLayer = domTiles
-        now.setBounds domTiles.getTilePointAbsoluteBounds()
-        inputEl.focus()
+        switchToLayer(payload)
 
     if type == 'color'
       # console.log 'ch color'
@@ -237,7 +237,8 @@ initializeInterface = ->
       $('.direction-dropdown i').addClass('icon-white')
     if type == 'submitfeedback'
       f=$('#feedback').val()
-      now.submitFeedback(f)
+      t=$("#t").val()
+      now.submitFeedback(f,t)
       $('#feedbackModal').modal('hide')
       inputEl.focus()
       return false
@@ -286,13 +287,18 @@ jQuery ->
     map.on 'zoomend', ->
       setTileStyle()
     initializeInterface()
-
+    $("#loadingIndicator").fadeOut('slow')
+    
     now.setBounds domTiles.getTilePointAbsoluteBounds()
     
+   
+      
     map.on 'moveend', (e)->
       now.setBounds state.topLayer.getTilePointAbsoluteBounds() if state.topLayer
+      $("#loadingIndicator").fadeOut('slow')
     map.on 'zoomend', (e)->
       now.setBounds state.topLayer.getTilePointAbsoluteBounds() if state.topLayer
+      $("#loadingIndicator").fadeOut('slow')
 
     now.setClientStateFromServer (s)->
       if s.color # s is session
@@ -364,6 +370,8 @@ window.clearMessages = ->
 
 $().alert() #applies close functionality to all alerts
 
+#todo disable cell caching, because then they don't get liveupdated...
+
 window.Cell = class Cell
   all = {}
   @all: -> all
@@ -398,6 +406,18 @@ window.Cell = class Cell
     $(@span).addClass(@props.color)
     if @props.echoes
       $(@span).addClass("e#{@props.echoes}")
+    
+    @watch "contents", (id, oldval, newval) ->
+      @span.innerHTML=newval
+      return newval
+
+    $span = $(@span)
+    @props.watch "echoes", (id, oldval, newval) ->
+      # console.log "echoes changed, #{oldval} to #{newval}"
+      # console.log $span 
+      $span.removeClass('e'+oldval)
+      $span.addClass('e'+newval)
+      return newval
 
   write: (c) ->
     cellPoint = cellKeyToXY @key
@@ -406,30 +426,23 @@ window.Cell = class Cell
 
   # COMMAND PATTERN
   normalRite: (rite) ->
-    console.log 'normal rite yo'
     @contents = rite.contents
-    @span.innerHTML = @contents
     $(@span).addClass rite.props.color
 
   echo: (rite, cellProps) ->
-    console.log 'echooo'
     @props.echoes = cellProps.echoes
     @animateText(1)
-    console.log cellProps
-    $(@span).addClass('e'+cellProps.echoes)
 
   overrite: (rite, cellProps) ->
-    console.log 'ovverite'
     @animateTextRemove(1)
     @contents = rite.contents
-    @span.innerHTML = rite.contents
+    @props.echoes =0
     $(@span).addClass rite.props.color
 
   downrote: (rite, cellProps) ->
-    console.log 'downroteddd'
     $(@span).removeClass('e'+@props.echoes)
     @props.echoes-=1
-    $(@span).addClass("e#{@props.echoes}")
+    shakeWindow(1)
 
   kill: ->
     dbg 'killing a cell'#, @key
@@ -438,10 +451,6 @@ window.Cell = class Cell
     
   clear: ->
     @write(config.defaultChar())
-    # if @contents
-      # @animateTextRemove(1)
-    # @span.innerHTML= config.defaultChar()
-    # @span.className= 'cell'
   
   animateTextInsert: (animateWith=0, c) ->
     if not prefs.animate.writing
@@ -509,6 +518,46 @@ window.Cell = class Cell
     else
       cell = new Cell row, col, tile, contents, props
       return cell
+
+
+
+# HELPER FUNCTIONS
+turnOffLayerHack = ->
+  Cell.killAll()
+  # this is a ridiculously hacky solution, I blame leaflet 
+  # map.removeLayer(map._layers[l])
+  # map.removeLayer(l)
+  state.topLayer = 0
+  now.setCurrentWorld(null)
+
+turnOffLayer = ->
+  Cell.killAll()
+  map.removeLayer(state.topLayer) if state.topLayer
+  state.topLayer = 0
+  now.setCurrentWorld(null)
+
+turnOnMainLayer= ->
+  Cell.killAll()
+  # map.removeLayer(state.topLayer) if state.topLayer
+  now.setCurrentWorld(mainWorldId)
+  domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+  map.addLayer(domTiles)
+  state.topLayer = domTiles
+  now.setBounds state.topLayer.getTilePointAbsoluteBounds()
+  inputEl.focus()
+  centerCursor()
+
+switchToLayer= (worldId) ->
+  #todo load ruleset/config from now
+  Cell.killAll()
+  map.removeLayer(state.topLayer) if state.topLayer
+  now.setCurrentWorld(worldId)
+  domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+  map.addLayer(domTiles)
+  state.topLayer = domTiles
+  now.setBounds domTiles.getTilePointAbsoluteBounds()
+  inputEl.focus()
+  centerCursor()
 
 window.shakeWindow =(s=1) ->
   b = $('body') #s = severity
