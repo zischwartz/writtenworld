@@ -1,4 +1,7 @@
-- var colors = {gray:'c0', blue: 'c1', purple: 'c2', green: 'c3' } // blue: 'c4'}
+-if (!everyauth.loggedIn)
+  - var colors = {gray:'c0', blue: 'c1', purple: 'c2', green: 'c3' } // blue: 'c4'}
+-else
+  - var colors = {gray:'c0', blue: 'c1', purple: 'c2', green: 'c3', blue2: 'c4'}
 
 link(rel='stylesheet', href="/css/bootstrap.css")
 
@@ -7,7 +10,7 @@ link(rel='stylesheet', href="/css/bootstrap.css")
       a.close(data-dismiss='modal') ×
       h3 Pick A Color 
     .modal-body
-      p Any color. As long as it's one of these. Want more options? Get some echoes.
+      p Any color. As long as it's one of these. Want more options? Get some echoes (and an account).
       each val, key in colors
         a.colorOptions.trigger(class=val, data-payload=val, data-type='color', data-action='set', data-dismiss='modal') #{key} 
     .modal-footer
@@ -42,6 +45,7 @@ form.modal.fade.hide#locationSearch
       p Where would you like to go?
       .well 
         input.span5#locationSearchInput
+      p Hint: Include the state, in the US, or country, if not. Americas only for now.
     .modal-footer
       button.btn.btn-primary(type="submit") Go!
       a.btn(href='#', data-dismiss='modal') Nevermind 
