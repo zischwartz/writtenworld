@@ -7,7 +7,6 @@ html(lang="en")
     // meta(name = "viewport", content = "width = device-width, initial-scale = 1.0,  user-scalable = no")
     meta(name="apple-mobile-web-app-capable", content="yes") 
 
-    script(src="/js/libs/async.min.js")
     script(src="/js/libs/jquery-1.7.js")
     script(src="/js/libs/bootstrap-dropdown.js")
     script(src="/js/libs/bootstrap-collapse.js")
@@ -15,25 +14,15 @@ html(lang="en")
     script(src="/js/libs/bootstrap-transition.js")
     script(src="/js/libs/bootstrap-alert.js")
     script(src="/js/libs/dotimeout.js")
-    script(src="/js/libs/jquery.jrumble.min.js")
-    script(src="/js/leaflet-src.js")
-    script(src="/js/config_client.js")
-    script(src="/js/geo.js")
-    script(src="/js/layer.js")
-    script(src="/js/world.js")
-      
-    //script(src="/nowjs/now.js")
-    
-    //style(id="dynamicStyles")
-      
     script(type="text/javascript")
       var _gaq = _gaq || []; _gaq.push(['_setAccount', 'UA-30418262-1']); _gaq.push(['_setDomainName', 'scribver.se']); _gaq.push(['_setAllowLinker', true]); _gaq.push(['_trackPageview']);
       (function() {
         var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); })();
 
-body
+body.home
   //include include/nav_site.jade
   div(id="messages") 
+  div.container-fluid
   block contents
     div(class="row-fluid")
        div(class="span2")  .  

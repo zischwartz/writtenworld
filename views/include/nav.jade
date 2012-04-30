@@ -8,25 +8,25 @@
               a.brand(href='#') #{title} 
           .nav-collapse
             ul.nav
-            
-              li.dropdown
-                a#worldLayer.dropdown-toggle(href='#', data-toggle='dropdown')
-                  | World
-                  b.caret
-                ul.dropdown-menu
-                  li.active
-                    a.trigger(href='#', data-payload="main", data-type='layer', data-action="setClientState") Main World 
-                  if everyauth.loggedIn
+             // 
+                li.dropdown
+                  a#worldLayer.dropdown-toggle(href='#', data-toggle='dropdown')
+                    | World
+                    b.caret
+                  ul.dropdown-menu
+                    li.active
+                      a.trigger(href='#', data-payload="main", data-type='layer', data-action="setClientState") Main World 
+                    if everyauth.loggedIn
+                      li
+                        a.trigger(href='#', data-payload=personalWorldId, data-type='layer', data-action="setClientState") Your World 
+                    else
+                      li
+                        a(href="#registerModal", data-toggle="modal") Your World  
                     li
-                      a.trigger(href='#', data-payload=personalWorldId, data-type='layer', data-action="setClientState") Your World 
-                  else
+                      a.trigger(data-payload='off', data-type='layer', data-action='setClientState') Off
+                    li.divider
                     li
-                      a(href="#registerModal", data-toggle="modal") Your World  
-                  li
-                    a.trigger(data-payload='off', data-type='layer', data-action='setClientState') Off
-                  li.divider
-                  li
-                    a(href='#') More Worlds...
+                      a(href='#') More Worlds...
               li
                 a(href='#locationSearch', data-toggle="modal") 
                   i.icon-search.icon-white 

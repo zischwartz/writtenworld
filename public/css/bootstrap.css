@@ -6046,6 +6046,9 @@ a.thumbnail:hover {
 .invisible {
   visibility: hidden;
 }
+body.home .container-fluid {
+  margin-top: 8em;
+}
 .navbar a.brand {
   font-size: 15px;
   padding: 10px 20px 12px;
