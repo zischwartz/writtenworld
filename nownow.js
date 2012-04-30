@@ -28,10 +28,12 @@
       var sid, _ref,
         _this = this;
       sid = decodeURIComponent(this.user.cookie['connect.sid']);
+      console.log(this.user);
       if ((_ref = this.user.session) != null ? _ref.auth : void 0) {
         cUsers[this.user.clientId] = {
           sid: sid,
-          userId: this.user.session.auth.userId
+          userId: this.user.session.auth.userId,
+          login: this.user.login
         };
         aUsers[this.user.session.auth.userId] = {
           sid: sid,
@@ -193,8 +195,6 @@
           i = users[_i];
           uC = cUsers[i].selected;
           distance = Math.sqrt((aC.x - uC.x) * (aC.x - uC.x) + (aC.y - uC.y) * (aC.y - uC.y));
-          console.log("i: " + i);
-          console.log("cid: " + cid);
           console.log(distance);
           if (distance < 1000 && (i !== cid)) {
             u = {};
@@ -205,6 +205,9 @@
               u[key] = value;
             }
             u.distance = distance;
+            if (cUsers[i].login) {
+              u.login = cUsers[i].login;
+            }
             closeUsers.push(u);
           }
         }

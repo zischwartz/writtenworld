@@ -143,11 +143,14 @@
       return true;
     },
     _initContainer: function() {
-      var first, tilePane;
+      var first, stamp, tilePane;
       tilePane = this._map._panes.tilePane;
       first = tilePane.firstChild;
       if (!this._container || tilePane.empty) {
         this._container = L.DomUtil.create("div", "leaflet-layer");
+        console.log('staaamp');
+        stamp = L.Util.stamp(this);
+        L.DomUtil.addClass(this._container, "layer-" + stamp);
         if (this._insertAtTheBottom && first) {
           tilePane.insertBefore(this._container, first);
         } else {

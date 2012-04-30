@@ -73,7 +73,10 @@ window.centerCursor = ->
   $.doTimeout 400, ->
     # target = window.domTiles.getCenterTile()
     console.log state.topLayerStamp
-    target=getLayer(state.topLayerStamp).getCenterTile()
+    layer=getLayer(state.topLayerStamp)
+    if not layer
+      return true
+    target=layer.getCenterTile()
     # console.log('center cursor poll')
     key = "c#{target.x}x#{target.y}"
     targetCell=Cell.all()[key]
@@ -275,7 +278,7 @@ jQuery ->
   state.baseLayer= tileServeLayer
 
   centerPoint= new L.LatLng(40.714269, -74.005972) #try adding slight randomness to this
-  window.map = new L.Map('map', {center: centerPoint, zoom: config.defZoom(), scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset }).addLayer(tileServeLayer)
+  window.map = new L.Map('map', {center: centerPoint, attributionControl:false, zoom: config.defZoom(), scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset }).addLayer(tileServeLayer)
   initializeGeo()
   
   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
@@ -337,10 +340,10 @@ jQuery ->
           user.degrees= user.radians*(180/Math.PI)
           if user.radians < 0
             user.degrees= 360+user.degrees #this ends up with directly left =0, up being 90 and so on
-          if not user.name
-            user.name= 'Someone'
+          if not user.login
+            user.login= 'Someone'
           $("ul#nearby").append ->
-            arrow= $("<li><a><i class='icon-arrow-left' style='-moz-transform: rotate(#{user.degrees}deg);-webkit-transform: rotate(#{user.degrees}deg);'></i> #{user.name}</a></li>")
+            arrow= $("<li><a><i class='icon-arrow-left' style='-moz-transform: rotate(#{user.degrees}deg);-webkit-transform: rotate(#{user.degrees}deg);'></i> #{user.login}</a></li>")
         true
 
     now.drawRite = (commandType, rite, cellPoint, cellProps) ->
@@ -535,8 +538,8 @@ window.Cell = class Cell
 
 
 # HELPER FUNCTIONS
-turnOffLayerHack = ->
-  Cell.killAll()
+# turnOffLayerHack = ->
+  # Cell.killAll()
   #
   # Instead use the Stamp
   # Also, try adding a timeout?
@@ -544,16 +547,31 @@ turnOffLayerHack = ->
   # this is a ridiculously hacky solution, I blame leaflet 
   # map.removeLayer(map._layers[l])
   # map.removeLayer(l)
-  state.topLayer = 0
-  now.setCurrentWorld(null)
+  # state.topLayer = 0
+  # now.setCurrentWorld(null)
 
 turnOffLayer = ->
   #hide the layer first, with css?
   Cell.killAll()
-  $.doTimeout 200, ->
+  
+  # OHOh do it this way. TODO
+#  removeLayerThenDo(layer, callback) #cb = zoomOut
+
+
+  # TODO I think it's still creating the tiles.
+
+  layer= map._layers[state.topLayerStamp]
+  console.log(state.topLayerStamp)
+  $layer = $(".layer-#{state.topLayerStamp}")
+  console.log $layer
+
+  $layer.fadeOut('slow')
+  
+
+  $.doTimeout 500, ->
     console.log 'turn off layer'
     # console.log state.topLayerStamp
-    layer= map._layers[state.topLayerStamp]
+    # layer= map._layers[state.topLayerStamp]
     # console.log layer
     map.removeLayer(layer) if state.topLayerStamp
     state.topLayerStamp = 0

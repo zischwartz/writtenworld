@@ -26,8 +26,9 @@ module.exports = (app, SessionModel) ->
   nowjs.on 'connect', ->
     sid=decodeURIComponent(this.user.cookie['connect.sid'])
     # console.log 'SID ', sid
+    console.log this.user
     if this.user.session?.auth
-      cUsers[this.user.clientId]={sid:sid, userId: this.user.session.auth.userId }
+      cUsers[this.user.clientId]={sid:sid, userId: this.user.session.auth.userId, login: this.user.login }
       aUsers[this.user.session.auth.userId]={sid:sid,cid: this.user.clientId}
     else
       cUsers[this.user.clientId]={sid:sid}
@@ -133,13 +134,15 @@ module.exports = (app, SessionModel) ->
       for i in users
         uC = cUsers[i].selected
         distance = Math.sqrt((aC.x-uC.x)*(aC.x-uC.x)+(aC.y-uC.y)*(aC.y-uC.y))
-        console.log "i: #{i}"
-        console.log "cid: #{cid}"
+        # console.log "i: #{i}"
+        # console.log "cid: #{cid}"
         console.log distance
         if distance < 1000 and (i isnt cid)
           u = {}
-          u[key] = value  for own key,value of cUsers[i]
+          u[key] = value for own key,value of cUsers[i]
           u.distance = distance
+          if cUsers[i].login
+            u.login= cUsers[i].login
           closeUsers.push(u)
       cb(closeUsers)
     true

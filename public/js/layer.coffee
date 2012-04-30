@@ -87,6 +87,7 @@ L.DomTileLayer = L.Class.extend
     true
 
   onAdd: (map, insertAtTheBottom) ->
+    
     @_map = map
     @_insertAtTheBottom = insertAtTheBottom
     @_initContainer()
@@ -106,6 +107,7 @@ L.DomTileLayer = L.Class.extend
     # console.log map._panes.tilePane
     # console.log '@_container'
     # console.log @_container
+    
 
     # $(@_container).remove()
     console.log 'onRemove called'
@@ -141,6 +143,9 @@ L.DomTileLayer = L.Class.extend
     # console.log @_container
     if not @_container or tilePane.empty
       @_container = L.DomUtil.create("div", "leaflet-layer")
+      console.log('staaamp')
+      stamp = L.Util.stamp(this)
+      L.DomUtil.addClass(@_container, "layer-#{stamp}")
       if @_insertAtTheBottom and first
         # console.log 'inserted at bottom'
         tilePane.insertBefore @_container, first

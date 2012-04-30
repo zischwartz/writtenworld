@@ -71,6 +71,9 @@ app.get '/home', (req, res) ->
   else
       res.render 'home.jade', { title: 'Home', worlds: worlds}
 
+app.get '/about', (req, res) ->
+  res.render 'about.jade', { title: 'About'}
+
 app.get '/uw/:slug', (req, res)->
   if req.loggedIn
     models.World.findOne {slug: req.params.slug},(err,world) ->

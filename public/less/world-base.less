@@ -130,18 +130,29 @@ a.colorOptions
 
 }
 
-#feedbackButton
+
+#feedbackAndAbout
 {
   position: absolute;
   z-index: 100;
   bottom: 0px;
-  left: 0px;
-  padding: 5px; 
-  font-size: 1.3em;
+  right: 0px;
+  font-size: 1.2em;
   /*#translucent > .background(@black, .5);*/
-  #translucent > .background(@white, .5);
-  cursor: pointer;  
-  a {color: @red;}
+  a {
+    color: @red;
+    margin-left: 10px;
+    margin-right: 5px;
+    #translucent > .background(@white, .5);
+    cursor: pointer;  
+    padding: 5px; 
+  }
+  a:hover
+  {
+    #translucent > .background(@white, 1);
+  }
+
+
 }
 
 a#color
