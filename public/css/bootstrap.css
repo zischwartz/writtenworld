@@ -6031,6 +6031,9 @@ a.thumbnail:hover {
     margin-left: 30px;
   }
 }
+body.home .container-fluid {
+  margin-top: 8em;
+}
 .pull-right {
   float: right;
 }
@@ -6045,9 +6048,6 @@ a.thumbnail:hover {
 }
 .invisible {
   visibility: hidden;
-}
-body.home .container-fluid {
-  margin-top: 8em;
 }
 .navbar a.brand {
   font-size: 15px;
@@ -6272,7 +6272,7 @@ a.colorOptions:first-child {
 a.colorOptions:first-child {
   *margin-left: 0;
 }
-a.colorOptions.c2 {
+a.colorOptions.c3 {
   text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8);
 }
 #feedbackAndAbout {
@@ -6402,6 +6402,9 @@ div.leaflet-tile-loaded {
   color: white;
 }
 /* COLORS  */
+/*@blue0 : #0B5FA5;*/
+/*@purple0 : #1D1AB2;*/
+/*@green0 : #00AE68;*/
 .c0 {
   color: #999999 !important;
 }
@@ -6409,22 +6412,22 @@ div.leaflet-tile-loaded {
   background-color: #999999 !important;
 }
 .c1 {
-  color: #0b5fa5 !important;
+  color: #4e7bce !important;
 }
 .cc1 {
-  background-color: #0b5fa5 !important;
+  background-color: #4e7bce !important;
 }
 .c2 {
-  color: #1d1ab2 !important;
+  color: #6b52d2 !important;
 }
 .cc2 {
-  background-color: #1d1ab2 !important;
+  background-color: #6b52d2 !important;
 }
 .c3 {
-  color: #00ae68 !important;
+  color: #3ec8b9 !important;
 }
 .cc3 {
-  background-color: #00ae68 !important;
+  background-color: #3ec8b9 !important;
 }
 .c4 {
   color: #0500ff !important;
@@ -6434,7 +6437,13 @@ div.leaflet-tile-loaded {
 }
 /* ECHOES */
 /* ECHOES */
-.e1, .e2, .e3 {
+.e1,
+.e2,
+.e3,
+.e4,
+.e5,
+.e6,
+.e7 {
   font-weight: bold !important;
   text-shadow: 0px 0px 5px #000000;
   /*text-shadow: 0px 1px 3px  rgba(0, 0 ,0, .8);*/
@@ -6449,6 +6458,22 @@ div.leaflet-tile-loaded {
 .e3 {
   background-color: rgba(255, 255, 255, 0.5);
   background-color: rgba(255, 255, 255, 0.5);
+}
+.e4 {
+  background-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.6);
+}
+.e5 {
+  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.7);
+}
+.e6 {
+  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.8);
+}
+.e7 {
+  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.9);
 }
 /* ANIMATION KEYFRAMES */
 /* ANIMATION KEYFRAMES */
