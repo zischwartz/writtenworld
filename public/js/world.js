@@ -146,7 +146,9 @@
     inputEl.keypress(function(e) {
       var c, cellPoint, userTotalRites, _ref;
       dbg(e.which, 'pressed');
-      if ((_ref = e.which) === 0 || _ref === 13 || _ref === 32 || _ref === 9 || _ref === 38 || _ref === 40 || _ref === 8) {
+      console.log(e.which);
+      if ((_ref = e.which) === 0 || _ref === 13 || _ref === 32 || _ref === 9 || _ref === 8) {
+        console.log('SPECIAL KEY, screw this keypress');
         return false;
       } else {
         c = String.fromCharCode(e.which);

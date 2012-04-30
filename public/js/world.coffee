@@ -125,8 +125,9 @@ initializeInterface = ->
 
   inputEl.keypress (e) ->
     dbg  e.which, 'pressed'
-    if e.which in [0, 13, 32, 9, 38, 40, 8] #39 was here, but that seems to be single quote?
-      # console.log 'SPECIAL KEY, screw this keypress'
+    console.log e.which
+    if e.which in [0, 13, 32, 9, 8] # 40, 39, 38  were here, but that seems to be single quote?
+      console.log 'SPECIAL KEY, screw this keypress'
       return false
     else #it's a normal character which we should actually write
       c = String.fromCharCode e.which
