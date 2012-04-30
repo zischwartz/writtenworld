@@ -28,7 +28,6 @@
       var sid, _ref,
         _this = this;
       sid = decodeURIComponent(this.user.cookie['connect.sid']);
-      console.log(this.user);
       if ((_ref = this.user.session) != null ? _ref.auth : void 0) {
         cUsers[this.user.clientId] = {
           sid: sid,

@@ -112,7 +112,7 @@
             x: 192,
             y: 256
           },
-          tileServeUrl: "http://s3.amazonaws.com/ww-tiles/wwtiles/{z}/{x}/{y}.png",
+          tileServeUrl: "http://23.23.200.225/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png",
           ruleSet: false,
           props: {
             echoes: true

@@ -26,7 +26,7 @@ module.exports = (app, SessionModel) ->
   nowjs.on 'connect', ->
     sid=decodeURIComponent(this.user.cookie['connect.sid'])
     # console.log 'SID ', sid
-    console.log this.user
+    # console.log this.user
     if this.user.session?.auth
       cUsers[this.user.clientId]={sid:sid, userId: this.user.session.auth.userId, login: this.user.login }
       aUsers[this.user.session.auth.userId]={sid:sid,cid: this.user.clientId}
