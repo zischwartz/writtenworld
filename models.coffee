@@ -8,7 +8,6 @@ Schema = mongoose.Schema
 ObjectId = Schema.ObjectId
 
 
-
 WorldSchema = new Schema
   owner: ObjectId
   ownerlogin: {type: String}
@@ -140,6 +139,19 @@ UserSchema.plugin mongooseAuth,
 
 
 exports.User= mongoose.model('User', UserSchema)
+
+
+# NOT TECHNICALLY A MODEL But this is as good a place as any
+class ConnectedUser
+  allByCid = {}
+  allBySid = {}
+  allByUid = {}
+
+  constructor: (@cid, @sid, @login=null, @uid=null, @props={})->
+    allByCid[@cid] = this
+    allBySid[@sid] = this
+    allByUid[@uid] = this if @uid
+
 
 
 FeedbackSchema = new Schema

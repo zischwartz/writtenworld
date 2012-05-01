@@ -374,7 +374,7 @@ window.clearMessages = ->
 
 $().alert() #applies close functionality to all alerts
 
-#todo disable cell caching, because then they don't get liveupdated...
+#todo disable cell caching, because then they don't get liveupdated when not visible, duh...
 
 window.Cell = class Cell
   all = {}

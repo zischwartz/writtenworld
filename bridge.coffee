@@ -9,8 +9,6 @@ module.exports = (everyone, SessionModel) ->
 
   processRite = (cellPoint, contents, nowUser, currentWorldId, callback) ->
     # nowUser is this.user within  everyone.now
-    # console.log 'processRite Called !!!!!', nowUser
-
     cid = nowUser.clientId
     sid= decodeURIComponent nowUser.cookie['connect.sid']
     
@@ -66,7 +64,8 @@ module.exports = (everyone, SessionModel) ->
 
         logic.legitEcho = already != 'echoer' and logic.potentialEcho
         logic.legitDownrote= not logic.blankCurrently and not logic.potentialEcho and already != 'downroter'
-        
+        originalOwner = cell.current?.owner
+
         debug = ' '
         for k, v of logic
          debug+="#{k} : #{v}  .  "
@@ -118,8 +117,22 @@ module.exports = (everyone, SessionModel) ->
         if logic.riteToHistory
           cell.history.push(rite)
           cell.save()
+          models.User.findById riter, (err, user)->
+            if user
+              user.totalRites+=1
+              user.save (err) -> console.log err if err
+
+        if originalOwner and  (logic.legitEcho or logic.legitDownrote)
+          models.User.findById originalOwner, (err, user) ->
+            if user and logic.legitEcho
+              user.totalEchoes+=1
+              user.save (err)-> console.log err if err
+              user.emit('receivedEcho', rite)
+            if user and logic.legitDownrote and originalOwner.toString() isnt riter.toString()
+              user.emit('receivedOverRite', rite)
 
 
+     
         # TODO, need msg notification, and adding to total user rite!!! TODO TODO
   # END processRite
 
