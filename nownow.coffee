@@ -25,22 +25,23 @@ module.exports = (app, SessionModel) ->
 
   nowjs.on 'connect', ->
     sid=decodeURIComponent(this.user.cookie['connect.sid'])
-    # console.log 'SID ', sid
-    # console.log this.user
+    cid = this.user.clientId
+    nowUser = this.user
     if this.user.session?.auth
-      cUsers[this.user.clientId]={sid:sid, userId: this.user.session.auth.userId, login: this.user.login }
-      aUsers[this.user.session.auth.userId]={sid:sid,cid: this.user.clientId}
+      userId = this.user.session.auth.userId
+      cUsers[cid]={sid:sid, userId: userId, login: this.user.login }
+      aUsers[userId]={sid:sid,cid: cid}
+       
+      models.User.findById userId, (err, doc) ->
+        cUsers[cid]={sid:sid, userId: userId, login: doc.login }
+        aUsers[userId]={sid:sid,cid: cid, login: doc.login}
+        nowUser.login = doc.login
     else
-      cUsers[this.user.clientId]={sid:sid}
+      cUsers[cid]={sid:sid}
       SessionModel.findOne {'sid': sid } , (err, doc) =>
         data = JSON.parse(doc.data)
-        cUsers[this.user.clientId]={sid:sid, userId: doc._id}
+        cUsers[cid]={sid:sid, userId: doc._id}
         this.user.soid=doc._id #not sure if this is a good idea
-
-        # console.log 'session object  id' , doc._id
-        # props.color = data.color
-
-    # console.log this.user.clientId, 'connected clientId: '
     true
 
   nowjs.on 'disconnect', ->
@@ -92,8 +93,8 @@ module.exports = (app, SessionModel) ->
     if not this.now.currentWorldId
       return false
     models.Cell.where('world', this.now.currentWorldId)
-      .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows) #numrows for both, numcol == numrows
-      .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows) #lt or lte??
+      .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
+      .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
       .populate('current')
       .run (err,docs) =>
         results = {}

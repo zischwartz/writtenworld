@@ -25,21 +25,37 @@
     cUsers = {};
     aUsers = {};
     nowjs.on('connect', function() {
-      var sid, _ref,
+      var cid, nowUser, sid, userId, _ref,
         _this = this;
       sid = decodeURIComponent(this.user.cookie['connect.sid']);
+      cid = this.user.clientId;
+      nowUser = this.user;
       if ((_ref = this.user.session) != null ? _ref.auth : void 0) {
-        cUsers[this.user.clientId] = {
+        userId = this.user.session.auth.userId;
+        cUsers[cid] = {
           sid: sid,
-          userId: this.user.session.auth.userId,
+          userId: userId,
           login: this.user.login
         };
-        aUsers[this.user.session.auth.userId] = {
+        aUsers[userId] = {
           sid: sid,
-          cid: this.user.clientId
+          cid: cid
         };
+        models.User.findById(userId, function(err, doc) {
+          cUsers[cid] = {
+            sid: sid,
+            userId: userId,
+            login: doc.login
+          };
+          aUsers[userId] = {
+            sid: sid,
+            cid: cid,
+            login: doc.login
+          };
+          return nowUser.login = doc.login;
+        });
       } else {
-        cUsers[this.user.clientId] = {
+        cUsers[cid] = {
           sid: sid
         };
         SessionModel.findOne({
@@ -47,7 +63,7 @@
         }, function(err, doc) {
           var data;
           data = JSON.parse(doc.data);
-          cUsers[_this.user.clientId] = {
+          cUsers[cid] = {
             sid: sid,
             userId: doc._id
           };

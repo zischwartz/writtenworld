@@ -297,7 +297,6 @@ jQuery ->
     $("#loadingIndicator").fadeOut('slow')
     
     now.setBounds domTiles.getTilePointAbsoluteBounds()
-   
       
     map.on 'moveend', (e)->
       # now.setBounds state.topLayer.getTilePointAbsoluteBounds() if state.topLayer
@@ -311,8 +310,7 @@ jQuery ->
     now.setClientStateFromServer (s)->
       if s.color # s is session
         state.color= s.color
-      else
-        #easy fix for override issue, set default color. this could be random.
+      else #easy fix for override issue, set default color. this could be random.
         state.color = 'c0'
         now.setUserOption('color','c0')
 
@@ -320,14 +318,11 @@ jQuery ->
     
     now.drawCursors = (user) ->
       # TODO Fix this up: make it a global object 
-      # console.log user, 'users'
       $(".u#{user.cid}").removeClass("otherSelected u#{user.cid} c#{user.color}")
-
       if user.selected.x
         otherSelected = Cell.get(user.selected.x, user.selected.y)
         if otherSelected
           $(otherSelected.span).addClass("u#{user.cid} c#{user.color} otherSelected")
-    
     
     $("#getNearby").click ->
       now.getCloseUsers (closeUsers)->
@@ -355,9 +350,10 @@ jQuery ->
     now.insertMessage = (heading, message, cssclass) ->
       insertMessage(heading, message, cssclass)
 
-    true # end now.ready
+    return # end now.ready
 
-  true # end doc.ready
+
+  return true # end doc.ready
 
 
 # this shouldn't get called until docready anyway...

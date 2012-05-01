@@ -53,6 +53,10 @@ body
   div#loadingIndicator
     div.progress.progress-striped.active
       div.bar LOADING
+  div#errorIndicator
+    div.progress.progress-striped.active.progress-danger
+      div.bar ERROR!
+        h5  Maybe reload the page if this doesn't go away in a few seconds.
   div(id="map")
   div(id="inputWrap")
     input(id="input", type="text", autocorrect="off", autocapitalize="off")

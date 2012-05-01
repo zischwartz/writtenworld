@@ -397,7 +397,6 @@
       now.insertMessage = function(heading, message, cssclass) {
         return insertMessage(heading, message, cssclass);
       };
-      return true;
     });
     return true;
   });

@@ -73,9 +73,9 @@ module.exports = (everyone, SessionModel) ->
         
         rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], echoes:-1, downroters:[], color: color}})
         console.log ' '
-        console.log ' '
-        console.log 'riter ', riter
-        console.log debug
+        # console.log ' '
+        # console.log 'riter ', riter
+        # console.log debug
 
         if logic.blankCurrently
           console.log 'Blank, just write'
@@ -118,6 +118,9 @@ module.exports = (everyone, SessionModel) ->
         if logic.riteToHistory
           cell.history.push(rite)
           cell.save()
+
+
+        # TODO, need msg notification, and adding to total user rite!!! TODO TODO
   # END processRite
 
 
