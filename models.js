@@ -277,11 +277,30 @@
 
     allByUid = {};
 
-    function ConnectedUser(cid, sid, login, uid, props) {
+    ConnectedUser.byCid = function(cid) {
+      return allByCid[cid];
+    };
+
+    ConnectedUser.bySid = function(sid) {
+      return allBy[sid];
+    };
+
+    ConnectedUser.byUid = function(uid) {
+      var r;
+      r = allByUid[uid];
+      if (r) {
+        return r;
+      } else {
+        return false;
+      }
+    };
+
+    function ConnectedUser(cid, sid, uid, currentWorldId, login, props) {
       this.cid = cid;
       this.sid = sid;
-      this.login = login != null ? login : null;
       this.uid = uid != null ? uid : null;
+      this.currentWorldId = currentWorldId != null ? currentWorldId : null;
+      this.login = login != null ? login : null;
       this.props = props != null ? props : {};
       allByCid[this.cid] = this;
       allBySid[this.sid] = this;
@@ -289,6 +308,12 @@
         allByUid[this.uid] = this;
       }
     }
+
+    ConnectedUser.prototype.destructor = function() {
+      delete allByCid[this.cid];
+      delete allBySid[this.sid];
+      return delete allByUid[this.uid];
+    };
 
     return ConnectedUser;
 

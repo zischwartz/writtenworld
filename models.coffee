@@ -146,13 +146,29 @@ class ConnectedUser
   allByCid = {}
   allBySid = {}
   allByUid = {}
+  
+  @byCid: (cid)->
+    return allByCid[cid]
+  
+  @bySid: (sid) ->
+    return allBy[sid]
 
-  constructor: (@cid, @sid, @login=null, @uid=null, @props={})->
+  @byUid: (uid) ->
+    r = allByUid[uid]
+    if r
+      return r
+    else
+      return false
+
+  constructor: (@cid, @sid, @uid=null, @currentWorldId=null, @login=null, @props={})->
     allByCid[@cid] = this
     allBySid[@sid] = this
     allByUid[@uid] = this if @uid
-
-
+    
+  destructor: ->
+    delete allByCid[@cid]
+    delete allBySid[@sid]
+    delete allByUid[@uid]
 
 FeedbackSchema = new Schema
   contents: {type: String, default: ' '}

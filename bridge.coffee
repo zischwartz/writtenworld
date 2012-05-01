@@ -131,9 +131,6 @@ module.exports = (everyone, SessionModel) ->
             if user and logic.legitDownrote and originalOwner.toString() isnt riter.toString()
               user.emit('receivedOverRite', rite)
 
-
-     
-        # TODO, need msg notification, and adding to total user rite!!! TODO TODO
   # END processRite
 
 
