@@ -1,11 +1,3 @@
-# For testing it with a lighter weight object but still DOM elements
-# Cell = {}
-# Cell.getOrCreate= (a) ->
-#   c = {}
-#   c.span = document.createElement('span')
-#   return c
-# 
-# Cell.get = -> null
 
 betterBuildTile= (tile, tileData, absTilePoint)->
   dbg 'betterBuildTile'

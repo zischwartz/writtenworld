@@ -108,11 +108,7 @@ initializeInterface = ->
     inputEl.focus()
   
   map.on 'viewreset', (e) ->
-    # console.log 'viewreset'
     $("#loadingIndicator").fadeIn('fast')
-    if map.getZoom() < config.minLayerZoom() and state.topLayerStamp
-      turnOffLayer()
-      # turnOffLayerHack()
     if map.getZoom() >= config.minLayerZoom() and not state.topLayerStamp
       turnOnMainLayer() #should be turnOnLastLayer
   
@@ -121,7 +117,6 @@ initializeInterface = ->
 
   $(".leaflet-control-zoom-in, .leaflet-control-zoom-out").click (e) ->
     $("#loadingIndicator").fadeIn('fast')
-    # console.log 'zoomoutin'
 
   inputEl.keypress (e) ->
     dbg  e.which, 'pressed'
@@ -193,16 +188,24 @@ initializeInterface = ->
         map.panTo(latlng)
         $('#locationSearch').modal('hide')
         centerCursor()
-
     return false
 
   $(".modal").on 'shown', ->
     $(this).find('input')[0]?.focus()
-    #end interface init
  
   $(".modal").on 'hidden', ->
     inputEl.focus()
 
+  $(".leaflet-control-zoom-in").click (e) ->
+    map.zoomIn()
+    return
+
+  $(".leaflet-control-zoom-out").click (e) ->
+    if map.getZoom() <=config.minLayerZoom() and state.topLayerStamp
+      removeLayerThenZoomOut()
+    else
+      map.zoomOut()
+    return
 
   $(".trigger").live 'click', ->
     action= $(this).data('action')
@@ -223,7 +226,6 @@ initializeInterface = ->
     
     
     #specific interfaces
-
     # Layer Switching
     if type=='layer'
       $("#worldLayer").html(text+'<b class="caret"></b>' )
@@ -278,8 +280,18 @@ jQuery ->
   tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()})
   state.baseLayer= tileServeLayer
 
-  centerPoint= new L.LatLng(40.714269, -74.005972) #try adding slight randomness to this
-  window.map = new L.Map('map', {center: centerPoint, attributionControl:false, zoom: config.defZoom(), scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset }).addLayer(tileServeLayer)
+  centerPoint= new L.LatLng(40.714269, -74.005972) 
+  mapOptions =
+    center: centerPoint
+    zoomControl: false
+    attributionControl:false
+    zoom: config.defZoom()
+    scrollWheelZoom: false
+    minZoom: config.minZoom()
+    maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset 
+  window.map= new L.Map('map', mapOptions).addLayer(tileServeLayer)
+
+  # window.map = new L.Map('map', {center: centerPoint,zoomControl: false, attributionControl:false, zoom: config.defZoom(), scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset }).addLayer(tileServeLayer)
   initializeGeo()
   
   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
@@ -417,15 +429,11 @@ window.Cell = class Cell
 
     $span = $(@span)
     @props.watch "echoes", (id, oldval, newval) ->
-      # console.log "echoes changed, #{oldval} to #{newval}"
-      # console.log $span 
       $span.removeClass('e'+oldval)
       $span.addClass('e'+newval)
       return newval
 
     @props.watch "color", (id, oldval, newval) ->
-      # console.log "color changed, #{oldval} to #{newval}"
-      # console.log $span 
       $span.removeClass(oldval)
       $span.addClass(newval)
       return newval
@@ -433,7 +441,6 @@ window.Cell = class Cell
   write: (c) ->
     cellPoint = cellKeyToXY @key
     now.writeCell(cellPoint,c)
-    # TODO this is so simple, but really we should be handling this client side. lag will be frustrating.
 
   # COMMAND PATTERN
   normalRite: (rite) ->
@@ -534,42 +541,26 @@ window.Cell = class Cell
 
 
 
-# HELPER FUNCTIONS
-# turnOffLayerHack = ->
-  # Cell.killAll()
-  #
-  # Instead use the Stamp
-  # Also, try adding a timeout?
-  #
-  # this is a ridiculously hacky solution, I blame leaflet 
-  # map.removeLayer(map._layers[l])
-  # map.removeLayer(l)
-  # state.topLayer = 0
-  # now.setCurrentWorld(null)
+removeLayerThenZoomOut=  ->
+  Cell.killAll()
+  layer= map._layers[state.topLayerStamp]
+  $layer = $(".layer-#{state.topLayerStamp}")
+  $layer.fadeOut('slow')
+  console.log 'turn off layer'
+  map.removeLayer(layer) if state.topLayerStamp
+  state.topLayerStamp = 0
+  now.setCurrentWorld(null)
+  map.zoomOut()
+  return
 
 turnOffLayer = ->
   #hide the layer first, with css?
   Cell.killAll()
-  
-  # OHOh do it this way. TODO
-#  removeLayerThenDo(layer, callback) #cb = zoomOut
-
-
-  # TODO I think it's still creating the tiles.
-
   layer= map._layers[state.topLayerStamp]
-  console.log(state.topLayerStamp)
   $layer = $(".layer-#{state.topLayerStamp}")
-  console.log $layer
-
   $layer.fadeOut('slow')
-  
-
   $.doTimeout 500, ->
     console.log 'turn off layer'
-    # console.log state.topLayerStamp
-    # layer= map._layers[state.topLayerStamp]
-    # console.log layer
     map.removeLayer(layer) if state.topLayerStamp
     state.topLayerStamp = 0
     now.setCurrentWorld(null)
