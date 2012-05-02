@@ -2,8 +2,8 @@ models= require './models'
 nowjs = require 'now'
 
 async = require './lib/async.js'
-
 leaflet = require './lib/leaflet-custom-src.js'
+
 
 module.exports = (everyone, SessionModel) ->
 
