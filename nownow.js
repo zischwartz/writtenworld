@@ -42,7 +42,7 @@
         return callback(this.user.session);
       }
     };
-    everyone.now.setSelectedCell = function(cellPoint) {
+    everyone.now.setCursor = function(cellPoint) {
       var cid, user;
       if (!this.now.currentWorldId) {
         return false;

@@ -2,8 +2,6 @@ window.state =
   selectedCell: null
   lastClickCell: null #actually more about carriage return
   color: null
-  # canRead: true
-  # canWrite: true
   # geoPos: null
   # geoAccuracy: null
   writeDirection: 'right'
@@ -31,14 +29,14 @@ setTileStyle = ->
  $("#dynamicStyles").text rules.join("\n")
 
 # TODO rewrite with command pattern, and big otherUsers object
-window.setSelected = (cell) ->  # takes the object, not the dom element
+window.setCursor = (cell) ->  # takes the object, not the dom element
   dbg 'selecting', cell
   if state.selectedEl
     $(state.selectedEl).removeClass('selected')
   state.selectedEl=cell.span
   $(cell.span).addClass('selected')
   state.selectedCell =cell
-  now.setSelectedCell cellKeyToXY cell.key
+  now.setCursor cellKeyToXY cell.key
  
   if cell.props
     if cell.props.decayed
@@ -67,7 +65,7 @@ moveCursor = (direction, from = state.selectedCell) ->
      # throw 'cell does not exist'
   else
     panIfAppropriate(direction)
-    setSelected(targetCell)
+    setCursor(targetCell)
     return targetCell
 
 window.centerCursor = ->
@@ -84,7 +82,7 @@ window.centerCursor = ->
     if not targetCell
       return true #true to repeat the timer and try again
     else
-      setSelected(targetCell)
+      setCursor(targetCell)
       return false
     true
 
@@ -96,7 +94,7 @@ initializeInterface = ->
     if $(e.target).hasClass 'cell'
       cell=Cell.all()[e.target.id]
       state.lastClickCell = cell
-      setSelected(cell)
+      setCursor(cell)
       inputEl.focus()
     else
       inputEl.focus()
@@ -107,21 +105,17 @@ initializeInterface = ->
 
   map.on 'zoomend', ->
     inputEl.focus()
-  
-  # map.on 'viewreset', (e) ->
-  #   # console.log 'viewreset'
-  #   $("#loadingIndicator").fadeIn('fast')
-  #   if map.getZoom() < config.minLayerZoom() and state.topLayerStamp
-  #     turnOffLayer()
-  #   if map.getZoom() >= config.minLayerZoom() and not state.topLayerStamp
-  #     turnOnMainLayer() #should be turnOnLastLayer
+
+  map.on 'viewreset', (e) ->
+    $("#loadingIndicator").fadeIn('fast')
+    if map.getZoom() >= config.minLayerZoom() and not state.topLayerStamp
+      turnOnMainLayer() #should be turnOnLastLayer 
   
   map.on 'dblclick', (e) ->
     $("#loadingIndicator").fadeIn('fast')
 
   $(".leaflet-control-zoom-in, .leaflet-control-zoom-out").click (e) ->
     $("#loadingIndicator").fadeIn('fast')
-    # console.log 'zoomoutin'
 
   inputEl.keypress (e) ->
     dbg  e.which, 'pressed'
@@ -171,7 +165,7 @@ initializeInterface = ->
       when 8 # delete
         moveCursor 'left'
         state.selectedCell.clear()
-        setSelected(state.selectedCell)
+        setCursor(state.selectedCell)
       when 13 #enter
         t = moveCursor 'down', state.lastClickCell
         state.lastClickCell = t
@@ -206,8 +200,8 @@ initializeInterface = ->
     return
 
   $(".leaflet-control-zoom-out").click (e) ->
-    if map.getZoom() < config.minLayerZoom() and state.topLayerStamp
-      removeLayerThen(map.zoomOut)
+    if map.getZoom() <=config.minLayerZoom() and state.topLayerStamp
+      removeLayerThenZoomOut()
     else
       map.zoomOut()
     return
@@ -555,8 +549,7 @@ window.Cell = class Cell
       return cell
 
 
-
-removeLayerThen= (cb) ->
+removeLayerThenZoomOut=  ->
   Cell.killAll()
   layer= map._layers[state.topLayerStamp]
   $layer = $(".layer-#{state.topLayerStamp}")
@@ -565,24 +558,16 @@ removeLayerThen= (cb) ->
   map.removeLayer(layer) if state.topLayerStamp
   state.topLayerStamp = 0
   now.setCurrentWorld(null)
-  cb()
-  # $.doTimeout 500, ->
+  map.zoomOut()
+  return
+
 
 turnOffLayer = ->
   #hide the layer first, with css?
   Cell.killAll()
-  
-  # OHOh do it this way. TODO
-#  removeLayerThenDo(layer, callback) #cb = zoomOut
-  # TODO I think it's still creating the tiles.
-
   layer= map._layers[state.topLayerStamp]
-  # console.log(state.topLayerStamp)
   $layer = $(".layer-#{state.topLayerStamp}")
-  # console.log $layer
-
   $layer.fadeOut('slow')
-
   $.doTimeout 500, ->
     console.log 'turn off layer'
     map.removeLayer(layer) if state.topLayerStamp

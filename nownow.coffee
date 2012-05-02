@@ -36,7 +36,7 @@ module.exports = (app, SessionModel) ->
     if this.user.session
       callback(this.user.session)
 
-  everyone.now.setSelectedCell = (cellPoint) ->
+  everyone.now.setCursor = (cellPoint) ->
     if not this.now.currentWorldId
       return false
     cid = this.user.clientId
