@@ -141,35 +141,6 @@ UserSchema.plugin mongooseAuth,
 exports.User= mongoose.model('User', UserSchema)
 
 
-# NOT TECHNICALLY A MODEL But this is as good a place as any
-class ConnectedUser
-  allByCid = {}
-  allBySid = {}
-  allByUid = {}
-  
-  @byCid: (cid)->
-    return allByCid[cid]
-  
-  @bySid: (sid) ->
-    return allBy[sid]
-
-  @byUid: (uid) ->
-    r = allByUid[uid]
-    if r
-      return r
-    else
-      return false
-
-  constructor: (@cid, @sid, @uid=null, @currentWorldId=null, @login=null, @props={})->
-    allByCid[@cid] = this
-    allBySid[@sid] = this
-    allByUid[@uid] = this if @uid
-    
-  destructor: ->
-    delete allByCid[@cid]
-    delete allBySid[@sid]
-    delete allByUid[@uid]
-
 FeedbackSchema = new Schema
   contents: {type: String, default: ' '}
   t: {type: String, default: ' '}

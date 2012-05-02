@@ -1,5 +1,5 @@
 
-models= require './models.js'
+models= require './models'
 nowjs = require 'now'
 
 # async = require './lib/async.js'
@@ -24,9 +24,12 @@ module.exports = (app, SessionModel) ->
   # should use redis for these. maybe?
 
   nowjs.on 'connect', ->
+    nowUser = this.user
+    # u= new CUser(nowUser)
     sid=decodeURIComponent(this.user.cookie['connect.sid'])
     cid = this.user.clientId
-    nowUser = this.user
+
+    # z=CUser.byCid(this.user.clientId)
     if this.user.session?.auth
       userId = this.user.session.auth.userId
       cUsers[cid]={sid:sid, userId: userId, login: this.user.login }
@@ -41,10 +44,11 @@ module.exports = (app, SessionModel) ->
       SessionModel.findOne {'sid': sid } , (err, doc) =>
         data = JSON.parse(doc.data)
         cUsers[cid]={sid:sid, userId: doc._id}
-        this.user.soid=doc._id #not sure if this is a good idea
+        this.user.soid=doc._id
     true
 
   nowjs.on 'disconnect', ->
+    console.log 'disconenect -----------------'
     delete cUsers[this.user.clientId]
     if this.user.session?.auth
       delete aUsers[this.user.session.auth.userId]
@@ -199,5 +203,49 @@ module.exports = (app, SessionModel) ->
     return true
 
 
-  return 5
+
+  class CUser
+    allByCid = {}
+    allBySid = {}
+    allByUid = {}
+    
+    @byCid: (cid)->
+      return allByCid[cid]
+    
+    @bySid: (sid) ->
+      return allBy[sid]
+
+    @byUid: (uid) ->
+      return allByUid[uid]
+
+    constructor: (@nowUser) ->
+      @cid = @nowUser.clientId
+      @sid = decodeURIComponent(@nowUser.cookie['connect.sid'])
+      if nowUser.session?.auth
+        @uid= nowUser.session.auth.userId
+        models.User.findById @uid, (err, doc) =>
+            @login = doc.login
+            @nowUser.login = doc.login
+      else
+        SessionModel.findOne {'sid': @sid } , (err, doc) =>
+          @uid = doc._id
+          @nowUser.soid=doc._id
+      
+      allByCid[@cid] = this
+      allBySid[@sid] = this
+      allByUid[@uid] = this
+      
+      # console.log allByCid
+    destructor: ->
+      delete allByCid[@cid]
+      delete allBySid[@sid]
+      delete allByUid[@uid]
+      delete @nowUser
+      # delete this
+
+  exports.CUser = CUser
+
+
+
+  return true 
   # return everyone

@@ -3,14 +3,14 @@
   var leaflet, models, nowjs,
     __hasProp = {}.hasOwnProperty;
 
-  models = require('./models.js');
+  models = require('./models');
 
   nowjs = require('now');
 
   leaflet = require('./lib/leaflet-custom-src.js');
 
   module.exports = function(app, SessionModel) {
-    var aUsers, bridge, cUsers, everyone, getWhoCanSee;
+    var CUser, aUsers, bridge, cUsers, everyone, getWhoCanSee;
     everyone = nowjs.initialize(app);
     bridge = require('./bridge')(everyone, SessionModel);
     everyone.now.setCurrentWorld = function(currentWorldId) {
@@ -27,9 +27,9 @@
     nowjs.on('connect', function() {
       var cid, nowUser, sid, userId, _ref,
         _this = this;
+      nowUser = this.user;
       sid = decodeURIComponent(this.user.cookie['connect.sid']);
       cid = this.user.clientId;
-      nowUser = this.user;
       if ((_ref = this.user.session) != null ? _ref.auth : void 0) {
         userId = this.user.session.auth.userId;
         cUsers[cid] = {
@@ -74,6 +74,7 @@
     });
     nowjs.on('disconnect', function() {
       var _ref;
+      console.log('disconenect -----------------');
       delete cUsers[this.user.clientId];
       if ((_ref = this.user.session) != null ? _ref.auth : void 0) {
         delete aUsers[this.user.session.auth.userId];
@@ -304,7 +305,66 @@
       }
       return true;
     });
-    return 5;
+    CUser = (function() {
+      var allByCid, allBySid, allByUid;
+
+      CUser.name = 'CUser';
+
+      allByCid = {};
+
+      allBySid = {};
+
+      allByUid = {};
+
+      CUser.byCid = function(cid) {
+        return allByCid[cid];
+      };
+
+      CUser.bySid = function(sid) {
+        return allBy[sid];
+      };
+
+      CUser.byUid = function(uid) {
+        return allByUid[uid];
+      };
+
+      function CUser(nowUser) {
+        var _ref,
+          _this = this;
+        this.nowUser = nowUser;
+        this.cid = this.nowUser.clientId;
+        this.sid = decodeURIComponent(this.nowUser.cookie['connect.sid']);
+        if ((_ref = nowUser.session) != null ? _ref.auth : void 0) {
+          this.uid = nowUser.session.auth.userId;
+          models.User.findById(this.uid, function(err, doc) {
+            _this.login = doc.login;
+            return _this.nowUser.login = doc.login;
+          });
+        } else {
+          SessionModel.findOne({
+            'sid': this.sid
+          }, function(err, doc) {
+            _this.uid = doc._id;
+            return _this.nowUser.soid = doc._id;
+          });
+        }
+        allByCid[this.cid] = this;
+        allBySid[this.sid] = this;
+        allByUid[this.uid] = this;
+      }
+
+      CUser.prototype.destructor = function() {
+        delete allByCid[this.cid];
+        delete allBySid[this.sid];
+        delete allByUid[this.uid];
+        return delete this.nowUser;
+      };
+
+      return CUser;
+
+    })();
+    exports.CUser = CUser;
+    return true;
   };
 
 }).call(this);

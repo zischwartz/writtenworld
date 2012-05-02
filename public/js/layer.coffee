@@ -40,7 +40,6 @@ getTileLocally =(absTilePoint, tile) ->
     return false
 
 
-# L.TileLayer = L.Class.extend(
 L.DomTileLayer = L.Class.extend
   includes: L.Mixin.Events
   options:
