@@ -18,46 +18,19 @@ module.exports = (app, SessionModel) ->
     else
       this.now.currentWorldId = false
 
-  # These are problematic, but we never iterate through them, just look ups
-  cUsers = {} #all of the connected users, by clientId (nowjs)
-  aUsers = {} #all connected and auth'd users, by actual userId (mongoose _id)
-  # should use redis for these. maybe?
-
   nowjs.on 'connect', ->
-    nowUser = this.user
-    # u= new CUser(nowUser)
-    sid=decodeURIComponent(this.user.cookie['connect.sid'])
-    cid = this.user.clientId
-
-    # z=CUser.byCid(this.user.clientId)
-    if this.user.session?.auth
-      userId = this.user.session.auth.userId
-      cUsers[cid]={sid:sid, userId: userId, login: this.user.login }
-      aUsers[userId]={sid:sid,cid: cid}
-       
-      models.User.findById userId, (err, doc) ->
-        cUsers[cid]={sid:sid, userId: userId, login: doc.login }
-        aUsers[userId]={sid:sid,cid: cid, login: doc.login}
-        nowUser.login = doc.login
-    else
-      cUsers[cid]={sid:sid}
-      SessionModel.findOne {'sid': sid } , (err, doc) =>
-        data = JSON.parse(doc.data)
-        cUsers[cid]={sid:sid, userId: doc._id}
-        this.user.soid=doc._id
-    true
+    this.user.cid = this.user.clientId
+    u= new CUser(this.user)
+    return
 
   nowjs.on 'disconnect', ->
-    console.log 'disconenect -----------------'
-    delete cUsers[this.user.clientId]
-    if this.user.session?.auth
-      delete aUsers[this.user.session.auth.userId]
-      console.log 'removing authd disconnected user'
-    console.log 'removing disconnected user'
+    # u=CUser.byCid(this.user.clientId)
+    # u.destroy()
+    return
 
   everyone.now.setBounds = (bounds) ->
     b = new leaflet.L.Bounds bounds.max, bounds.min
-    cUsers[this.user.clientId].bounds = b
+    CUser.byCid(this.user.cid).bounds=b
 
   everyone.now.setClientStateFromServer = (callback) ->
     if this.user.session
@@ -67,12 +40,12 @@ module.exports = (app, SessionModel) ->
     if not this.now.currentWorldId
       return false
     cid = this.user.clientId
-    cUsers[cid].selected = cellPoint
+    CUser.byCid(cid).cursor = cellPoint
     user = this.user
     getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
       for i of toUpdate
         if i != cid #not you
-          update = cUsers[cid]
+          update = CUser.byCid(cid)
           update.color = user.session.color if user.session
           update.cid = cid
           nowjs.getClient i, -> this.now.drawCursors(update)
@@ -117,37 +90,34 @@ module.exports = (app, SessionModel) ->
   getWhoCanSee = (cellPoint, worldId, cb ) ->
     nowjs.getGroup(worldId).getUsers (users) ->
       toUpdate = {}
-      # console.log 'worldId', worldId # console.log 'cellPoint', cellPoint
       if worldId
         for i in users
-            # console.log '   bounds',  cUsers[i].bounds
-            if cUsers[i]?.bounds?.contains(cellPoint) # added the ? 
-              toUpdate[i] = cUsers[i]
+            if CUser.byCid(i)?.bounds?.contains(cellPoint) # added the ? 
+              toUpdate[i] = CUser.byCid(i)
       cb(toUpdate)
 
   everyone.now.getCloseUsers= (cb)->
     if not this.now.currentWorldId
       return false
     console.log 'getCloseUsers called'
-    # console.log this.user
     closeUsers= []
     cid = this.user.clientId
-    aC=cUsers[cid].selected
+    aC=CUser.byCid(cid).cursor
     # console.log cUsers[cid]
     # console.log 'ac', aC
     nowjs.getGroup(this.now.currentWorldId).getUsers (users) ->
       for i in users
-        uC = cUsers[i].selected
+        uC = CUser.byCid(i).cursor
         distance = Math.sqrt((aC.x-uC.x)*(aC.x-uC.x)+(aC.y-uC.y)*(aC.y-uC.y))
         # console.log "i: #{i}"
         # console.log "cid: #{cid}"
-        console.log distance
+        # console.log distance
         if distance < 1000 and (i isnt cid)
           u = {}
-          u[key] = value for own key,value of cUsers[i]
+          u[key] = value for own key,value of CUser.byCid(i)
           u.distance = distance
-          if cUsers[i].login
-            u.login= cUsers[i].login
+          # if cUsers[i].login
+            # u.login= cUsers[i].login
           closeUsers.push(u)
       cb(closeUsers)
     true
@@ -162,7 +132,7 @@ module.exports = (app, SessionModel) ->
     console.log 'setUserOption', type, payload
     if type = 'color'
       cid=this.user.clientId
-      cUsers[cid].color= payload
+      CUser.byCid(cid).color= payload
       this.user.session.color=payload
       this.user.session.save()
       if this.user.session.auth
@@ -174,34 +144,30 @@ module.exports = (app, SessionModel) ->
           console.log 'USER COLORCHANGE', doc
           this.now.insertMessage('hi', 'nice color')
 
+  # can i impliment this on sessions instead....
   models.User.prototype.on 'receivedEcho', (rite) ->
-    if aUsers[this._id]
+      console.log 'rcvd echo called'
       userId= this._id
       rite.getOwner (err,u)->
         console.log err if err
-        nowjs.getClient aUsers[userId].cid, ->
+        nowjs.getClient CUser.byUid(userId).cid, ->
           if u
             this.now.insertMessage 'Echoed!', "#{u.login} echoed what you said!"
           else
             this.now.insertMessage 'Echoed!', "Someone echoed what you said!"
-    return true
-
+      return true
 
   models.User.prototype.on 'receivedOverRite', (rite) ->
-    # console.log 'this: ', this
-    if aUsers[this._id]
+      console.log 'rcd ovrt called'
       userId= this._id
       rite.getOwner (err,u)->
         console.log err if err
-        nowjs.getClient aUsers[userId].cid, ->
+        nowjs.getClient CUser.byUid(userId).cid, ->
           if u
             this.now.insertMessage 'Over Written', "Someone called #{u.login} is writing over your cells. Click for more info"
           else
             this.now.insertMessage 'Over Written', "Someone is writing over your cells. Click for more info"
-    # else if 
-    # console.log rite
-    return true
-
+      return true
 
 
   class CUser
@@ -210,6 +176,16 @@ module.exports = (app, SessionModel) ->
     allByUid = {}
     
     @byCid: (cid)->
+      r= allByCid[cid]
+      # TODO clone for security, or just pick what we want
+      # r.nowUser = null
+      # r.uid =null
+      # r.sid = null
+      # u[key] = value for own key,value of CUser.byCid(i)
+      return r
+    
+    # sometimes we pass the whole thing to the client, security, bla
+    @byCidFull: (cid) ->
       return allByCid[cid]
     
     @bySid: (sid) ->
@@ -235,17 +211,16 @@ module.exports = (app, SessionModel) ->
       allBySid[@sid] = this
       allByUid[@uid] = this
       
-      # console.log allByCid
-    destructor: ->
+
+    destroy: ->
       delete allByCid[@cid]
       delete allBySid[@sid]
       delete allByUid[@uid]
       delete @nowUser
+      # console.log this
       # delete this
 
   exports.CUser = CUser
 
-
-
-  return true 
+  return true
   # return everyone

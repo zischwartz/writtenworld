@@ -10,7 +10,7 @@
   leaflet = require('./lib/leaflet-custom-src.js');
 
   module.exports = function(app, SessionModel) {
-    var CUser, aUsers, bridge, cUsers, everyone, getWhoCanSee;
+    var CUser, bridge, everyone, getWhoCanSee;
     everyone = nowjs.initialize(app);
     bridge = require('./bridge')(everyone, SessionModel);
     everyone.now.setCurrentWorld = function(currentWorldId) {
@@ -22,70 +22,16 @@
         return this.now.currentWorldId = false;
       }
     };
-    cUsers = {};
-    aUsers = {};
     nowjs.on('connect', function() {
-      var cid, nowUser, sid, userId, _ref,
-        _this = this;
-      nowUser = this.user;
-      sid = decodeURIComponent(this.user.cookie['connect.sid']);
-      cid = this.user.clientId;
-      if ((_ref = this.user.session) != null ? _ref.auth : void 0) {
-        userId = this.user.session.auth.userId;
-        cUsers[cid] = {
-          sid: sid,
-          userId: userId,
-          login: this.user.login
-        };
-        aUsers[userId] = {
-          sid: sid,
-          cid: cid
-        };
-        models.User.findById(userId, function(err, doc) {
-          cUsers[cid] = {
-            sid: sid,
-            userId: userId,
-            login: doc.login
-          };
-          aUsers[userId] = {
-            sid: sid,
-            cid: cid,
-            login: doc.login
-          };
-          return nowUser.login = doc.login;
-        });
-      } else {
-        cUsers[cid] = {
-          sid: sid
-        };
-        SessionModel.findOne({
-          'sid': sid
-        }, function(err, doc) {
-          var data;
-          data = JSON.parse(doc.data);
-          cUsers[cid] = {
-            sid: sid,
-            userId: doc._id
-          };
-          return _this.user.soid = doc._id;
-        });
-      }
-      return true;
+      var u;
+      this.user.cid = this.user.clientId;
+      u = new CUser(this.user);
     });
-    nowjs.on('disconnect', function() {
-      var _ref;
-      console.log('disconenect -----------------');
-      delete cUsers[this.user.clientId];
-      if ((_ref = this.user.session) != null ? _ref.auth : void 0) {
-        delete aUsers[this.user.session.auth.userId];
-        console.log('removing authd disconnected user');
-      }
-      return console.log('removing disconnected user');
-    });
+    nowjs.on('disconnect', function() {});
     everyone.now.setBounds = function(bounds) {
       var b;
       b = new leaflet.L.Bounds(bounds.max, bounds.min);
-      return cUsers[this.user.clientId].bounds = b;
+      return CUser.byCid(this.user.cid).bounds = b;
     };
     everyone.now.setClientStateFromServer = function(callback) {
       if (this.user.session) {
@@ -98,14 +44,14 @@
         return false;
       }
       cid = this.user.clientId;
-      cUsers[cid].selected = cellPoint;
+      CUser.byCid(cid).cursor = cellPoint;
       user = this.user;
       return getWhoCanSee(cellPoint, this.now.currentWorldId, function(toUpdate) {
         var i, update, _results;
         _results = [];
         for (i in toUpdate) {
           if (i !== cid) {
-            update = cUsers[cid];
+            update = CUser.byCid(cid);
             if (user.session) {
               update.color = user.session.color;
             }
@@ -188,8 +134,8 @@
         if (worldId) {
           for (_i = 0, _len = users.length; _i < _len; _i++) {
             i = users[_i];
-            if ((_ref = cUsers[i]) != null ? (_ref1 = _ref.bounds) != null ? _ref1.contains(cellPoint) : void 0 : void 0) {
-              toUpdate[i] = cUsers[i];
+            if ((_ref = CUser.byCid(i)) != null ? (_ref1 = _ref.bounds) != null ? _ref1.contains(cellPoint) : void 0 : void 0) {
+              toUpdate[i] = CUser.byCid(i);
             }
           }
         }
@@ -204,26 +150,22 @@
       console.log('getCloseUsers called');
       closeUsers = [];
       cid = this.user.clientId;
-      aC = cUsers[cid].selected;
+      aC = CUser.byCid(cid).cursor;
       nowjs.getGroup(this.now.currentWorldId).getUsers(function(users) {
         var distance, i, key, u, uC, value, _i, _len, _ref;
         for (_i = 0, _len = users.length; _i < _len; _i++) {
           i = users[_i];
-          uC = cUsers[i].selected;
+          uC = CUser.byCid(i).cursor;
           distance = Math.sqrt((aC.x - uC.x) * (aC.x - uC.x) + (aC.y - uC.y) * (aC.y - uC.y));
-          console.log(distance);
           if (distance < 1000 && (i !== cid)) {
             u = {};
-            _ref = cUsers[i];
+            _ref = CUser.byCid(i);
             for (key in _ref) {
               if (!__hasProp.call(_ref, key)) continue;
               value = _ref[key];
               u[key] = value;
             }
             u.distance = distance;
-            if (cUsers[i].login) {
-              u.login = cUsers[i].login;
-            }
             closeUsers.push(u);
           }
         }
@@ -250,7 +192,7 @@
       console.log('setUserOption', type, payload);
       if (type = 'color') {
         cid = this.user.clientId;
-        cUsers[cid].color = payload;
+        CUser.byCid(cid).color = payload;
         this.user.session.color = payload;
         this.user.session.save();
         if (this.user.session.auth) {
@@ -269,40 +211,38 @@
     };
     models.User.prototype.on('receivedEcho', function(rite) {
       var userId;
-      if (aUsers[this._id]) {
-        userId = this._id;
-        rite.getOwner(function(err, u) {
-          if (err) {
-            console.log(err);
+      console.log('rcvd echo called');
+      userId = this._id;
+      rite.getOwner(function(err, u) {
+        if (err) {
+          console.log(err);
+        }
+        return nowjs.getClient(CUser.byUid(userId).cid, function() {
+          if (u) {
+            return this.now.insertMessage('Echoed!', "" + u.login + " echoed what you said!");
+          } else {
+            return this.now.insertMessage('Echoed!', "Someone echoed what you said!");
           }
-          return nowjs.getClient(aUsers[userId].cid, function() {
-            if (u) {
-              return this.now.insertMessage('Echoed!', "" + u.login + " echoed what you said!");
-            } else {
-              return this.now.insertMessage('Echoed!', "Someone echoed what you said!");
-            }
-          });
         });
-      }
+      });
       return true;
     });
     models.User.prototype.on('receivedOverRite', function(rite) {
       var userId;
-      if (aUsers[this._id]) {
-        userId = this._id;
-        rite.getOwner(function(err, u) {
-          if (err) {
-            console.log(err);
+      console.log('rcd ovrt called');
+      userId = this._id;
+      rite.getOwner(function(err, u) {
+        if (err) {
+          console.log(err);
+        }
+        return nowjs.getClient(CUser.byUid(userId).cid, function() {
+          if (u) {
+            return this.now.insertMessage('Over Written', "Someone called " + u.login + " is writing over your cells. Click for more info");
+          } else {
+            return this.now.insertMessage('Over Written', "Someone is writing over your cells. Click for more info");
           }
-          return nowjs.getClient(aUsers[userId].cid, function() {
-            if (u) {
-              return this.now.insertMessage('Over Written', "Someone called " + u.login + " is writing over your cells. Click for more info");
-            } else {
-              return this.now.insertMessage('Over Written', "Someone is writing over your cells. Click for more info");
-            }
-          });
         });
-      }
+      });
       return true;
     });
     CUser = (function() {
@@ -317,6 +257,12 @@
       allByUid = {};
 
       CUser.byCid = function(cid) {
+        var r;
+        r = allByCid[cid];
+        return r;
+      };
+
+      CUser.byCidFull = function(cid) {
         return allByCid[cid];
       };
 
@@ -353,7 +299,7 @@
         allByUid[this.uid] = this;
       }
 
-      CUser.prototype.destructor = function() {
+      CUser.prototype.destroy = function() {
         delete allByCid[this.cid];
         delete allBySid[this.sid];
         delete allByUid[this.uid];

@@ -107,16 +107,20 @@ initializeInterface = ->
   map.on 'zoomend', ->
     inputEl.focus()
   
-  map.on 'viewreset', (e) ->
-    $("#loadingIndicator").fadeIn('fast')
-    if map.getZoom() >= config.minLayerZoom() and not state.topLayerStamp
-      turnOnMainLayer() #should be turnOnLastLayer
+  # map.on 'viewreset', (e) ->
+  #   # console.log 'viewreset'
+  #   $("#loadingIndicator").fadeIn('fast')
+  #   if map.getZoom() < config.minLayerZoom() and state.topLayerStamp
+  #     turnOffLayer()
+  #   if map.getZoom() >= config.minLayerZoom() and not state.topLayerStamp
+  #     turnOnMainLayer() #should be turnOnLastLayer
   
   map.on 'dblclick', (e) ->
     $("#loadingIndicator").fadeIn('fast')
 
   $(".leaflet-control-zoom-in, .leaflet-control-zoom-out").click (e) ->
     $("#loadingIndicator").fadeIn('fast')
+    # console.log 'zoomoutin'
 
   inputEl.keypress (e) ->
     dbg  e.which, 'pressed'
@@ -201,10 +205,8 @@ initializeInterface = ->
     return
 
   $(".leaflet-control-zoom-out").click (e) ->
-    if map.getZoom() <=config.minLayerZoom() and state.topLayerStamp
-      removeLayerThenZoomOut()
-    else
-      map.zoomOut()
+    if map.getZoom() < config.minLayerZoom() and state.topLayerStamp
+      removeLayerThen(map.zoomOut)
     return
 
   $(".trigger").live 'click', ->
@@ -226,6 +228,7 @@ initializeInterface = ->
     
     
     #specific interfaces
+
     # Layer Switching
     if type=='layer'
       $("#worldLayer").html(text+'<b class="caret"></b>' )
@@ -330,21 +333,23 @@ jQuery ->
     
     now.drawCursors = (user) ->
       # TODO Fix this up: make it a global object 
+      console.log user
       $(".u#{user.cid}").removeClass("otherSelected u#{user.cid} c#{user.color}")
-      if user.selected.x
-        otherSelected = Cell.get(user.selected.x, user.selected.y)
+      if user.cursor.x
+        otherSelected = Cell.get(user.cursor.x, user.cursor.y)
         if otherSelected
           $(otherSelected.span).addClass("u#{user.cid} c#{user.color} otherSelected")
     
     $("#getNearby").click ->
       now.getCloseUsers (closeUsers)->
+        console.log closeUsers
         $("#nearby").empty()
         if closeUsers.length is 0
           $("ul#nearby").append -> $ '<li> <a>Sorry, no one is nearby. </a></li>'
           return false
         cellPoint=cellKeyToXY state.selectedCell.key
         for user in closeUsers
-          user.radians=Math.atan2(cellPoint.y-user.selected.y, cellPoint.x-user.selected.x) #y,x
+          user.radians=Math.atan2(cellPoint.y-user.cursor.y, cellPoint.x-user.cursor.x) #y,x
           user.degrees= user.radians*(180/Math.PI)
           if user.radians < 0
             user.degrees= 360+user.degrees #this ends up with directly left =0, up being 90 and so on
@@ -429,11 +434,15 @@ window.Cell = class Cell
 
     $span = $(@span)
     @props.watch "echoes", (id, oldval, newval) ->
+      # console.log "echoes changed, #{oldval} to #{newval}"
+      # console.log $span 
       $span.removeClass('e'+oldval)
       $span.addClass('e'+newval)
       return newval
 
     @props.watch "color", (id, oldval, newval) ->
+      # console.log "color changed, #{oldval} to #{newval}"
+      # console.log $span 
       $span.removeClass(oldval)
       $span.addClass(newval)
       return newval
@@ -441,6 +450,7 @@ window.Cell = class Cell
   write: (c) ->
     cellPoint = cellKeyToXY @key
     now.writeCell(cellPoint,c)
+    # TODO this is so simple, but really we should be handling this client side. lag will be frustrating.
 
   # COMMAND PATTERN
   normalRite: (rite) ->
@@ -541,7 +551,7 @@ window.Cell = class Cell
 
 
 
-removeLayerThenZoomOut=  ->
+removeLayerThen= (cb) ->
   Cell.killAll()
   layer= map._layers[state.topLayerStamp]
   $layer = $(".layer-#{state.topLayerStamp}")
@@ -550,15 +560,24 @@ removeLayerThenZoomOut=  ->
   map.removeLayer(layer) if state.topLayerStamp
   state.topLayerStamp = 0
   now.setCurrentWorld(null)
-  map.zoomOut()
-  return
+  cb()
+  # $.doTimeout 500, ->
 
 turnOffLayer = ->
   #hide the layer first, with css?
   Cell.killAll()
+  
+  # OHOh do it this way. TODO
+#  removeLayerThenDo(layer, callback) #cb = zoomOut
+  # TODO I think it's still creating the tiles.
+
   layer= map._layers[state.topLayerStamp]
+  # console.log(state.topLayerStamp)
   $layer = $(".layer-#{state.topLayerStamp}")
+  # console.log $layer
+
   $layer.fadeOut('slow')
+
   $.doTimeout 500, ->
     console.log 'turn off layer'
     map.removeLayer(layer) if state.topLayerStamp
