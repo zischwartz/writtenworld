@@ -14,6 +14,34 @@ util = require('util')
 
 models= require './models'
 
+assetManager = require('connect-assetmanager')
+root = __dirname + '/public'
+
+assetManagerGroups =
+  'js' :
+    route: /\/assets\/js\/application\.js/
+    path: root + '/js/'
+    dataType: 'javascript'
+    files: [
+      'libs/jquery.min.js'
+      'libs/watch_shim.js'
+      'libs/bootstrap-collapse.js'
+      'libs/bootstrap-dropdown.js'
+      'libs/bootstrap-modal.js'
+      'libs/bootstrap-transition.js'
+      'libs/bootstrap-alert.js'
+      'libs/dotimeout.js'
+      'libs/jquery.jrumble.min.js'
+      'leaflet-src.js'
+      'config_client.js'
+      'geo.js'
+      'layer.js'
+      'world.js'
+      ]
+
+assetsManagerMiddleware = assetManager(assetManagerGroups)
+
+
 [sessionStore, SessionModel] = require("./lib/mongoose-session.js")(connect) #my edited version returns the model as well because looks weren't working through the get() interface
 
 app = express.createServer()
@@ -23,7 +51,7 @@ app.configure ->
   app.use express.cookieParser()
   app.use express.session {secret: 'tshh secret', store : new sessionStore()}
   app.use express.favicon(__dirname + '/public/img/favicon.ico')
-  # app.use express.compiler { src: __dirname + '/public', enable: ['less', 'coffeescript'] }
+  app.use assetsManagerMiddleware
   app.use models.mongooseAuth.middleware()
   # app.use app.router #mongooseAuth says not to use this.
 
