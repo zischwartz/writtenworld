@@ -122,6 +122,7 @@ module.exports = (everyone, SessionModel) ->
               user.totalRites+=1
               user.save (err) -> console.log err if err
 
+        # make CUser based? TODO
         if originalOwner and  (logic.legitEcho or logic.legitDownrote)
           models.User.findById originalOwner, (err, user) ->
             if user and logic.legitEcho

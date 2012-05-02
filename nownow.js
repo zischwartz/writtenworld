@@ -27,7 +27,11 @@
       this.user.cid = this.user.clientId;
       u = new CUser(this.user);
     });
-    nowjs.on('disconnect', function() {});
+    nowjs.on('disconnect', function() {
+      var u;
+      u = CUser.byCid(this.user.clientId);
+      u.destroy();
+    });
     everyone.now.setBounds = function(bounds) {
       var b;
       b = new leaflet.L.Bounds(bounds.max, bounds.min);
@@ -56,8 +60,9 @@
               update.color = user.session.color;
             }
             update.cid = cid;
+            console.log('update', cid);
             _results.push(nowjs.getClient(i, function() {
-              return this.now.drawCursors(update);
+              return this.now.updateCursors(update);
             }));
           } else {
             _results.push(void 0);
@@ -214,10 +219,11 @@
       console.log('rcvd echo called');
       userId = this._id;
       rite.getOwner(function(err, u) {
+        var _ref;
         if (err) {
           console.log(err);
         }
-        return nowjs.getClient(CUser.byUid(userId).cid, function() {
+        return nowjs.getClient((_ref = CUser.byUid(userId)) != null ? _ref.cid : void 0, function() {
           if (u) {
             return this.now.insertMessage('Echoed!', "" + u.login + " echoed what you said!");
           } else {
@@ -232,10 +238,11 @@
       console.log('rcd ovrt called');
       userId = this._id;
       rite.getOwner(function(err, u) {
+        var _ref;
         if (err) {
           console.log(err);
         }
-        return nowjs.getClient(CUser.byUid(userId).cid, function() {
+        return nowjs.getClient((_ref = CUser.byUid(userId)) != null ? _ref.cid : void 0, function() {
           if (u) {
             return this.now.insertMessage('Over Written', "Someone called " + u.login + " is writing over your cells. Click for more info");
           } else {

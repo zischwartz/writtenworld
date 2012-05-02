@@ -218,6 +218,8 @@
     $(".leaflet-control-zoom-out").click(function(e) {
       if (map.getZoom() < config.minLayerZoom() && state.topLayerStamp) {
         removeLayerThen(map.zoomOut);
+      } else {
+        map.zoomOut();
       }
     });
     return $(".trigger").live('click', function() {

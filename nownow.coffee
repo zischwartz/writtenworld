@@ -24,8 +24,8 @@ module.exports = (app, SessionModel) ->
     return
 
   nowjs.on 'disconnect', ->
-    # u=CUser.byCid(this.user.clientId)
-    # u.destroy()
+    u=CUser.byCid(this.user.clientId)
+    u.destroy()
     return
 
   everyone.now.setBounds = (bounds) ->
@@ -48,7 +48,9 @@ module.exports = (app, SessionModel) ->
           update = CUser.byCid(cid)
           update.color = user.session.color if user.session
           update.cid = cid
-          nowjs.getClient i, -> this.now.drawCursors(update)
+          console.log 'update', cid
+          nowjs.getClient i, ->
+            this.now.updateCursors(update)
 
   everyone.now.writeCell = (cellPoint, content) ->
     if not this.now.currentWorldId
@@ -144,13 +146,13 @@ module.exports = (app, SessionModel) ->
           console.log 'USER COLORCHANGE', doc
           this.now.insertMessage('hi', 'nice color')
 
-  # can i impliment this on sessions instead....
+  # can I impliment this on CUser  instead....
   models.User.prototype.on 'receivedEcho', (rite) ->
       console.log 'rcvd echo called'
       userId= this._id
       rite.getOwner (err,u)->
         console.log err if err
-        nowjs.getClient CUser.byUid(userId).cid, ->
+        nowjs.getClient CUser.byUid(userId)?.cid, ->
           if u
             this.now.insertMessage 'Echoed!', "#{u.login} echoed what you said!"
           else
@@ -162,7 +164,7 @@ module.exports = (app, SessionModel) ->
       userId= this._id
       rite.getOwner (err,u)->
         console.log err if err
-        nowjs.getClient CUser.byUid(userId).cid, ->
+        nowjs.getClient CUser.byUid(userId)?.cid, ->
           if u
             this.now.insertMessage 'Over Written', "Someone called #{u.login} is writing over your cells. Click for more info"
           else
