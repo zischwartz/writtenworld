@@ -27,7 +27,8 @@
     },
     belowInputRateLimit: true,
     topLayerStamp: null,
-    baseLayer: null
+    baseLayer: null,
+    cursors: {}
   };
 
   setTileStyle = function() {
@@ -351,7 +352,7 @@
         }
       });
       centerCursor();
-      now.drawCursors = function(user) {
+      now.updateCursors = function(user) {
         var otherSelected;
         console.log(user);
         $(".u" + user.cid).removeClass("otherSelected u" + user.cid + " c" + user.color);

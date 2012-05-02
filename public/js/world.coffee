@@ -20,6 +20,7 @@ window.state =
   belowInputRateLimit: true
   topLayerStamp: null
   baseLayer: null
+  cursors: {}
 
 setTileStyle = ->
  width = state.cellWidth()
@@ -330,8 +331,10 @@ jQuery ->
         now.setUserOption('color','c0')
 
     centerCursor()
-    
-    now.drawCursors = (user) ->
+
+
+    now.updateCursors = (user) ->
+      
       # TODO Fix this up: make it a global object 
       console.log user
       $(".u#{user.cid}").removeClass("otherSelected u#{user.cid} c#{user.color}")
