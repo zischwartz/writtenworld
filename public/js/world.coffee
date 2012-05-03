@@ -291,7 +291,6 @@ jQuery ->
     maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset 
   window.map= new L.Map('map', mapOptions).addLayer(tileServeLayer)
 
-  # window.map = new L.Map('map', {center: centerPoint,zoomControl: false, attributionControl:false, zoom: config.defZoom(), scrollWheelZoom: false, minZoom: config.minZoom(), maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset }).addLayer(tileServeLayer)
   initializeGeo()
   
   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
@@ -311,11 +310,9 @@ jQuery ->
     now.setBounds domTiles.getTilePointAbsoluteBounds()
       
     map.on 'moveend', (e)->
-      # now.setBounds state.topLayer.getTilePointAbsoluteBounds() if state.topLayer
       now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
       $("#loadingIndicator").fadeOut('slow')
     map.on 'zoomend', (e)->
-      # now.setBounds state.topLayer.getTilePointAbsoluteBounds() if state.topLayer
       now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
       $("#loadingIndicator").fadeOut('slow')
 
@@ -329,16 +326,19 @@ jQuery ->
     centerCursor()
 
 
-    now.updateCursors = (user) ->
-      
-      # TODO Fix this up: make it a global object 
-      console.log user
-      $(".u#{user.cid}").removeClass("otherSelected u#{user.cid} c#{user.color}")
-      if user.cursor.x
-        otherSelected = Cell.get(user.cursor.x, user.cursor.y)
-        if otherSelected
-          $(otherSelected.span).addClass("u#{user.cid} c#{user.color} otherSelected")
-    
+    now.updateCursors = (updatedCursor) ->
+      if state.cursors[updatedCursor.cid]
+        cursor=state.cursors[updatedCursor.cid]
+        selectedCell = Cell.get(cursor.x, cursor.y)
+        $(selectedCell.span).removeClass("c#{cursor.color} otherSelected")
+      state.cursors[updatedCursor.cid]= updatedCursor
+      cursor= updatedCursor
+      if cursor.x and cursor.y
+        selectedCell = Cell.get(cursor.x, cursor.y)
+        $(selectedCell.span).addClass("c#{cursor.color} otherSelected")
+      else
+        delete state.cursors[cursor.cid] # on disconnect, remove
+  
     $("#getNearby").click ->
       now.getCloseUsers (closeUsers)->
         console.log closeUsers

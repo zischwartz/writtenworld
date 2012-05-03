@@ -28,8 +28,22 @@
       u = new CUser(this.user);
     });
     nowjs.on('disconnect', function() {
-      var u;
-      u = CUser.byCid(this.user.clientId);
+      var cid, u, update;
+      cid = this.user.clientId;
+      u = CUser.byCid(cid);
+      update = {
+        cid: cid
+      };
+      getWhoCanSee(u.cursor, this.now.currentWorldId, function(toUpdate) {
+        var i, _results;
+        _results = [];
+        for (i in toUpdate) {
+          _results.push(nowjs.getClient(i, function() {
+            return this.now.updateCursors(update);
+          }));
+        }
+        return _results;
+      });
       u.destroy();
     });
     everyone.now.setBounds = function(bounds) {
@@ -43,24 +57,23 @@
       }
     };
     everyone.now.setCursor = function(cellPoint) {
-      var cid, user;
+      var cid, update;
       if (!this.now.currentWorldId) {
         return false;
       }
       cid = this.user.clientId;
       CUser.byCid(cid).cursor = cellPoint;
-      user = this.user;
+      update = {
+        cid: cid,
+        x: cellPoint.x,
+        y: cellPoint.y,
+        color: this.user.session ? this.user.session.color : void 0
+      };
       return getWhoCanSee(cellPoint, this.now.currentWorldId, function(toUpdate) {
-        var i, update, _results;
+        var i, _results;
         _results = [];
         for (i in toUpdate) {
           if (i !== cid) {
-            update = CUser.byCid(cid);
-            if (user.session) {
-              update.color = user.session.color;
-            }
-            update.cid = cid;
-            console.log('update', cid);
             _results.push(nowjs.getClient(i, function() {
               return this.now.updateCursors(update);
             }));

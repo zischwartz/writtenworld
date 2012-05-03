@@ -24,7 +24,14 @@ module.exports = (app, SessionModel) ->
     return
 
   nowjs.on 'disconnect', ->
-    u=CUser.byCid(this.user.clientId)
+    cid = this.user.clientId
+    u=CUser.byCid(cid)
+    update =
+      cid: cid
+    getWhoCanSee u.cursor, this.now.currentWorldId, (toUpdate)->
+      for i of toUpdate
+          nowjs.getClient i, ->
+            this.now.updateCursors(update)
     u.destroy()
     return
 
@@ -41,14 +48,15 @@ module.exports = (app, SessionModel) ->
       return false
     cid = this.user.clientId
     CUser.byCid(cid).cursor = cellPoint
-    user = this.user
+    update =
+      cid: cid
+      x: cellPoint.x
+      y: cellPoint.y
+      color: this.user.session.color if this.user.session
+
     getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
       for i of toUpdate
         if i != cid #not you
-          update = CUser.byCid(cid)
-          update.color = user.session.color if user.session
-          update.cid = cid
-          console.log 'update', cid
           nowjs.getClient i, ->
             this.now.updateCursors(update)
 

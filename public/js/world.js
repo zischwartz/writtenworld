@@ -360,15 +360,20 @@
         }
       });
       centerCursor();
-      now.updateCursors = function(user) {
-        var otherSelected;
-        console.log(user);
-        $(".u" + user.cid).removeClass("otherSelected u" + user.cid + " c" + user.color);
-        if (user.cursor.x) {
-          otherSelected = Cell.get(user.cursor.x, user.cursor.y);
-          if (otherSelected) {
-            return $(otherSelected.span).addClass("u" + user.cid + " c" + user.color + " otherSelected");
-          }
+      now.updateCursors = function(updatedCursor) {
+        var cursor, selectedCell;
+        if (state.cursors[updatedCursor.cid]) {
+          cursor = state.cursors[updatedCursor.cid];
+          selectedCell = Cell.get(cursor.x, cursor.y);
+          $(selectedCell.span).removeClass("c" + cursor.color + " otherSelected");
+        }
+        state.cursors[updatedCursor.cid] = updatedCursor;
+        cursor = updatedCursor;
+        if (cursor.x && cursor.y) {
+          selectedCell = Cell.get(cursor.x, cursor.y);
+          return $(selectedCell.span).addClass("c" + cursor.color + " otherSelected");
+        } else {
+          return delete state.cursors[cursor.cid];
         }
       };
       $("#getNearby").click(function() {
