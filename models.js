@@ -208,7 +208,13 @@
       "default": ''
     },
     personalWorld: ObjectId,
-    email: String
+    email: String,
+    powers: {
+      jumpDistance: {
+        type: Number,
+        "default": 500
+      }
+    }
   });
 
   UserSchema.plugin(mongooseAuth, {

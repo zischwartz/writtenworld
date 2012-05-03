@@ -134,7 +134,7 @@ L.DomTileLayer = L.Class.extend
     # console.log @_container
     if not @_container or tilePane.empty
       @_container = L.DomUtil.create("div", "leaflet-layer")
-      console.log('staaamp')
+      # console.log('staaamp')
       stamp = L.Util.stamp(this)
       L.DomUtil.addClass(@_container, "layer-#{stamp}")
       if @_insertAtTheBottom and first

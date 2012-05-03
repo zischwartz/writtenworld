@@ -7,6 +7,8 @@
     selectedCell: null,
     lastClickCell: null,
     color: null,
+    geoPos: null,
+    geoAccuracy: null,
     writeDirection: 'right',
     zoomDiff: function() {
       return config.maxZoom() - map.getZoom();
@@ -92,7 +94,6 @@
   window.centerCursor = function() {
     return $.doTimeout(400, function() {
       var key, layer, target, targetCell;
-      console.log(state.topLayerStamp);
       layer = getLayer(state.topLayerStamp);
       if (!layer) {
         return true;
@@ -144,9 +145,7 @@
     inputEl.keypress(function(e) {
       var c, cellPoint, userTotalRites, _ref;
       dbg(e.which, 'pressed');
-      console.log(e.which);
       if ((_ref = e.which) === 0 || _ref === 13 || _ref === 32 || _ref === 9 || _ref === 8) {
-        console.log('SPECIAL KEY, screw this keypress');
         return false;
       } else {
         c = String.fromCharCode(e.which);
@@ -199,12 +198,16 @@
       $.ajax({
         url: "http://where.yahooapis.com/geocode?location=" + locationString + "&flags=JC&appid=a6mq7d30",
         success: function(data) {
-          var latlng, result;
-          console.log(data);
+          var km, latlng, result;
           result = data['ResultSet']['Results'][0];
           latlng = new L.LatLng(parseFloat(result.latitude), parseFloat(result.longitude));
-          dbg('go to, ', latlng);
-          map.panTo(latlng);
+          km = latlng.distanceTo(state.geoPos) / 1000;
+          if (km <= state.userPowers.jumpDistance) {
+            map.panTo(latlng);
+            state.geoPos = latlng;
+          } else {
+            insertMessage('Too Far!', "Sorry, you can't jump that far. Get some echoes to go further than " + state.userPowers.jumpDistance + "km.");
+          }
           $('#locationSearch').modal('hide');
           return centerCursor();
         }
@@ -352,6 +355,7 @@
         return $("#loadingIndicator").fadeOut('slow');
       });
       now.setClientStateFromServer(function(s) {
+        state.userPowers = s.powers;
         if (s.color) {
           return state.color = s.color;
         } else {
@@ -688,7 +692,6 @@
     layer = map._layers[state.topLayerStamp];
     $layer = $(".layer-" + state.topLayerStamp);
     $layer.fadeOut('slow');
-    console.log('turn off layer');
     if (state.topLayerStamp) {
       map.removeLayer(layer);
     }
@@ -704,7 +707,6 @@
     $layer = $(".layer-" + state.topLayerStamp);
     $layer.fadeOut('slow');
     $.doTimeout(500, function() {
-      console.log('turn off layer');
       if (state.topLayerStamp) {
         map.removeLayer(layer);
       }

@@ -104,6 +104,8 @@ UserSchema = new Schema
   color: {type: String, default: ''}
   personalWorld: ObjectId
   email: String
+  powers:
+    jumpDistance: {type: Number, default: 500}
 
 UserSchema.plugin mongooseAuth,
     everymodule:

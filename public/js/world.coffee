@@ -2,15 +2,15 @@ window.state =
   selectedCell: null
   lastClickCell: null #actually more about carriage return
   color: null
-  # geoPos: null
-  # geoAccuracy: null
+  geoPos: null
+  geoAccuracy: null
   writeDirection: 'right'
   zoomDiff: ->
     config.maxZoom()-map.getZoom()
   numRows: ->
     numRows = Math.pow(2, state.zoomDiff())
   numCols: ->
-    numCols = Math.pow(2, state.zoomDiff()) #old method for setting ratio was to multiply this, but now we just change the tilesize
+    numCols = Math.pow(2, state.zoomDiff()) 
   cellWidth: ->
     config.tileSize().x/state.numCols()
   cellHeight: ->
@@ -28,7 +28,6 @@ setTileStyle = ->
  rules.push("div.leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
  $("#dynamicStyles").text rules.join("\n")
 
-# TODO rewrite with command pattern, and big otherUsers object
 window.setCursor = (cell) ->  # takes the object, not the dom element
   dbg 'selecting', cell
   if state.selectedEl
@@ -71,7 +70,7 @@ moveCursor = (direction, from = state.selectedCell) ->
 window.centerCursor = ->
   $.doTimeout 400, ->
     # target = window.domTiles.getCenterTile()
-    console.log state.topLayerStamp
+    # console.log state.topLayerStamp
     layer=getLayer(state.topLayerStamp)
     if not layer
       return true
@@ -119,9 +118,9 @@ initializeInterface = ->
 
   inputEl.keypress (e) ->
     dbg  e.which, 'pressed'
-    console.log e.which
+    # console.log e.which
     if e.which in [0, 13, 32, 9, 8] # 40, 39, 38  were here, but that seems to be single quote?
-      console.log 'SPECIAL KEY, screw this keypress'
+      # console.log 'SPECIAL KEY, screw this keypress'
       return false
     else #it's a normal character which we should actually write
       c = String.fromCharCode e.which
@@ -180,11 +179,16 @@ initializeInterface = ->
     $.ajax
       url: "http://where.yahooapis.com/geocode?location=#{locationString}&flags=JC&appid=a6mq7d30"
       success: (data)->
-        console.log data
         result =  data['ResultSet']['Results'][0]
         latlng = new L.LatLng parseFloat(result.latitude), parseFloat(result.longitude)
-        dbg 'go to, ',  latlng
-        map.panTo(latlng)
+        km=latlng.distanceTo(state.geoPos)/1000
+        # console.log km
+        # console.log state.userPowers.jumpDistance
+        if km <= state.userPowers.jumpDistance
+          map.panTo(latlng)
+          state.geoPos= latlng
+        else
+          insertMessage('Too Far!', "Sorry, you can't jump that far. Get some echoes to go further than #{state.userPowers.jumpDistance}km.")
         $('#locationSearch').modal('hide')
         centerCursor()
     return false
@@ -295,7 +299,6 @@ jQuery ->
   
   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
 
-  # state.topLayer = domTiles
   state.topLayerStamp = L.Util.stamp domTiles
 
   now.ready ->
@@ -317,14 +320,15 @@ jQuery ->
       $("#loadingIndicator").fadeOut('slow')
 
     now.setClientStateFromServer (s)->
+      state.userPowers = s.powers
+      # console.log s
       if s.color # s is session
         state.color= s.color
       else #easy fix for override issue, set default color. this could be random.
         state.color = 'c0'
         now.setUserOption('color','c0')
-
+      
     centerCursor()
-
 
     now.updateCursors = (updatedCursor) ->
       if state.cursors[updatedCursor.cid]
@@ -554,7 +558,7 @@ removeLayerThenZoomOut=  ->
   layer= map._layers[state.topLayerStamp]
   $layer = $(".layer-#{state.topLayerStamp}")
   $layer.fadeOut('slow')
-  console.log 'turn off layer'
+  # console.log 'turn off layer'
   map.removeLayer(layer) if state.topLayerStamp
   state.topLayerStamp = 0
   now.setCurrentWorld(null)
@@ -569,7 +573,7 @@ turnOffLayer = ->
   $layer = $(".layer-#{state.topLayerStamp}")
   $layer.fadeOut('slow')
   $.doTimeout 500, ->
-    console.log 'turn off layer'
+    # console.log 'turn off layer'
     map.removeLayer(layer) if state.topLayerStamp
     state.topLayerStamp = 0
     now.setCurrentWorld(null)

@@ -119,9 +119,6 @@ module.exports = (app, SessionModel) ->
       for i in users
         uC = CUser.byCid(i).cursor
         distance = Math.sqrt((aC.x-uC.x)*(aC.x-uC.x)+(aC.y-uC.y)*(aC.y-uC.y))
-        # console.log "i: #{i}"
-        # console.log "cid: #{cid}"
-        # console.log distance
         if distance < 1000 and (i isnt cid)
           u = {}
           u[key] = value for own key,value of CUser.byCid(i)
@@ -190,13 +187,7 @@ module.exports = (app, SessionModel) ->
     allByUid = {}
     
     @byCid: (cid)->
-      r= allByCid[cid]
-      # TODO clone for security, or just pick what we want
-      # r.nowUser = null
-      # r.uid =null
-      # r.sid = null
-      # u[key] = value for own key,value of CUser.byCid(i)
-      return r
+      return allByCid[cid]
     
     # sometimes we pass the whole thing to the client, security, bla
     @byCidFull: (cid) ->
@@ -216,10 +207,14 @@ module.exports = (app, SessionModel) ->
         models.User.findById @uid, (err, doc) =>
             @login = doc.login
             @nowUser.login = doc.login
+            @nowUser.powers = doc.powers
+            @nowUser.session.powers = doc.powers
       else
         SessionModel.findOne {'sid': @sid } , (err, doc) =>
           @uid = doc._id
           @nowUser.soid=doc._id
+          @nowUser.powers = defaultUserPowers()
+          @nowUser.session.powers = defaultUserPowers()
       
       allByCid[@cid] = this
       allBySid[@sid] = this
@@ -238,3 +233,12 @@ module.exports = (app, SessionModel) ->
 
   return true
   # return everyone
+
+defaultUserPowers= ->
+  powers =
+    jumpDistance:50
+
+#this one isn't used, yet
+defaultRegisteredPowers = ->
+  powers=
+    jumpDistance: 500

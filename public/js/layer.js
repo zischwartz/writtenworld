@@ -148,7 +148,6 @@
       first = tilePane.firstChild;
       if (!this._container || tilePane.empty) {
         this._container = L.DomUtil.create("div", "leaflet-layer");
-        console.log('staaamp');
         stamp = L.Util.stamp(this);
         L.DomUtil.addClass(this._container, "layer-" + stamp);
         if (this._insertAtTheBottom && first) {

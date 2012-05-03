@@ -107,10 +107,14 @@ app.get '/uw/:slug', (req, res)->
     models.World.findOne {slug: req.params.slug},(err,world) ->
       if world.personal
         if world.owner.toString() is req.user._id.toString()
-          res.render 'map_base.jade', {title: world.name, initialWorldId: world._id, mainWorldId: models.mainWorldId, personalWorldId: world._id}
-        else
-          res.write 'error'
-          res.end()
+          res.render 'map_base.jade',
+            title: world.name
+            initialWorldId: world._id
+            mainWorldId: models.mainWorldId
+            personalWorldId: world._id
+            worldSpec: JSON.stringify(world.config)
+          # res.write 'error'
+          # res.end()
       else #it's not personal/private
         res.render 'map_base.jade', {title: world.name}
   else
