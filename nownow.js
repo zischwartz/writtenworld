@@ -232,17 +232,20 @@
       console.log('rcvd echo called');
       userId = this._id;
       rite.getOwner(function(err, u) {
-        var _ref;
+        var cid, _ref;
         if (err) {
           console.log(err);
         }
-        return nowjs.getClient((_ref = CUser.byUid(userId)) != null ? _ref.cid : void 0, function() {
-          if (u) {
-            return this.now.insertMessage('Echoed!', "" + u.login + " echoed what you said!");
-          } else {
-            return this.now.insertMessage('Echoed!', "Someone echoed what you said!");
-          }
-        });
+        cid = (_ref = CUser.byUid(userId)) != null ? _ref.cid : void 0;
+        if (cid) {
+          return nowjs.getClient(cid(function() {
+            if (u) {
+              return this.now.insertMessage('Echoed!', "" + u.login + " echoed what you said!");
+            } else {
+              return this.now.insertMessage('Echoed!', "Someone echoed what you said!");
+            }
+          }));
+        }
       });
       return true;
     });
@@ -251,17 +254,20 @@
       console.log('rcd ovrt called');
       userId = this._id;
       rite.getOwner(function(err, u) {
-        var _ref;
+        var cid, _ref;
         if (err) {
           console.log(err);
         }
-        return nowjs.getClient((_ref = CUser.byUid(userId)) != null ? _ref.cid : void 0, function() {
-          if (u) {
-            return this.now.insertMessage('Over Written', "Someone called " + u.login + " is writing over your cells. Click for more info");
-          } else {
-            return this.now.insertMessage('Over Written', "Someone is writing over your cells. Click for more info");
-          }
-        });
+        cid = (_ref = CUser.byUid(userId)) != null ? _ref.cid : void 0;
+        if (cid) {
+          return nowjs.getClient(cid(function() {
+            if (u) {
+              return this.now.insertMessage('Over Written', "Someone called " + u.login + " is writing over your cells. Click for more info");
+            } else {
+              return this.now.insertMessage('Over Written', "Someone is writing over your cells. Click for more info");
+            }
+          }));
+        }
       });
       return true;
     });

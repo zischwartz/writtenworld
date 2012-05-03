@@ -160,11 +160,13 @@ module.exports = (app, SessionModel) ->
       userId= this._id
       rite.getOwner (err,u)->
         console.log err if err
-        nowjs.getClient CUser.byUid(userId)?.cid, ->
-          if u
-            this.now.insertMessage 'Echoed!', "#{u.login} echoed what you said!"
-          else
-            this.now.insertMessage 'Echoed!', "Someone echoed what you said!"
+        cid = CUser.byUid(userId)?.cid
+        if cid
+          nowjs.getClient cid ->
+            if u
+              this.now.insertMessage 'Echoed!', "#{u.login} echoed what you said!"
+            else
+              this.now.insertMessage 'Echoed!', "Someone echoed what you said!"
       return true
 
   models.User.prototype.on 'receivedOverRite', (rite) ->
@@ -172,11 +174,13 @@ module.exports = (app, SessionModel) ->
       userId= this._id
       rite.getOwner (err,u)->
         console.log err if err
-        nowjs.getClient CUser.byUid(userId)?.cid, ->
-          if u
-            this.now.insertMessage 'Over Written', "Someone called #{u.login} is writing over your cells. Click for more info"
-          else
-            this.now.insertMessage 'Over Written', "Someone is writing over your cells. Click for more info"
+        cid=CUser.byUid(userId)?.cid
+        if cid
+          nowjs.getClient cid ->
+            if u
+              this.now.insertMessage 'Over Written', "Someone called #{u.login} is writing over your cells. Click for more info"
+            else
+              this.now.insertMessage 'Over Written', "Someone is writing over your cells. Click for more info"
       return true
 
 

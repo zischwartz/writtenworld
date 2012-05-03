@@ -33,7 +33,8 @@
         };
       };
       this.tileServeUrl = function() {
-        return s3Url;
+        var _ref;
+        return (_ref = spec.tileServeUrl) != null ? _ref : tileServeUrl;
       };
       this.maxZoom = function() {
         var _ref;
