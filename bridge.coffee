@@ -4,16 +4,22 @@ nowjs = require 'now'
 async = require './lib/async.js'
 leaflet = require './lib/leaflet-custom-src.js'
 
+otherWorlds = require './otherworlds'
 
 module.exports = (everyone, SessionModel) ->
   
   processRite = (cellPoint, contents, nowUser, currentWorldId, callback) ->
-    # nowUser is this.user within  everyone.now
     cid = nowUser.clientId
     sid= decodeURIComponent nowUser.cookie['connect.sid']
-    
     color= nowUser.session?.color
     
+    if nowUser.specialWorld
+      console.log 'ooh look at you, in your own special world'
+      otherWorlds.doStuff()
+      console.log "welp, i'm out"
+      return
+
+    #otherwise, main or personal
     # If user has an account and is logged in
     if nowUser.session.auth
       personalWorld = models.ObjectIdFromString(nowUser.personalWorldId)

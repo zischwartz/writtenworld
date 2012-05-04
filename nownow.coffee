@@ -18,6 +18,14 @@ module.exports = (app, SessionModel) ->
       this.user.currentWorldId=currentWorldId
     else
       this.user.currentWorldId=false
+    if currentWorldId != models.mainWorldId.toString() and currentWorldId != personalWorldId
+      console.log 'NOT MAIN, NOT PERSONAL'
+      this.user.specialWorld = true
+      models.World.findById currentWorldId, (err, world) =>
+        console.log err if err
+        console.log world
+        this.user.specialWorldName= world.name
+        console.log 'zzzzzzzzzzzzzzzzz'
 
   nowjs.on 'connect', ->
     this.user.cid = this.user.clientId

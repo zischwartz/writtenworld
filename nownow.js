@@ -14,13 +14,26 @@
     everyone = nowjs.initialize(app);
     bridge = require('./bridge')(everyone, SessionModel);
     everyone.now.setCurrentWorld = function(currentWorldId, personalWorldId) {
-      var group;
+      var group,
+        _this = this;
       this.user.personalWorldId = personalWorldId;
       if (currentWorldId) {
         group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId);
-        return this.user.currentWorldId = currentWorldId;
+        this.user.currentWorldId = currentWorldId;
       } else {
-        return this.user.currentWorldId = false;
+        this.user.currentWorldId = false;
+      }
+      if (currentWorldId !== models.mainWorldId.toString() && currentWorldId !== personalWorldId) {
+        console.log('NOT MAIN, NOT PERSONAL');
+        this.user.specialWorld = true;
+        return models.World.findById(currentWorldId, function(err, world) {
+          if (err) {
+            console.log(err);
+          }
+          console.log(world);
+          _this.user.specialWorldName = world.name;
+          return console.log('zzzzzzzzzzzzzzzzz');
+        });
       }
     };
     nowjs.on('connect', function() {

@@ -8,7 +8,7 @@ mongoose = require 'mongoose'
 mongoose.connect('mongodb://localhost/mapist')
 jade = require('jade')
 
-# fs = require('fs')
+fs = require('fs')
 events = require('events')
 util = require('util')
 
@@ -120,6 +120,18 @@ app.get '/uw/:slug', (req, res)->
   else
     #first add a message saying you gota login
     res.redirect('/login')
+
+# a whole new world
+app.get '/:slug', (req, res)->
+    models.World.findOne {slug: req.params.slug},(err,world) ->
+      if world
+        if not world.personal
+            res.render 'map_base.jade',
+              title: world.name
+              initialWorldId: world._id
+              mainWorldId: models.mainWorldId
+              personalWorldId: null
+              worldSpec: JSON.stringify(world.config)
 
 models.mongooseAuth.helpExpress(app)
 
