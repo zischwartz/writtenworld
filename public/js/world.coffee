@@ -302,7 +302,7 @@ jQuery ->
   state.topLayerStamp = L.Util.stamp domTiles
 
   now.ready ->
-    now.setCurrentWorld(initialWorldId)
+    now.setCurrentWorld(initialWorldId, personalWorldId)
     map.addLayer(domTiles)
     setTileStyle() #set initial
     map.on 'zoomend', ->

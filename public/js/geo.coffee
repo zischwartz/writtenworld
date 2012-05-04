@@ -60,7 +60,7 @@ geoHasPosition = (position) ->
   # console.log "accuracy: #{position.coords.accuracy}"
   # p = nj
   state.geoPos = p
-
+  state.initialGeoPos = new L.LatLng(p.lat, p.lng)
   for own key, val of officialCities
     distance = p.distanceTo(val)
     if distance < config.maxDistanceFromOfficial()

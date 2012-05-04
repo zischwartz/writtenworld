@@ -6,36 +6,31 @@ leaflet = require './lib/leaflet-custom-src.js'
 
 
 module.exports = (everyone, SessionModel) ->
-
+  
   processRite = (cellPoint, contents, nowUser, currentWorldId, callback) ->
     # nowUser is this.user within  everyone.now
     cid = nowUser.clientId
     sid= decodeURIComponent nowUser.cookie['connect.sid']
     
     color= nowUser.session?.color
-    # console.log 'color', color
-    getOut=false
+    
     # If user has an account and is logged in
     if nowUser.session.auth
+      personalWorld = models.ObjectIdFromString(nowUser.personalWorldId)
       riter=nowUser.session.auth.userId
-      models.User.findById riter, (err, user) ->
-        # if user.personalWorld.toString() isnt currentWorldId  #check if they're already in their own world (heh)
-          # console.log 'write to their world' #write to personal world here
-          models.Cell .findOne({world: user.personalWorld, x:cellPoint.x, y: cellPoint.y}) .populate('current')
-          .run (err, cell) ->
-              console.log err if err
-              cell = new models.Cell {x:cellPoint.x, y:cellPoint.y, world:user.personalWorld} if not cell
-              rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], echoes:-1, downroters:[], color: color}})
-              cell.history.push(rite)
-              rite.save (err) ->
-                cell.current= rite._id
-                cell.save()
-              if user.personalWorld.toString() is currentWorldId  #check if they're already in their own world (heh)
-                console.log 'was actually writing directly to yr world, so skip the echo behavior below'
-                getOut=true
-                return 
-       if getOut
-         return
+      rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], echoes:-1, downroters:[], color: color}})
+      models.Cell .findOne({world: personalWorld, x:cellPoint.x, y: cellPoint.y}) .populate('current')
+      .run (err, cell) ->
+          console.log err if err
+          cell = new models.Cell {x:cellPoint.x, y:cellPoint.y, world:personalWorld} if not cell
+          cell.history.push(rite)
+          rite.save (err) ->
+            cell.current= rite._id
+            cell.save()
+      if nowUser.personalWorldId.toString() is currentWorldId  #check if they're already in their own world (heh)
+        console.log 'was actually writing directly to yr world, so skip the echo behavior below'
+        callback('normalRite', rite, cellPoint)
+        return
     else # Not logged in
       riter = nowUser.soid #session object id
 
@@ -126,8 +121,7 @@ module.exports = (everyone, SessionModel) ->
               user.save (err) -> console.log err if err
 
         # make CUser based? TODO
-        console.log getOut
-        if originalOwner and  (logic.legitEcho or logic.legitDownrote) and not getOut
+        if originalOwner and  (logic.legitEcho or logic.legitDownrote)
           models.User.findById originalOwner, (err, user) ->
             if user and logic.legitEcho
               user.totalEchoes+=1

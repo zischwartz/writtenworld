@@ -333,7 +333,7 @@
     });
     state.topLayerStamp = L.Util.stamp(domTiles);
     now.ready(function() {
-      now.setCurrentWorld(initialWorldId);
+      now.setCurrentWorld(initialWorldId, personalWorldId);
       map.addLayer(domTiles);
       setTileStyle();
       map.on('zoomend', function() {

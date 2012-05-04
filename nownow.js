@@ -13,13 +13,14 @@
     var CUser, bridge, everyone, getWhoCanSee;
     everyone = nowjs.initialize(app);
     bridge = require('./bridge')(everyone, SessionModel);
-    everyone.now.setCurrentWorld = function(currentWorldId) {
+    everyone.now.setCurrentWorld = function(currentWorldId, personalWorldId) {
       var group;
+      this.user.personalWorldId = personalWorldId;
       if (currentWorldId) {
         group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId);
-        return this.now.currentWorldId = currentWorldId;
+        return this.user.currentWorldId = currentWorldId;
       } else {
-        return this.now.currentWorldId = false;
+        return this.user.currentWorldId = false;
       }
     };
     nowjs.on('connect', function() {
@@ -34,7 +35,7 @@
       update = {
         cid: cid
       };
-      getWhoCanSee(u.cursor, this.now.currentWorldId, function(toUpdate) {
+      getWhoCanSee(u.cursor, this.user.currentWorldId, function(toUpdate) {
         var i, _results;
         _results = [];
         for (i in toUpdate) {
@@ -58,7 +59,7 @@
     };
     everyone.now.setCursor = function(cellPoint) {
       var cid, update;
-      if (!this.now.currentWorldId) {
+      if (!this.user.currentWorldId) {
         return false;
       }
       cid = this.user.clientId;
@@ -69,7 +70,7 @@
         y: cellPoint.y,
         color: this.user.session ? this.user.session.color : void 0
       };
-      return getWhoCanSee(cellPoint, this.now.currentWorldId, function(toUpdate) {
+      return getWhoCanSee(cellPoint, this.user.currentWorldId, function(toUpdate) {
         var i, _results;
         _results = [];
         for (i in toUpdate) {
@@ -86,10 +87,10 @@
     };
     everyone.now.writeCell = function(cellPoint, content) {
       var cid, currentWorldId;
-      if (!this.now.currentWorldId) {
+      if (!this.user.currentWorldId) {
         return false;
       }
-      currentWorldId = this.now.currentWorldId;
+      currentWorldId = this.user.currentWorldId;
       cid = this.user.clientId;
       bridge.processRite(cellPoint, content, this.user, currentWorldId, function(commandType, rite, cellPoint, cellProps) {
         if (rite == null) {
@@ -120,10 +121,10 @@
     };
     everyone.now.getTile = function(absTilePoint, numRows, callback) {
       var _this = this;
-      if (!this.now.currentWorldId) {
+      if (!this.user.currentWorldId) {
         return false;
       }
-      return models.Cell.where('world', this.now.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
+      return models.Cell.where('world', this.user.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
         var c, pCell, results, _i, _len;
         results = {};
         if (docs.length) {
@@ -162,14 +163,14 @@
     };
     everyone.now.getCloseUsers = function(cb) {
       var aC, cid, closeUsers;
-      if (!this.now.currentWorldId) {
+      if (!this.user.currentWorldId) {
         return false;
       }
       console.log('getCloseUsers called');
       closeUsers = [];
       cid = this.user.clientId;
       aC = CUser.byCid(cid).cursor;
-      nowjs.getGroup(this.now.currentWorldId).getUsers(function(users) {
+      nowjs.getGroup(this.user.currentWorldId).getUsers(function(users) {
         var distance, i, key, u, uC, value, _i, _len, _ref;
         for (_i = 0, _len = users.length; _i < _len; _i++) {
           i = users[_i];
@@ -238,13 +239,13 @@
         }
         cid = (_ref = CUser.byUid(userId)) != null ? _ref.cid : void 0;
         if (cid) {
-          return nowjs.getClient(cid(function() {
+          return nowjs.getClient(cid, function() {
             if (u) {
               return this.now.insertMessage('Echoed!', "" + u.login + " echoed what you said!");
             } else {
               return this.now.insertMessage('Echoed!', "Someone echoed what you said!");
             }
-          }));
+          });
         }
       });
       return true;
@@ -260,13 +261,13 @@
         }
         cid = (_ref = CUser.byUid(userId)) != null ? _ref.cid : void 0;
         if (cid) {
-          return nowjs.getClient(cid(function() {
+          return nowjs.getClient(cid, function() {
             if (u) {
-              return this.now.insertMessage('Over Written', "Someone called " + u.login + " is writing over your cells. Click for more info");
+              return this.now.insertMessage('Over Written', "" + u.login + " is writing over your cells");
             } else {
-              return this.now.insertMessage('Over Written', "Someone is writing over your cells. Click for more info");
+              return this.now.insertMessage('Over Written', "Someone is writing over your cells.");
             }
-          }));
+          });
         }
       });
       return true;

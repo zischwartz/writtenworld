@@ -7,6 +7,7 @@ mongoose.connect('mongodb://localhost/mapist')
 Schema = mongoose.Schema
 ObjectId = Schema.ObjectId
 
+exports.ObjectIdFromString = mongoose.Types.ObjectId.fromString
 
 WorldSchema = new Schema
   owner: ObjectId

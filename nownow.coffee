@@ -11,12 +11,13 @@ module.exports = (app, SessionModel) ->
   
   bridge = require('./bridge')(everyone, SessionModel)
 
-  everyone.now.setCurrentWorld = (currentWorldId) ->
+  everyone.now.setCurrentWorld = (currentWorldId, personalWorldId) ->
+    this.user.personalWorldId = personalWorldId
     if currentWorldId
       group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId)
-      this.now.currentWorldId = currentWorldId
+      this.user.currentWorldId=currentWorldId
     else
-      this.now.currentWorldId = false
+      this.user.currentWorldId=false
 
   nowjs.on 'connect', ->
     this.user.cid = this.user.clientId
@@ -28,7 +29,7 @@ module.exports = (app, SessionModel) ->
     u=CUser.byCid(cid)
     update =
       cid: cid
-    getWhoCanSee u.cursor, this.now.currentWorldId, (toUpdate)->
+    getWhoCanSee u.cursor, this.user.currentWorldId, (toUpdate)->
       for i of toUpdate
           nowjs.getClient i, ->
             this.now.updateCursors(update)
@@ -44,7 +45,7 @@ module.exports = (app, SessionModel) ->
       callback(this.user.session)
 
   everyone.now.setCursor = (cellPoint) ->
-    if not this.now.currentWorldId
+    if not this.user.currentWorldId
       return false
     cid = this.user.clientId
     CUser.byCid(cid).cursor = cellPoint
@@ -54,16 +55,16 @@ module.exports = (app, SessionModel) ->
       y: cellPoint.y
       color: this.user.session.color if this.user.session
 
-    getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
+    getWhoCanSee cellPoint, this.user.currentWorldId, (toUpdate)->
       for i of toUpdate
         if i != cid #not you
           nowjs.getClient i, ->
             this.now.updateCursors(update)
 
   everyone.now.writeCell = (cellPoint, content) ->
-    if not this.now.currentWorldId
+    if not this.user.currentWorldId
       return false
-    currentWorldId = this.now.currentWorldId
+    currentWorldId = this.user.currentWorldId
     cid = this.user.clientId
 
     bridge.processRite cellPoint, content, this.user, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->
@@ -77,9 +78,9 @@ module.exports = (app, SessionModel) ->
     return true
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
-    if not this.now.currentWorldId
+    if not this.user.currentWorldId
       return false
-    models.Cell.where('world', this.now.currentWorldId)
+    models.Cell.where('world', this.user.currentWorldId)
       .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
       .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
       .populate('current')
@@ -107,7 +108,7 @@ module.exports = (app, SessionModel) ->
       cb(toUpdate)
 
   everyone.now.getCloseUsers= (cb)->
-    if not this.now.currentWorldId
+    if not this.user.currentWorldId
       return false
     console.log 'getCloseUsers called'
     closeUsers= []
@@ -115,7 +116,7 @@ module.exports = (app, SessionModel) ->
     aC=CUser.byCid(cid).cursor
     # console.log cUsers[cid]
     # console.log 'ac', aC
-    nowjs.getGroup(this.now.currentWorldId).getUsers (users) ->
+    nowjs.getGroup(this.user.currentWorldId).getUsers (users) ->
       for i in users
         uC = CUser.byCid(i).cursor
         distance = Math.sqrt((aC.x-uC.x)*(aC.x-uC.x)+(aC.y-uC.y)*(aC.y-uC.y))
@@ -159,7 +160,7 @@ module.exports = (app, SessionModel) ->
         console.log err if err
         cid = CUser.byUid(userId)?.cid
         if cid
-          nowjs.getClient cid ->
+          nowjs.getClient cid, ->
             if u
               this.now.insertMessage 'Echoed!', "#{u.login} echoed what you said!"
             else
@@ -173,11 +174,11 @@ module.exports = (app, SessionModel) ->
         console.log err if err
         cid=CUser.byUid(userId)?.cid
         if cid
-          nowjs.getClient cid ->
+          nowjs.getClient cid, ->
             if u
-              this.now.insertMessage 'Over Written', "Someone called #{u.login} is writing over your cells. Click for more info"
+              this.now.insertMessage 'Over Written', "#{u.login} is writing over your cells"
             else
-              this.now.insertMessage 'Over Written', "Someone is writing over your cells. Click for more info"
+              this.now.insertMessage 'Over Written', "Someone is writing over your cells."
       return true
 
 
