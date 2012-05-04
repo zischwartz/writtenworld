@@ -14,7 +14,7 @@ module.exports = (everyone, SessionModel) ->
     
     color= nowUser.session?.color
     # console.log 'color', color
-
+    getOut=false
     # If user has an account and is logged in
     if nowUser.session.auth
       riter=nowUser.session.auth.userId
@@ -31,8 +31,11 @@ module.exports = (everyone, SessionModel) ->
                 cell.current= rite._id
                 cell.save()
               if user.personalWorld.toString() is currentWorldId  #check if they're already in their own world (heh)
-                # console.log 'was actually writing directly to yr world, so skip the echo behavior below'
-                return true
+                console.log 'was actually writing directly to yr world, so skip the echo behavior below'
+                getOut=true
+                return 
+       if getOut
+         return
     else # Not logged in
       riter = nowUser.soid #session object id
 
@@ -123,7 +126,8 @@ module.exports = (everyone, SessionModel) ->
               user.save (err) -> console.log err if err
 
         # make CUser based? TODO
-        if originalOwner and  (logic.legitEcho or logic.legitDownrote)
+        console.log getOut
+        if originalOwner and  (logic.legitEcho or logic.legitDownrote) and not getOut
           models.User.findById originalOwner, (err, user) ->
             if user and logic.legitEcho
               user.totalEchoes+=1

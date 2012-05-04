@@ -208,13 +208,13 @@ module.exports = (app, SessionModel) ->
             @login = doc.login
             @nowUser.login = doc.login
             @nowUser.powers = doc.powers
-            @nowUser.session.powers = doc.powers
+            @nowUser.session?.powers = doc.powers
       else
         SessionModel.findOne {'sid': @sid } , (err, doc) =>
           @uid = doc._id
           @nowUser.soid=doc._id
           @nowUser.powers = defaultUserPowers()
-          @nowUser.session.powers = defaultUserPowers()
+          @nowUser.session?.powers = defaultUserPowers()
       
       allByCid[@cid] = this
       allBySid[@sid] = this
