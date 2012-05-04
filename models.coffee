@@ -119,6 +119,40 @@ CellSchema.index {world:1, x:1, y:1}, {unique:true}
 
 exports.Cell = mongoose.model('Cell', CellSchema)
 
+exports.getContigs = (cellPoint, worldId, callback) ->
+  contigs = []
+  console.log cellPoint.x, cellPoint.y
+  
+  #top
+  exports.Cell .findOne({world: worldId, x:cellPoint.x, y: cellPoint.y-1}) .populate('current')
+  .run (err, cell) ->
+    if cell?.current
+       contigs.push(cell.current.contents)
+    else
+      contigs.push(-1)
+    # right
+    exports.Cell .findOne({world: worldId, x:cellPoint.x+1, y: cellPoint.y}) .populate('current')
+    .run (err, cell) ->
+      if cell?.current
+         contigs.push(cell.current.contents)
+      else
+        contigs.push(-1)
+      
+      #below
+      exports.Cell .findOne({world: worldId, x:cellPoint.x, y: cellPoint.y+1}) .populate('current')
+      .run (err, cell) ->
+        if cell?.current
+           contigs.push(cell.current.contents)
+        else
+          contigs.push(-1)
+
+        exports.Cell .findOne({world: worldId, x:cellPoint.x-1, y: cellPoint.y}) .populate('current')
+        .run (err, cell) ->
+          if cell?.current
+             contigs.push(cell.current.contents)
+          else
+            contigs.push(-1)
+          callback(contigs)
 
 
 mongooseAuth=require('mongoose-auth')

@@ -10,6 +10,7 @@ module.exports = (app, SessionModel) ->
   everyone = nowjs.initialize app
   
   bridge = require('./bridge')(everyone, SessionModel)
+  otherWorlds = require('./otherworlds')(SessionModel)
 
   everyone.now.setCurrentWorld = (currentWorldId, personalWorldId) ->
     this.user.personalWorldId = personalWorldId
@@ -19,13 +20,11 @@ module.exports = (app, SessionModel) ->
     else
       this.user.currentWorldId=false
     if currentWorldId != models.mainWorldId.toString() and currentWorldId != personalWorldId
-      console.log 'NOT MAIN, NOT PERSONAL'
       this.user.specialWorld = true
       models.World.findById currentWorldId, (err, world) =>
         console.log err if err
-        console.log world
         this.user.specialWorldName= world.name
-        console.log 'zzzzzzzzzzzzzzzzz'
+        otherWorlds[world.name].begin(this.user)
 
   nowjs.on 'connect', ->
     this.user.cid = this.user.clientId

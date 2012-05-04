@@ -224,6 +224,57 @@
 
   exports.Cell = mongoose.model('Cell', CellSchema);
 
+  exports.getContigs = function(cellPoint, worldId, callback) {
+    var contigs;
+    contigs = [];
+    console.log(cellPoint.x, cellPoint.y);
+    return exports.Cell.findOne({
+      world: worldId,
+      x: cellPoint.x,
+      y: cellPoint.y - 1
+    }).populate('current').run(function(err, cell) {
+      if (cell != null ? cell.current : void 0) {
+        contigs.push(cell.current.contents);
+      } else {
+        contigs.push(-1);
+      }
+      return exports.Cell.findOne({
+        world: worldId,
+        x: cellPoint.x + 1,
+        y: cellPoint.y
+      }).populate('current').run(function(err, cell) {
+        if (cell != null ? cell.current : void 0) {
+          contigs.push(cell.current.contents);
+        } else {
+          contigs.push(-1);
+        }
+        return exports.Cell.findOne({
+          world: worldId,
+          x: cellPoint.x,
+          y: cellPoint.y + 1
+        }).populate('current').run(function(err, cell) {
+          if (cell != null ? cell.current : void 0) {
+            contigs.push(cell.current.contents);
+          } else {
+            contigs.push(-1);
+          }
+          return exports.Cell.findOne({
+            world: worldId,
+            x: cellPoint.x - 1,
+            y: cellPoint.y
+          }).populate('current').run(function(err, cell) {
+            if (cell != null ? cell.current : void 0) {
+              contigs.push(cell.current.contents);
+            } else {
+              contigs.push(-1);
+            }
+            return callback(contigs);
+          });
+        });
+      });
+    });
+  };
+
   mongooseAuth = require('mongoose-auth');
 
   UserSchema = new Schema({

@@ -302,6 +302,15 @@ jQuery ->
   state.topLayerStamp = L.Util.stamp domTiles
 
   now.ready ->
+    now.drawRite = (commandType, rite, cellPoint, cellProps) ->
+      # console.log(commandType, rite, cellPoint)
+      c=Cell.get(cellPoint.x, cellPoint.y)
+      c[commandType](rite, cellProps)
+
+    now.insertMessage = (heading, message, cssclass, timing=6) ->
+      console.log 'insert msg'
+      insertMessage(heading, message, cssclass, timing)
+
     now.setCurrentWorld(initialWorldId, personalWorldId)
     map.addLayer(domTiles)
     setTileStyle() #set initial
@@ -362,16 +371,8 @@ jQuery ->
             arrow= $("<li><a><i class='icon-arrow-left' style='-moz-transform: rotate(#{user.degrees}deg);-webkit-transform: rotate(#{user.degrees}deg);'></i> #{user.login}</a></li>")
         true
 
-    now.drawRite = (commandType, rite, cellPoint, cellProps) ->
-      # console.log(commandType, rite, cellPoint)
-      c=Cell.get(cellPoint.x, cellPoint.y)
-      c[commandType](rite, cellProps)
-
-    now.insertMessage = (heading, message, cssclass) ->
-      insertMessage(heading, message, cssclass)
 
     return # end now.ready
-
 
   return true # end doc.ready
 

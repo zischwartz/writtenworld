@@ -10,9 +10,10 @@
   leaflet = require('./lib/leaflet-custom-src.js');
 
   module.exports = function(app, SessionModel) {
-    var CUser, bridge, everyone, getWhoCanSee;
+    var CUser, bridge, everyone, getWhoCanSee, otherWorlds;
     everyone = nowjs.initialize(app);
     bridge = require('./bridge')(everyone, SessionModel);
+    otherWorlds = require('./otherworlds')(SessionModel);
     everyone.now.setCurrentWorld = function(currentWorldId, personalWorldId) {
       var group,
         _this = this;
@@ -24,15 +25,13 @@
         this.user.currentWorldId = false;
       }
       if (currentWorldId !== models.mainWorldId.toString() && currentWorldId !== personalWorldId) {
-        console.log('NOT MAIN, NOT PERSONAL');
         this.user.specialWorld = true;
         return models.World.findById(currentWorldId, function(err, world) {
           if (err) {
             console.log(err);
           }
-          console.log(world);
           _this.user.specialWorldName = world.name;
-          return console.log('zzzzzzzzzzzzzzzzz');
+          return otherWorlds[world.name].begin(_this.user);
         });
       }
     };

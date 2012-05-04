@@ -4,18 +4,21 @@ nowjs = require 'now'
 async = require './lib/async.js'
 leaflet = require './lib/leaflet-custom-src.js'
 
-otherWorlds = require './otherworlds'
 
 module.exports = (everyone, SessionModel) ->
-  
+
+  otherWorlds = require('./otherworlds')(SessionModel)
+
   processRite = (cellPoint, contents, nowUser, currentWorldId, callback) ->
     cid = nowUser.clientId
     sid= decodeURIComponent nowUser.cookie['connect.sid']
     color= nowUser.session?.color
     
     if nowUser.specialWorld
+      console.log nowUser.specialWorldName
       console.log 'ooh look at you, in your own special world'
-      otherWorlds.doStuff()
+      otherWorlds[nowUser.specialWorldName].write(cellPoint, contents, nowUser, callback)
+      # callback('normalRite', rite, cellPoint)
       console.log "welp, i'm out"
       return
 

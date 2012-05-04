@@ -333,6 +333,18 @@
     });
     state.topLayerStamp = L.Util.stamp(domTiles);
     now.ready(function() {
+      now.drawRite = function(commandType, rite, cellPoint, cellProps) {
+        var c;
+        c = Cell.get(cellPoint.x, cellPoint.y);
+        return c[commandType](rite, cellProps);
+      };
+      now.insertMessage = function(heading, message, cssclass, timing) {
+        if (timing == null) {
+          timing = 6;
+        }
+        console.log('insert msg');
+        return insertMessage(heading, message, cssclass, timing);
+      };
       now.setCurrentWorld(initialWorldId, personalWorldId);
       map.addLayer(domTiles);
       setTileStyle();
@@ -410,14 +422,6 @@
           return true;
         });
       });
-      now.drawRite = function(commandType, rite, cellPoint, cellProps) {
-        var c;
-        c = Cell.get(cellPoint.x, cellPoint.y);
-        return c[commandType](rite, cellProps);
-      };
-      now.insertMessage = function(heading, message, cssclass) {
-        return insertMessage(heading, message, cssclass);
-      };
     });
     return true;
   });
