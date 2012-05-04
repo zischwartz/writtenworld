@@ -43,6 +43,10 @@ form.modal.fade.hide#locationSearch
       h3 Find a Place 
     .modal-body
       p Where would you like to go?
+      -if (!everyauth.loggedIn)
+        p You can only jump 50km at once. With an account, you can jump up to 500km at once. With echoes, even more. 
+      -else
+        p You can jump 500km at once. With echoes, even more. 
       .well 
         input.span5#locationSearchInput
       p Hint: Include the state, in the US, or country, if not. Americas only for now.
