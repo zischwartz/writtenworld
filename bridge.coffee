@@ -4,7 +4,7 @@ nowjs = require 'now'
 async = require './lib/async.js'
 leaflet = require './lib/leaflet-custom-src.js'
 
-otherWorlds = require './otherworlds'
+# otherWorlds = require './otherworlds'
 
 module.exports = (everyone, SessionModel) ->
   
