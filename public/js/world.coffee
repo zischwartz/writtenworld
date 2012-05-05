@@ -215,10 +215,10 @@ initializeInterface = ->
     type= $(this).data('type')
     payload= $(this).data('payload')
     text = $(this).text()
-    console.log text
+    # console.log text
     $(this).parent().parent().find('.active').removeClass('active')
     $(this).parent().addClass('active')
-    console.log 'trigger triggered'
+    # console.log 'trigger triggered'
 
     if action == 'set' #change this (and setUserOption below) setServerState
       state[type]=payload
@@ -345,7 +345,7 @@ jQuery ->
   
     $("#getNearby").click ->
       now.getCloseUsers (closeUsers)->
-        console.log closeUsers
+        # console.log closeUsers
         $("#nearby").empty()
         if closeUsers.length is 0
           $("ul#nearby").append -> $ '<li> <a>Sorry, no one is nearby. </a></li>'
@@ -583,12 +583,11 @@ turnOffLayer = ->
 turnOnMainLayer= ->
   console.log 'turn on layer'
   Cell.killAll()
-  # map.removeLayer(state.topLayer) if state.topLayer
-  now.setCurrentWorld(mainWorldId)
+  now.setCurrentWorld(mainWorldId, personalWorldId)
   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
   map.addLayer(domTiles)
   stamp= L.Util.stamp(domTiles)
-  console.log 'stamp', stamp
+  # console.log 'stamp', stamp
   state.topLayerStamp = stamp
   now.setBounds domTiles.getTilePointAbsoluteBounds()
   inputEl.focus()

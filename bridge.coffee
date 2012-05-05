@@ -17,6 +17,7 @@ module.exports = (everyone, SessionModel) ->
     # If user has an account and is logged in
     if nowUser.session.auth
       personalWorld = models.ObjectIdFromString(nowUser.personalWorldId)
+      
       riter=nowUser.session.auth.userId
       rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], echoes:-1, downroters:[], color: color}})
       models.Cell .findOne({world: personalWorld, x:cellPoint.x, y: cellPoint.y}) .populate('current')

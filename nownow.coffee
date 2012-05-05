@@ -8,7 +8,7 @@ leaflet = require './lib/leaflet-custom-src.js'
 
 module.exports = (app, SessionModel) ->
   everyone = nowjs.initialize app
-  
+  # module.everyone = everyone
   bridge = require('./bridge')(everyone, SessionModel)
 
   everyone.now.setCurrentWorld = (currentWorldId, personalWorldId) ->
@@ -18,14 +18,11 @@ module.exports = (app, SessionModel) ->
       this.user.currentWorldId=currentWorldId
     else
       this.user.currentWorldId=false
-    if currentWorldId != models.mainWorldId.toString() and currentWorldId != personalWorldId
-      console.log 'NOT MAIN, NOT PERSONAL'
-      this.user.specialWorld = true
-      models.World.findById currentWorldId, (err, world) =>
-        console.log err if err
-        console.log world
-        this.user.specialWorldName= world.name
-        console.log 'zzzzzzzzzzzzzzzzz'
+    # if currentWorldId != models.mainWorldId.toString() and currentWorldId != personalWorldId
+    #   console.log 'NOT MAIN, NOT PERSONAL'
+    #   this.user.specialWorld = true
+    #   models.World.findById currentWorldId, (err, world) =>
+    #     this.user.specialWorldName= world.name
 
   nowjs.on 'connect', ->
     this.user.cid = this.user.clientId
@@ -240,8 +237,8 @@ module.exports = (app, SessionModel) ->
 
   exports.CUser = CUser
 
-  return true
-  # return everyone
+  # return true
+  return everyone
 
 defaultUserPowers= ->
   powers =

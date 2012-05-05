@@ -237,10 +237,8 @@
       type = $(this).data('type');
       payload = $(this).data('payload');
       text = $(this).text();
-      console.log(text);
       $(this).parent().parent().find('.active').removeClass('active');
       $(this).parent().addClass('active');
-      console.log('trigger triggered');
       if (action === 'set') {
         state[type] = payload;
         now.setUserOption(type, payload);
@@ -383,7 +381,6 @@
       $("#getNearby").click(function() {
         return now.getCloseUsers(function(closeUsers) {
           var cellPoint, user, _i, _len;
-          console.log(closeUsers);
           $("#nearby").empty();
           if (closeUsers.length === 0) {
             $("ul#nearby").append(function() {
@@ -720,13 +717,12 @@
     var domTiles, stamp;
     console.log('turn on layer');
     Cell.killAll();
-    now.setCurrentWorld(mainWorldId);
+    now.setCurrentWorld(mainWorldId, personalWorldId);
     domTiles = new L.DomTileLayer({
       tileSize: config.tileSize()
     });
     map.addLayer(domTiles);
     stamp = L.Util.stamp(domTiles);
-    console.log('stamp', stamp);
     state.topLayerStamp = stamp;
     now.setBounds(domTiles.getTilePointAbsoluteBounds());
     inputEl.focus();

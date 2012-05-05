@@ -41,7 +41,6 @@ assetManagerGroups =
 
 assetsManagerMiddleware = assetManager(assetManagerGroups)
 
-
 [sessionStore, SessionModel] = require("./lib/mongoose-session.js")(connect) #my edited version returns the model as well because looks weren't working through the get() interface
 
 app = express.createServer()
@@ -102,6 +101,34 @@ app.get '/home', (req, res) ->
 app.get '/about', (req, res) ->
   res.render 'about.jade', { title: 'About'}
 
+
+app.get '/secretfeedback' , (req, res) ->
+  models.Feedback.find (err, feedbacks)->
+    res.render 'table.jade', {things:feedbacks}
+
+app.get '/secretreset11' , (req, res) ->
+  # console.log req.user
+  if req.user?.login == 'zach'
+    msg =[
+      'Warning!'
+      "The server is about to reset. Either we're fixing a bug or adding a feature. You may have to refresh or reload the page to keep writing. Sorry/ Thanks!"
+      'major alert-danger'
+      25]
+    nownow.now.insertMessage msg[0], msg[1], msg[2], msg[3] 
+    res.render 'about.jade', { title: 'About'}
+  else
+    res.render 'about.jade', { title: 'About'}
+
+app.get '/wid/:id' , (req, res) ->
+    models.World.findById req.params.id,(err,world) ->
+      if world
+        if world.personal
+          res.redirect("/uw/#{world.slug}")
+        else
+          res.redirect("/")
+      else
+        res.redirect("/")
+
 app.get '/uw/:slug', (req, res)->
   if req.loggedIn
     models.World.findOne {slug: req.params.slug},(err,world) ->
@@ -122,16 +149,20 @@ app.get '/uw/:slug', (req, res)->
     res.redirect('/login')
 
 # a whole new world
-app.get '/:slug', (req, res)->
-    models.World.findOne {slug: req.params.slug},(err,world) ->
-      if world
-        if not world.personal
-            res.render 'map_base.jade',
-              title: world.name
-              initialWorldId: world._id
-              mainWorldId: models.mainWorldId
-              personalWorldId: null
-              worldSpec: JSON.stringify(world.config)
+# app.get '/:slug', (req, res)->
+#     models.World.findOne {slug: req.params.slug},(err,world) ->
+#       if world
+#         if not world.personal
+#             res.render 'map_base.jade',
+#               title: world.name
+#               initialWorldId: world._id
+#               mainWorldId: models.mainWorldId
+#               personalWorldId: null
+#               worldSpec: JSON.stringify(world.config)
+
+
+
+
 
 models.mongooseAuth.helpExpress(app)
 
