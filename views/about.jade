@@ -2,25 +2,41 @@ extends home
 
 block contents
     div(class="row-fluid")
-       div(class="span3")  .  
+       div(class="span3")
+         center
+           a(href="/") Back to Main World
        div(class="span6") 
-          h2 About Written World
           p Written World is a communal free-form text world, overlaid on a street map of the user's physical location. 
           p It incorporates elements of online chat and graffiti to explore and create a bridge between the physical and virtual.
-          p More info here soon
+
           hr 
+          
+          h2 News
+
+          h4 May 6, 2012
+          p Changed the default color of text to light blue instead of gray. Fixed the bug-while-writing fast, mostly, though zoomed out it's still a problem. 
+          p Implemented error message and auto-refresh when there's a connection hiccup. Previously it had just hung, and not allow you to type.
+
+          h4 May 5, 2012
+          p Launched to ITP. 
+
+          hr
+          hr
           h2 Frequently Asked Questions (FAQs)
 
           h4 You put me in the wrong place. Why?
           p HTML5 geolocation is an experimental feature. It doesn't work perfectly. Try restarting your browser. 
+
           h4 Why can't I write sometimes? And what's all this "echo" business?
-          p The idea behind echos and when you can or can't write is based on the now ubiquituous idea of upvoting and downvoting content.
+          p The idea behind echos and when you can or can't write is based on the now ubiquitous idea of upvoting and downvoting content.
           p In short, echoes are analogous to upvotes, and overwriting is analogous to downvotes. You can't echo a character you've written or already echoed, and you can't overwrite a character you've already overwritten. 
+
           hr
           h2 Acknowledgements and Attribution
           p All Map data (c) 
             a(href="http://www.openstreetmap.org/") OpenStreetMap 
             | contributors, CC-BY-SA. 
             | Tiles created using Mapnik, and a bunch of other tools. Clientside map is based on Leaflet.
-          p A large conceptual debt is owed to Andrew Badr for Your World of Text
+          p A major conceptual debt is owed to Andrew Badr and his excellent project <a href="http://www.yourworldoftext.com/"> Your World of Text</a>
+
         div(class="span3") .
