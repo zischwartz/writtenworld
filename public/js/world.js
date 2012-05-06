@@ -347,7 +347,10 @@
     $("#loadingIndicator").fadeOut('slow');
     now.setBounds(domTiles.getTilePointAbsoluteBounds());
     now.core.socketio.on('disconnect', function() {
-      return $("#errorIndicator").fadeIn('fast');
+      $("#errorIndicator").fadeIn('fast');
+      return $.doTimeout(2000, function() {
+        return location.reload();
+      });
     });
     map.on('moveend', function(e) {
       if (state.topLayerStamp) {

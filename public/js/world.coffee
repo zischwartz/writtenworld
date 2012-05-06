@@ -300,10 +300,8 @@ jQuery ->
 
   now.ready ->
     doNowInit(now)
-    # console.log now
     # now.core.socketio.on 'reconnect', ->
     #   console.log 'reconnected!'
-    #   doNowInit(now)
     return # end now.ready
 
   return true # end doc.ready
@@ -324,7 +322,8 @@ doNowInit= (now)->
   
     now.core.socketio.on 'disconnect', ->
       $("#errorIndicator").fadeIn('fast')
-
+      $.doTimeout 2000, ->
+        location.reload()
 
     map.on 'moveend', (e)->
       now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
