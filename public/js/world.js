@@ -143,7 +143,7 @@
       return $("#loadingIndicator").fadeIn('fast');
     });
     inputEl.keypress(function(e) {
-      var c, cellPoint, userTotalRites, _ref;
+      var c, userTotalRites, _ref;
       dbg(e.which, 'pressed');
       if ((_ref = e.which) === 0 || _ref === 13 || _ref === 32 || _ref === 9 || _ref === 8) {
         return false;
@@ -153,7 +153,6 @@
         state.selectedCell.write(c);
         userTotalRites = parseInt($("#userTotalRites").text());
         $("#userTotalRites").text(userTotalRites + 1);
-        cellPoint = cellKeyToXY(state.selectedCell.key);
         return moveCursor(state.writeDirection);
       }
     });

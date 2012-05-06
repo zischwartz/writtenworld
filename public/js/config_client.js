@@ -58,7 +58,7 @@
       };
       this.inputRateLimit = function() {
         var _ref;
-        return (_ref = spec.inputRateLimit) != null ? _ref : 40;
+        return (_ref = spec.inputRateLimit) != null ? _ref : 20;
       };
       this.maxDistanceFromOfficial = function() {
         var _ref;

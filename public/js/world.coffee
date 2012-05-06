@@ -122,15 +122,15 @@ initializeInterface = ->
     if e.which in [0, 13, 32, 9, 8] # 40, 39, 38  were here, but that seems to be single quote?
       # console.log 'SPECIAL KEY, screw this keypress'
       return false
-    else #it's a normal character which we should actually write
+    else 
       c = String.fromCharCode e.which
       dbg  c,  'Pressed!!!!'
       state.selectedCell.write( c)
       
+
       userTotalRites=parseInt($("#userTotalRites").text())
       $("#userTotalRites").text(userTotalRites+1)
-
-      cellPoint = cellKeyToXY state.selectedCell.key
+      # cellPoint = cellKeyToXY state.selectedCell.key
 
       moveCursor(state.writeDirection)
 

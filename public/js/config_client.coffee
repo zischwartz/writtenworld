@@ -18,7 +18,7 @@ Configuration = class Configuration
     @defZoom = -> spec.defZoom ? 17
     @minLayerZoom = -> spec.minLayerZoom ? 16 #turn off the layer at this zoom
     @defaultChar = -> spec.defaultChar ? " "
-    @inputRateLimit = -> spec.inputRateLimit ? 40
+    @inputRateLimit = -> spec.inputRateLimit ? 20
     @maxDistanceFromOfficial = -> spec.maxDistanceFromOfficial ? 10000 # from official City, for rollout, see below
     #not implimented
     @maxJumpDistance = spec.maxJumpDistance ? 0 # 0 no max, -1=no jumps, units are cells I supose 
