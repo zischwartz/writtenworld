@@ -10,7 +10,7 @@ window.state =
   numRows: ->
     numRows = Math.pow(2, state.zoomDiff())
   numCols: ->
-    numCols = Math.pow(2, state.zoomDiff()) 
+    numCols = Math.pow(2, state.zoomDiff())
   cellWidth: ->
     config.tileSize().x/state.numCols()
   cellHeight: ->
@@ -23,7 +23,7 @@ window.state =
 setTileStyle = ->
  width = state.cellWidth()
  height = state.cellHeight()
- fontSize = height*0.9 #width*1.5 #why not
+ fontSize = height*0.9
  rules = []
  rules.push("div.leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
  $("#dynamicStyles").text rules.join("\n")
@@ -122,7 +122,7 @@ initializeInterface = ->
     if e.which in [0, 13, 32, 9, 8] # 40, 39, 38  were here, but that seems to be single quote?
       # console.log 'SPECIAL KEY, screw this keypress'
       return false
-    else 
+    else
       c = String.fromCharCode e.which
       dbg  c,  'Pressed!!!!'
       state.selectedCell.write( c)
@@ -284,7 +284,7 @@ jQuery ->
   tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()})
   state.baseLayer= tileServeLayer
 
-  centerPoint= new L.LatLng(40.714269, -74.005972) 
+  centerPoint= new L.LatLng(40.714269, -74.005972)
   mapOptions =
     center: centerPoint
     zoomControl: false
@@ -292,16 +292,26 @@ jQuery ->
     zoom: config.defZoom()
     scrollWheelZoom: false
     minZoom: config.minZoom()
-    maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset 
+    maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset
   window.map= new L.Map('map', mapOptions).addLayer(tileServeLayer)
 
   initializeGeo()
   
-  domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
-
-  state.topLayerStamp = L.Util.stamp domTiles
 
   now.ready ->
+    doNowInit(now)
+    # console.log now
+    # now.core.socketio.on 'reconnect', ->
+    #   console.log 'reconnected!'
+    #   doNowInit(now)
+    return # end now.ready
+
+  return true # end doc.ready
+
+doNowInit= (now)->
+    domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+    state.topLayerStamp = L.Util.stamp domTiles
+
     now.setCurrentWorld(initialWorldId, personalWorldId)
     map.addLayer(domTiles)
     setTileStyle() #set initial
@@ -311,7 +321,11 @@ jQuery ->
     $("#loadingIndicator").fadeOut('slow')
     
     now.setBounds domTiles.getTilePointAbsoluteBounds()
-      
+  
+    now.core.socketio.on 'disconnect', ->
+      $("#errorIndicator").fadeIn('fast')
+
+
     map.on 'moveend', (e)->
       now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
       $("#loadingIndicator").fadeOut('slow')
@@ -321,7 +335,6 @@ jQuery ->
 
     now.setClientStateFromServer (s)->
       state.userPowers = s.powers
-      # console.log s
       if s.color # s is session
         state.color= s.color
       else #easy fix for override issue, set default color. this could be random.
@@ -369,12 +382,7 @@ jQuery ->
 
     now.insertMessage = (heading, message, cssclass) ->
       insertMessage(heading, message, cssclass)
-
-    return # end now.ready
-
-
-  return true # end doc.ready
-
+## END doNowInit()
 
 # this shouldn't get called until docready anyway...
 window.insertMessage = (heading, message, cssclass="", timing=6 ) ->
