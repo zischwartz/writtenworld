@@ -105,7 +105,7 @@
         return true;
       } else {
         setCursor(targetCell);
-        state.lastClickCell = targetcell;
+        state.lastClickCell = targetCell;
         return false;
       }
       return true;

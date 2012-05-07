@@ -82,7 +82,7 @@ window.centerCursor = ->
       return true #true to repeat the timer and try again
     else
       setCursor(targetCell)
-      state.lastClickCell = targetcell
+      state.lastClickCell = targetCell
       return false
     true
 
