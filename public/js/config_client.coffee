@@ -1,7 +1,7 @@
 window.DEBUG = false
 window.USEMAP = true
 window.VARYLATLNG = false
-window.MapBoxBadZoomOffset=0 #because mapbox can't zoom in all the way, but we use maxZoom to determine resolution
+window.MapBoxBadZoomOffset=2 #because mapbox can't zoom in all the way, but we use maxZoom to determine resolution
 
 s3Url= "http://s3.amazonaws.com/ww-tiles/wwtiles/{z}/{x}/{y}.png"
 mapBoxUrl = "http://{s}.tiles.mapbox.com/v3/zischwartz.map-ei57zypj/{z}/{x}/{y}.png" # set offset to 3 if use this one
@@ -27,7 +27,7 @@ window.config = new Configuration(window.worldSpec)
 
 window.officialCities =
   'New York City': new L.LatLng(40.73037270272987, -73.99361729621887)
-  'Washington DC': new L.LatLng(38.898715, -77.037655)
+  # 'Washington DC': new L.LatLng(38.898715, -77.037655)
 
 
 

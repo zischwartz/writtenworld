@@ -105,6 +105,7 @@
         return true;
       } else {
         setCursor(targetCell);
+        state.lastClickCell = targetcell;
         return false;
       }
       return true;
@@ -278,7 +279,6 @@
   panIfAppropriate = function(direction) {
     var panByDist, panOnDist, selectedPP;
     selectedPP = $(state.selectedEl).offset();
-    dbg('selectedPP', selectedPP);
     panOnDist = 200;
     if (direction === 'left' || direction === 'right') {
       panByDist = state.cellWidth();

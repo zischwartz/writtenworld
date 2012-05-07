@@ -82,6 +82,7 @@ window.centerCursor = ->
       return true #true to repeat the timer and try again
     else
       setCursor(targetCell)
+      state.lastClickCell = targetcell
       return false
     true
 
@@ -126,7 +127,6 @@ initializeInterface = ->
       c = String.fromCharCode e.which
       dbg  c,  'Pressed!!!!'
       state.selectedCell.write( c)
-      
 
       userTotalRites=parseInt($("#userTotalRites").text())
       $("#userTotalRites").text(userTotalRites+1)
@@ -260,7 +260,7 @@ initializeInterface = ->
 
 panIfAppropriate = (direction)->
   selectedPP= $(state.selectedEl).offset()
-  dbg 'selectedPP', selectedPP
+  # dbg 'selectedPP', selectedPP
   panOnDist = 200
   if direction is 'left' or direction is 'right'
     panByDist = state.cellWidth()

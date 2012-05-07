@@ -8,7 +8,7 @@
 
   window.VARYLATLNG = false;
 
-  window.MapBoxBadZoomOffset = 0;
+  window.MapBoxBadZoomOffset = 2;
 
   s3Url = "http://s3.amazonaws.com/ww-tiles/wwtiles/{z}/{x}/{y}.png";
 
@@ -74,8 +74,7 @@
   window.config = new Configuration(window.worldSpec);
 
   window.officialCities = {
-    'New York City': new L.LatLng(40.73037270272987, -73.99361729621887),
-    'Washington DC': new L.LatLng(38.898715, -77.037655)
+    'New York City': new L.LatLng(40.73037270272987, -73.99361729621887)
   };
 
 }).call(this);
