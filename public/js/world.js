@@ -365,12 +365,14 @@
       return $("#loadingIndicator").fadeOut('slow');
     });
     now.setClientStateFromServer(function(s) {
+      var color_ops;
       state.userPowers = s.powers;
       if (s.color) {
         return state.color = s.color;
       } else {
-        state.color = 'c0';
-        return now.setUserOption('color', 'c0');
+        color_ops = ['c0', 'c1', 'c2', 'c3'];
+        state.color = color_ops[Math.floor(Math.random() * 4)];
+        return now.setUserOption('color', state.color);
       }
     });
     centerCursor();

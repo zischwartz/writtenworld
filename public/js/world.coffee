@@ -337,8 +337,10 @@ doNowInit= (now)->
       if s.color # s is session
         state.color= s.color
       else #easy fix for override issue, set default color. this could be random.
-        state.color = 'c0'
-        now.setUserOption('color','c0')
+        color_ops = ['c0', 'c1', 'c2', 'c3']
+        state.color=color_ops[ Math.floor(Math.random() * 4)]
+        # state.color = 'c0'
+        now.setUserOption('color',state.color)
       
     centerCursor()
 

@@ -44,7 +44,8 @@ geoAlternative = ->
     true
 
 # chicago = new L.LatLng(41.878114,-87.629798) # for testing
-nj = new L.LatLng(40.058324,-74.405661) # for testing
+# nj = new L.LatLng(40.058324,-74.405661) # for testing
+# la = new L.LatLng(34.052234,-118.243685) # for testing
 
 geoHasPosition = (position) ->
   inOfficialCity = false
@@ -58,7 +59,7 @@ geoHasPosition = (position) ->
     # console.log 'varying'
     p = varyLatLng(p)
   # console.log "accuracy: #{position.coords.accuracy}"
-  # p = nj
+  # p = la
   state.geoPos = p
   state.initialGeoPos = new L.LatLng(p.lat, p.lng)
   for own key, val of officialCities
@@ -81,7 +82,7 @@ geoHasPosition = (position) ->
     else
       # console.log 'not varying ltlng'
       map.setView(officialCities[closest], config.defZoom() )
-    window.insertMessage "&quotHey, That's Not Where I Am!&quot", "Written World is still in beta, so we're limiting ourselves to a few cities for now. We took you to <b>#{closest}</b>.<br><br>Want a head start writing on your actual location? It may be kinda empty.<br><br><a href='#' class='goToActualPos btn' data-dismiss='alert'>Click here to go to your location</a>", 'major alert-info', 25
+    window.insertMessage "&quotHey, That's Not Where I Am!&quot", "Written World is still in beta, so we're limiting ourselves to a few cities for now. We took you to <b>#{closest}</b>.<br><br>Want a head start writing on your actual location? It may be kinda empty. And the map itself may take a while to load.<br><br><a href='#' class='goToActualPos btn' data-dismiss='alert'>Click here to go to your location</a>", 'major alert-info', 45
   return true
 
 $('.cancelAltGeo').live 'click', ->
