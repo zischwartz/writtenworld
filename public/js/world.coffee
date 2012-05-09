@@ -583,15 +583,29 @@ removeLayerThenZoomAndReplace = ->
 
   canvasTiles = new L.TileLayer.Canvas({tileSize:{x:192, y:256}})
   canvasTiles.drawTile = (canvas, tilePoint, zoom) ->
+    console.log 'drawTile'
     # console.log state.zoomDiff()
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
     ctx = canvas.getContext('2d')
     now.getZoomedOutTile absTilePoint, state.numRows(), (tileData, atp)->
       if tileData.density
         densityOffset= state.numRows()*state.numRows()
-        density = (tileData.density/densityOffset)+0.2
-        ctx.fillStyle = "rgba(095, 095, 095, #{density})"
-        ctx.fillRect(0, 0, 192, 256)
+        density = 100-(tileData.density/densityOffset)*500
+        if density<=1
+          return
+        console.log 'density', density
+        # ctx.fillStyle = "rgba(095, 095, 095, #{density})"
+        ctx.fillStyle = "rgba(095, 145, 125, 0.6 )"
+        # ctx.fillRect(0, 0, 192, 256)
+        # density= 30
+        x=0
+        y=0
+        until x >= 192
+          x= x+density
+          y=0
+          until y >= 256
+            ctx.fillRect(x, y, 10, 10)
+            y= y+density
 
   canvasTiles.getTilePointAbsoluteBounds= ->
     if this._map

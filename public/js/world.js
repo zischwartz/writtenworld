@@ -725,18 +725,39 @@
     });
     canvasTiles.drawTile = function(canvas, tilePoint, zoom) {
       var absTilePoint, ctx;
+      console.log('drawTile');
       absTilePoint = {
         x: tilePoint.x * Math.pow(2, state.zoomDiff()),
         y: tilePoint.y * Math.pow(2, state.zoomDiff())
       };
       ctx = canvas.getContext('2d');
       return now.getZoomedOutTile(absTilePoint, state.numRows(), function(tileData, atp) {
-        var density, densityOffset;
+        var density, densityOffset, x, y, _results;
         if (tileData.density) {
           densityOffset = state.numRows() * state.numRows();
-          density = (tileData.density / densityOffset) + 0.2;
-          ctx.fillStyle = "rgba(095, 095, 095, " + density + ")";
-          return ctx.fillRect(0, 0, 192, 256);
+          density = 100 - (tileData.density / densityOffset) * 500;
+          if (density <= 1) {
+            return;
+          }
+          console.log('density', density);
+          ctx.fillStyle = "rgba(095, 145, 125, 0.6 )";
+          x = 0;
+          y = 0;
+          _results = [];
+          while (!(x >= 192)) {
+            x = x + density;
+            y = 0;
+            _results.push((function() {
+              var _results1;
+              _results1 = [];
+              while (!(y >= 256)) {
+                ctx.fillRect(x, y, 10, 10);
+                _results1.push(y = y + density);
+              }
+              return _results1;
+            })());
+          }
+          return _results;
         }
       });
     };
