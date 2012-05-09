@@ -18,6 +18,7 @@ window.state =
   belowInputRateLimit: true
   topLayerStamp: null
   baseLayer: null
+  isTopLayerInteractive: true
   cursors: {}
 
 setTileStyle = ->
@@ -323,9 +324,15 @@ doNowInit= (now)->
     map.on 'moveend', (e)->
       now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
       $("#loadingIndicator").fadeOut('slow')
+
     map.on 'zoomend', (e)->
-      now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
-      $("#loadingIndicator").fadeOut('slow')
+      if state.topLayerStamp
+        now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds()
+      if map.getZoom()==config.minLayerZoom() and state.topLayerStamp and not state.isTopLayerInteractive
+        # console.log 'ZOOMIN SWITCH'
+        turnOffLayer()
+        turnOnMainLayer()
+        $("#loadingIndicator").fadeOut('slow')
 
     now.setClientStateFromServer (s)->
       state.userPowers = s.powers
@@ -568,21 +575,43 @@ removeLayerThenZoomAndReplace = ->
   layer= map._layers[state.topLayerStamp]
   $layer = $(".layer-#{state.topLayerStamp}")
   $layer.fadeOut('slow')
-  console.log 'turn off layer replace with new'
+  # console.log 'turn off layer replace with new'
   map.removeLayer(layer) if state.topLayerStamp
-  # REPLACE IT HERe with something simple
-  state.topLayerStamp = 0
-  now.setCurrentWorld(null)
+  # now.setCurrentWorld(null)
   map.zoomOut()
-  console.log 'and now for the new layer'
-  #um abstract that out
-  canvasTiles = new L.TileLayer.Canvas({tileSize:{x:256, y:256}})
-  canvasTiles.drawTile = (canvas, tilePoint, zoom) ->
-    ctx = canvas.getContext('2d')
-    ctx.fillRect(50, 25, 150, 100)
+  # console.log 'and now for the new layer'
 
-  console.log canvasTiles
+  canvasTiles = new L.TileLayer.Canvas({tileSize:{x:192, y:256}})
+  canvasTiles.drawTile = (canvas, tilePoint, zoom) ->
+    # console.log state.zoomDiff()
+    absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
+    ctx = canvas.getContext('2d')
+    now.getZoomedOutTile absTilePoint, state.numRows(), (tileData, atp)->
+      if tileData.density
+        densityOffset= state.numRows()*state.numRows()
+        density = (tileData.density/densityOffset)+0.2
+        ctx.fillStyle = "rgba(095, 095, 095, #{density})"
+        ctx.fillRect(0, 0, 192, 256)
+
+  canvasTiles.getTilePointAbsoluteBounds= ->
+    if this._map
+      bounds = this._map.getPixelBounds()
+      tileSize= this.options.tileSize
+      offset = Math.pow 2, state.zoomDiff()
+      nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x)*offset, Math.floor(bounds.min.y / tileSize.y)*offset)
+      seTilePoint = new L.Point( Math.ceil(bounds.max.x / tileSize.x)*offset, Math.ceil(bounds.max.y / tileSize.y)*offset)
+      tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
+      return tileBounds
+    else
+      return false
+
   map.addLayer canvasTiles
+  state.isTopLayerInteractive= false
+  stamp= L.Util.stamp(canvasTiles)
+
+  now.setBounds canvasTiles.getTilePointAbsoluteBounds()
+  # console.log 'stamp', stamp
+  state.topLayerStamp = stamp
   return true
 
 
@@ -595,13 +624,13 @@ turnOffLayer = ->
   $.doTimeout 500, ->
     # console.log 'turn off layer'
     map.removeLayer(layer) if state.topLayerStamp
-    state.topLayerStamp = 0
-    now.setCurrentWorld(null)
+    # state.topLayerStamp = 0
+    # now.setCurrentWorld(null)
     return false
   return
 
 turnOnMainLayer= ->
-  console.log 'turn on layer'
+  # console.log 'turn on layer'
   Cell.killAll()
   now.setCurrentWorld(mainWorldId, personalWorldId)
   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}

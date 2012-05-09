@@ -30,6 +30,7 @@
     belowInputRateLimit: true,
     topLayerStamp: null,
     baseLayer: null,
+    isTopLayerInteractive: true,
     cursors: {}
   };
 
@@ -358,7 +359,11 @@
       if (state.topLayerStamp) {
         now.setBounds(getLayer(state.topLayerStamp).getTilePointAbsoluteBounds());
       }
-      return $("#loadingIndicator").fadeOut('slow');
+      if (map.getZoom() === config.minLayerZoom() && state.topLayerStamp && !state.isTopLayerInteractive) {
+        turnOffLayer();
+        turnOnMainLayer();
+        return $("#loadingIndicator").fadeOut('slow');
+      }
     });
     now.setClientStateFromServer(function(s) {
       var color_ops;
@@ -703,32 +708,57 @@
   };
 
   removeLayerThenZoomAndReplace = function() {
-    var $layer, canvasTiles, layer;
+    var $layer, canvasTiles, layer, stamp;
     Cell.killAll();
     layer = map._layers[state.topLayerStamp];
     $layer = $(".layer-" + state.topLayerStamp);
     $layer.fadeOut('slow');
-    console.log('turn off layer replace with new');
     if (state.topLayerStamp) {
       map.removeLayer(layer);
     }
-    state.topLayerStamp = 0;
-    now.setCurrentWorld(null);
     map.zoomOut();
-    console.log('and now for the new layer');
     canvasTiles = new L.TileLayer.Canvas({
       tileSize: {
-        x: 256,
+        x: 192,
         y: 256
       }
     });
     canvasTiles.drawTile = function(canvas, tilePoint, zoom) {
-      var ctx;
+      var absTilePoint, ctx;
+      absTilePoint = {
+        x: tilePoint.x * Math.pow(2, state.zoomDiff()),
+        y: tilePoint.y * Math.pow(2, state.zoomDiff())
+      };
       ctx = canvas.getContext('2d');
-      return ctx.fillRect(50, 25, 150, 100);
+      return now.getZoomedOutTile(absTilePoint, state.numRows(), function(tileData, atp) {
+        var density, densityOffset;
+        if (tileData.density) {
+          densityOffset = state.numRows() * state.numRows();
+          density = (tileData.density / densityOffset) + 0.2;
+          ctx.fillStyle = "rgba(095, 095, 095, " + density + ")";
+          return ctx.fillRect(0, 0, 192, 256);
+        }
+      });
     };
-    console.log(canvasTiles);
+    canvasTiles.getTilePointAbsoluteBounds = function() {
+      var bounds, nwTilePoint, offset, seTilePoint, tileBounds, tileSize;
+      if (this._map) {
+        bounds = this._map.getPixelBounds();
+        tileSize = this.options.tileSize;
+        offset = Math.pow(2, state.zoomDiff());
+        nwTilePoint = new L.Point(Math.floor(bounds.min.x / tileSize.x) * offset, Math.floor(bounds.min.y / tileSize.y) * offset);
+        seTilePoint = new L.Point(Math.ceil(bounds.max.x / tileSize.x) * offset, Math.ceil(bounds.max.y / tileSize.y) * offset);
+        tileBounds = new L.Bounds(nwTilePoint, seTilePoint);
+        return tileBounds;
+      } else {
+        return false;
+      }
+    };
     map.addLayer(canvasTiles);
+    state.isTopLayerInteractive = false;
+    stamp = L.Util.stamp(canvasTiles);
+    now.setBounds(canvasTiles.getTilePointAbsoluteBounds());
+    state.topLayerStamp = stamp;
     return true;
   };
 
@@ -742,15 +772,12 @@
       if (state.topLayerStamp) {
         map.removeLayer(layer);
       }
-      state.topLayerStamp = 0;
-      now.setCurrentWorld(null);
       return false;
     });
   };
 
   turnOnMainLayer = function() {
     var domTiles, stamp;
-    console.log('turn on layer');
     Cell.killAll();
     now.setCurrentWorld(mainWorldId, personalWorldId);
     domTiles = new L.DomTileLayer({

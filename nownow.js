@@ -119,6 +119,22 @@
       });
       return true;
     };
+    everyone.now.getZoomedOutTile = function(absTilePoint, numRows, callback) {
+      var _this = this;
+      if (!this.user.currentWorldId) {
+        return false;
+      }
+      return models.Cell.where('world', this.user.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).run(function(err, docs) {
+        var results;
+        results = {};
+        if (docs.length) {
+          results = {
+            density: docs.length
+          };
+        }
+        return callback(results, absTilePoint);
+      });
+    };
     everyone.now.getTile = function(absTilePoint, numRows, callback) {
       var _this = this;
       if (!this.user.currentWorldId) {

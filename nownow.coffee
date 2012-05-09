@@ -82,6 +82,23 @@ module.exports = (app, SessionModel) ->
                 this.now.drawRite(commandType, rite, cellPoint, cellProps)
     return true
 
+
+  everyone.now.getZoomedOutTile= (absTilePoint, numRows, callback) ->
+    if not this.user.currentWorldId
+      return false
+    models.Cell.where('world', this.user.currentWorldId)
+      .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
+      .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
+      # .populate('current')
+      .run (err,docs) =>
+        # console.log docs if docs
+        results = {}
+        # console.log docs.length
+        # console.log docs
+        if docs.length
+          results= {density: docs.length}
+        callback(results, absTilePoint)
+
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
     if not this.user.currentWorldId
       return false
