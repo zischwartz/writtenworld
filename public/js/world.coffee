@@ -200,7 +200,8 @@ initializeInterface = ->
 
   $(".leaflet-control-zoom-out").click (e) ->
     if map.getZoom() <=config.minLayerZoom() and state.topLayerStamp
-      removeLayerThenZoomOut()
+      # removeLayerThenZoomOut()
+        removeLayerThenZoomAndReplace()
     else
       map.zoomOut()
     return
@@ -551,7 +552,7 @@ window.Cell = class Cell
 
 
 removeLayerThenZoomOut=  ->
-  Cell.killAll()
+  Cell.killAll() #this is good, but not actually neccesary (noted, because it used to be neccesary)
   layer= map._layers[state.topLayerStamp]
   $layer = $(".layer-#{state.topLayerStamp}")
   $layer.fadeOut('slow')
@@ -561,6 +562,28 @@ removeLayerThenZoomOut=  ->
   now.setCurrentWorld(null)
   map.zoomOut()
   return
+
+removeLayerThenZoomAndReplace = ->
+  Cell.killAll()
+  layer= map._layers[state.topLayerStamp]
+  $layer = $(".layer-#{state.topLayerStamp}")
+  $layer.fadeOut('slow')
+  console.log 'turn off layer replace with new'
+  map.removeLayer(layer) if state.topLayerStamp
+  # REPLACE IT HERe with something simple
+  state.topLayerStamp = 0
+  now.setCurrentWorld(null)
+  map.zoomOut()
+  console.log 'and now for the new layer'
+  #um abstract that out
+  canvasTiles = new L.TileLayer.Canvas({tileSize:{x:256, y:256}})
+  canvasTiles.drawTile = (canvas, tilePoint, zoom) ->
+    ctx = canvas.getContext('2d')
+    ctx.fillRect(50, 25, 150, 100)
+
+  console.log canvasTiles
+  map.addLayer canvasTiles
+  return true
 
 
 turnOffLayer = ->

@@ -1966,8 +1966,8 @@ L.TileLayer.Canvas = L.TileLayer.extend({
 		var proto = this._canvasProto = L.DomUtil.create('canvas', 'leaflet-tile');
 
 		var tileSize = this.options.tileSize;
-		proto.width = tileSize;
-		proto.height = tileSize;
+		proto.width = tileSize.x;
+		proto.height = tileSize.y;
 	},
 
 	_createTile: function () {
