@@ -21,7 +21,6 @@
     Configuration.name = 'Configuration';
 
     function Configuration(spec) {
-      var _ref;
       if (spec == null) {
         spec = {};
       }
@@ -46,7 +45,7 @@
       };
       this.defZoom = function() {
         var _ref;
-        return (_ref = spec.defZoom) != null ? _ref : 17;
+        return (_ref = spec.defZoom) != null ? _ref : 16;
       };
       this.minLayerZoom = function() {
         var _ref;
@@ -64,7 +63,15 @@
         var _ref;
         return (_ref = spec.maxDistanceFromOfficial) != null ? _ref : 10000;
       };
-      this.maxJumpDistance = (_ref = spec.maxJumpDistance) != null ? _ref : 0;
+      this.scrollWheelZoom = function() {
+        return false;
+      };
+      this.autoPan = function() {
+        return false;
+      };
+      this.updateWhenIdle = function() {
+        return false;
+      };
     }
 
     return Configuration;

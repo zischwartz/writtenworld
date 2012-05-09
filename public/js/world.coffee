@@ -29,7 +29,6 @@ setTileStyle = ->
  $("#dynamicStyles").text rules.join("\n")
 
 window.setCursor = (cell) ->  # takes the object, not the dom element
-  dbg 'selecting', cell
   if state.selectedEl
     $(state.selectedEl).removeClass('selected')
   state.selectedEl=cell.span
@@ -44,7 +43,6 @@ window.setCursor = (cell) ->  # takes the object, not the dom element
 
 
 moveCursor = (direction, from = state.selectedCell) ->
-  dbg 'move cursor'
   target = cellKeyToXY(from.key)
   
   switch direction
@@ -63,7 +61,8 @@ moveCursor = (direction, from = state.selectedCell) ->
     return false
      # throw 'cell does not exist'
   else
-    panIfAppropriate(direction)
+
+    panIfAppropriate(direction) if config.autoPan()
     setCursor(targetCell)
     return targetCell
 
@@ -88,7 +87,6 @@ window.centerCursor = ->
 
 #INTERFACE INITIALIZER 
 initializeInterface = ->
-  dbg 'initializing interface'
   $("#map").click (e) ->
     # console.log e.target
     if $(e.target).hasClass 'cell'
@@ -118,14 +116,12 @@ initializeInterface = ->
     $("#loadingIndicator").fadeIn('fast')
 
   inputEl.keypress (e) ->
-    dbg  e.which, 'pressed'
     # console.log e.which
     if e.which in [0, 13, 32, 9, 8] # 40, 39, 38  were here, but that seems to be single quote?
       # console.log 'SPECIAL KEY, screw this keypress'
       return false
     else
       c = String.fromCharCode e.which
-      dbg  c,  'Pressed!!!!'
       state.selectedCell.write( c)
 
       userTotalRites=parseInt($("#userTotalRites").text())
@@ -139,7 +135,6 @@ initializeInterface = ->
       # console.log("input was a letter, number, hyphen, underscore or space")
 
   inputEl.keydown (e) ->
-    dbg e.which,' keydownd'
     # e.stopPropagation() # e.stopImmediatePropagation()
 
     if not (state.belowInputRateLimit)
@@ -260,7 +255,6 @@ initializeInterface = ->
 
 panIfAppropriate = (direction)->
   selectedPP= $(state.selectedEl).offset()
-  # dbg 'selectedPP', selectedPP
   panOnDist = 200
   if direction is 'left' or direction is 'right'
     panByDist = state.cellWidth()
@@ -290,7 +284,7 @@ jQuery ->
     zoomControl: false
     attributionControl:false
     zoom: config.defZoom()
-    scrollWheelZoom: false
+    scrollWheelZoom: config.scrollWheelZoom()
     minZoom: config.minZoom()
     maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset
   window.map= new L.Map('map', mapOptions).addLayer(tileServeLayer)
@@ -426,8 +420,6 @@ window.Cell = class Cell
     return "c#{@x}x#{@y}"
 
   constructor: (@row, @col, @tile, @contents = config.defaultChar(), @props={}, @events=null) ->
-    # dbg 'Cell constructor called'
-    
     @key = this.generateKey()
     all[@key]=this
     @span = document.createElement('span')
@@ -487,7 +479,6 @@ window.Cell = class Cell
     shakeWindow(1)
 
   kill: ->
-    dbg 'killing a cell'#, @key
     @span= null
     delete all[@key]
     
@@ -504,7 +495,6 @@ window.Cell = class Cell
     span=@span
     $(clone).css('position', 'absolute').insertBefore('body').addClass('ai'+animateWith)
     offset= $(@span).offset()
-    dbg 'clone',  clone
     $(clone).css({'opacity': '1 !important', 'font-size': '1em'})
     $(clone).css({'position':'absolute', left: offset.left, top: offset.top})
     $(clone).doTimeout 200, ->
@@ -542,7 +532,6 @@ window.Cell = class Cell
     $(clone).css({'position':'absolute', left: offset.left, top: offset.top}).hide() #?
     $(clone).queue ->
       $(this).show()
-      dbg 'this', this
       if animateWith
         $(this).addClass('ar'+animateWith)
       $(this).dequeue()
@@ -551,7 +540,6 @@ window.Cell = class Cell
       return false
     
   @getOrCreate:(row, col, tile, contents=null, props={}) ->
-    # dbg 'cell @getOrCreate called'
     x=tile._tilePoint.x * Math.pow(2, state.zoomDiff())+col
     y=tile._tilePoint.y * Math.pow(2, state.zoomDiff())+row
     cell=Cell.get(x,y)

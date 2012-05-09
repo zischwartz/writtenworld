@@ -44,7 +44,6 @@
   };
 
   window.setCursor = function(cell) {
-    dbg('selecting', cell);
     if (state.selectedEl) {
       $(state.selectedEl).removeClass('selected');
     }
@@ -65,7 +64,6 @@
     if (from == null) {
       from = state.selectedCell;
     }
-    dbg('move cursor');
     target = cellKeyToXY(from.key);
     switch (direction) {
       case 'up':
@@ -85,7 +83,9 @@
     if (!targetCell) {
       return false;
     } else {
-      panIfAppropriate(direction);
+      if (config.autoPan()) {
+        panIfAppropriate(direction);
+      }
       setCursor(targetCell);
       return targetCell;
     }
@@ -113,7 +113,6 @@
   };
 
   initializeInterface = function() {
-    dbg('initializing interface');
     $("#map").click(function(e) {
       var cell;
       if ($(e.target).hasClass('cell')) {
@@ -145,12 +144,10 @@
     });
     inputEl.keypress(function(e) {
       var c, userTotalRites, _ref;
-      dbg(e.which, 'pressed');
       if ((_ref = e.which) === 0 || _ref === 13 || _ref === 32 || _ref === 9 || _ref === 8) {
         return false;
       } else {
         c = String.fromCharCode(e.which);
-        dbg(c, 'Pressed!!!!');
         state.selectedCell.write(c);
         userTotalRites = parseInt($("#userTotalRites").text());
         $("#userTotalRites").text(userTotalRites + 1);
@@ -159,7 +156,6 @@
     });
     inputEl.keydown(function(e) {
       var t;
-      dbg(e.which, ' keydownd');
       if (!state.belowInputRateLimit) {
         return false;
       }
@@ -319,7 +315,7 @@
       zoomControl: false,
       attributionControl: false,
       zoom: config.defZoom(),
-      scrollWheelZoom: false,
+      scrollWheelZoom: config.scrollWheelZoom(),
       minZoom: config.minZoom(),
       maxZoom: config.maxZoom() - window.MapBoxBadZoomOffset
     };
@@ -564,7 +560,6 @@
     };
 
     Cell.prototype.kill = function() {
-      dbg('killing a cell');
       this.span = null;
       return delete all[this.key];
     };
@@ -588,7 +583,6 @@
       span = this.span;
       $(clone).css('position', 'absolute').insertBefore('body').addClass('ai' + animateWith);
       offset = $(this.span).offset();
-      dbg('clone', clone);
       $(clone).css({
         'opacity': '1 !important',
         'font-size': '1em'
@@ -660,7 +654,6 @@
       }).hide();
       $(clone).queue(function() {
         $(this).show();
-        dbg('this', this);
         if (animateWith) {
           $(this).addClass('ar' + animateWith);
         }

@@ -4,19 +4,15 @@
 
   betterBuildTile = function(tile, tileData, absTilePoint) {
     var c, cell, cellData, frag, r, _i, _j, _ref, _ref1;
-    dbg('betterBuildTile');
     tile._cells = [];
     frag = document.createDocumentFragment();
     for (r = _i = 0, _ref = state.numRows() - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; r = 0 <= _ref ? ++_i : --_i) {
       for (c = _j = 0, _ref1 = state.numCols() - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; c = 0 <= _ref1 ? ++_j : --_j) {
         cellData = tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)];
         if (cellData) {
-          dbg('cell loaded from server');
-          dbg('cellData', cellData.contents);
           cell = Cell.getOrCreate(r, c, tile, cellData.contents, cellData.props);
         } else {
           cell = Cell.getOrCreate(r, c, tile);
-          dbg('cell created, but others in tile were from server');
         }
         frag.appendChild(cell.span);
         tile._cells.push(cell);
@@ -27,7 +23,6 @@
 
   getTileLocally = function(absTilePoint, tile) {
     var c, cell, cellsNeeded, frag, r, _i, _j, _ref, _ref1;
-    dbg('getTileLocally');
     tile._cells = [];
     frag = document.createDocumentFragment();
     cellsNeeded = state.numRows() * state.numCols();
@@ -37,14 +32,12 @@
         if (cell) {
           cell = Cell.getOrCreate(r, c, tile);
           frag.appendChild(cell.span);
-          dbg('FOUND CELL--------', cell);
           cellsNeeded--;
           tile._cells.push(cell);
         }
       }
     }
     if (cellsNeeded <= 0) {
-      dbg('we have the entire tile');
       return frag;
     } else {
       tile._cells = null;
@@ -71,7 +64,7 @@
       zoomOffset: 0,
       zoomReverse: false,
       unloadInvisibleTiles: true,
-      updateWhenIdle: true,
+      updateWhenIdle: config.updateWhenIdle(),
       reuseTiles: false
     },
     initialize: function(options, urlParams) {
@@ -167,7 +160,6 @@
     },
     _reset: function(clearOldContainer) {
       var key, tiles;
-      dbg('_reset called');
       key = void 0;
       tiles = this._tiles;
       for (key in tiles) {
@@ -189,7 +181,6 @@
     },
     _update: function(e) {
       var bounds, nwTilePoint, seTilePoint, tileBounds, tileSize, zoom;
-      dbg('_update');
       if (this._map._panTransition && this._map._panTransition._inProgress) {
         return;
       }
@@ -264,7 +255,6 @@
           x = parseInt(kArr[0], 10);
           y = parseInt(kArr[1], 10);
           if (x < bounds.min.x || x > bounds.max.x || y < bounds.min.y || y > bounds.max.y) {
-            dbg('outa bounds, REMOVE THAT SHIT');
             this._removeTile(key);
           }
         }
@@ -334,7 +324,6 @@
     },
     _createTileProto: function() {
       var tileSize;
-      dbg('creatingTileProto');
       this._divProto = L.DomUtil.create('div', 'leaflet-tile');
       tileSize = this.options.tileSize;
       this._divProto.style.width = tileSize.x + 'px';
@@ -385,18 +374,14 @@
     },
     drawTile: function(tile, tilePoint, zoom, frag) {
       tile.appendChild(frag);
-      dbg('drawTile');
       return true;
     },
     populateTile: function(tile, tilePoint, zoom, frag) {
-      dbg('populate tile called');
       tile.appendChild(frag);
       return true;
     },
     tileDrawn: function(tile) {
-      dbg('tileDrawn called');
       tile.className += ' leaflet-tile-drawn';
-      dbg('tileDrawn');
       this._tileOnLoad.call(tile);
       return true;
     },
@@ -412,12 +397,10 @@
       if (!layer._tilesToLoad) {
         layer.fire("load");
       }
-      dbg('_tileOnLoad');
       return true;
     },
     _tileOnError: function(e) {
       var layer, newUrl;
-      dbg('_tileOnError');
       layer = this._layer;
       layer.fire("tileerror", {
         tile: this,
@@ -431,8 +414,6 @@
     },
     _onTileUnload: function(e) {
       var tile;
-      dbg(e);
-      dbg('_onTileUnload !');
       tile = e.tile;
       tile.style.display = 'none';
       return true;

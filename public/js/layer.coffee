@@ -1,25 +1,20 @@
 
 betterBuildTile= (tile, tileData, absTilePoint)->
-  dbg 'betterBuildTile'
   tile._cells = [] #this would be good to use for removing old cells
   frag = document.createDocumentFragment()
   for r in [0..state.numRows()-1]
     for c in [0..state.numCols()-1]
       cellData=tileData["#{absTilePoint.x+c}x#{absTilePoint.y+r}"]
       if cellData
-        dbg 'cell loaded from server'
-        dbg 'cellData', cellData.contents
         cell=Cell.getOrCreate r, c, tile, cellData.contents, cellData.props
       else
         cell= Cell.getOrCreate r,c, tile
-        dbg 'cell created, but others in tile were from server'
       frag.appendChild(cell.span)
       tile._cells.push(cell)
   return frag
 
 # this is ridiculous TODO fix
 getTileLocally =(absTilePoint, tile) ->
-  dbg 'getTileLocally'
   tile._cells = []
   frag = document.createDocumentFragment()
   cellsNeeded = state.numRows()*state.numCols() #cellsNeeded to have a full tile
@@ -29,11 +24,9 @@ getTileLocally =(absTilePoint, tile) ->
       if cell
         cell=Cell.getOrCreate r, c, tile
         frag.appendChild(cell.span)
-        dbg 'FOUND CELL--------', cell
         cellsNeeded--
         tile._cells.push(cell)
   if cellsNeeded <=0
-    dbg 'we have the entire tile'
     return frag
   else
     tile._cells= null
@@ -58,8 +51,7 @@ L.DomTileLayer = L.Class.extend
     zoomOffset: 0
     zoomReverse: false
     unloadInvisibleTiles: true #  L.Browser.mobile # these should maybe be True
-    # updateWhenIdle: false # L.Browser.mobile
-    updateWhenIdle: true # L.Browser.mobile
+    updateWhenIdle: config.updateWhenIdle() #false, was recently true # L.Browser.mobile
     reuseTiles: false
 
   initialize: (options, urlParams) -> #removed url param
@@ -151,7 +143,6 @@ L.DomTileLayer = L.Class.extend
     true
 
   _reset: (clearOldContainer) ->
-    dbg '_reset called'
     key = undefined
     tiles = @_tiles
     for key of tiles
@@ -165,7 +156,6 @@ L.DomTileLayer = L.Class.extend
     true
 
   _update: (e) ->
-    dbg '_update'
     return  if @_map._panTransition and @_map._panTransition._inProgress
     bounds = @_map.getPixelBounds()
     zoom = @_map.getZoom()
@@ -228,7 +218,6 @@ L.DomTileLayer = L.Class.extend
         y = parseInt(kArr[1], 10)
         # doesn't apply on zooms? only pan? 
         if x < bounds.min.x or x > bounds.max.x or y < bounds.min.y or y > bounds.max.y
-          dbg 'outa bounds, REMOVE THAT SHIT'
           @_removeTile key
     true
 
@@ -285,7 +274,6 @@ L.DomTileLayer = L.Class.extend
     return 'noTileUrlForUsThanks'
 
   _createTileProto: ->
-    dbg 'creatingTileProto'
     @_divProto = L.DomUtil.create('div', 'leaflet-tile')
     tileSize = this.options.tileSize
     @_divProto.style.width = tileSize.x+'px'
@@ -347,22 +335,18 @@ L.DomTileLayer = L.Class.extend
     tile.appendChild(frag) # tile.appendChild(content.cloneNode(true))
     # tile.innerHTML= 'hi'
     # dbg 'drawtile for: ', tilePoint.x, tilePoint.y
-    dbg 'drawTile'
     true
    
   populateTile: (tile, tilePoint, zoom, frag) ->
-    dbg 'populate tile called'
     tile.appendChild(frag)
     true
 
   tileDrawn: (tile) ->
-    dbg  'tileDrawn called'
     tile.className += ' leaflet-tile-drawn'
     # $.doTimeout 200, ->
     #   dbg 'tiledrawntimer'
     #   tile.className += ' leaflet-tile-drawn'
     #   return false
-    dbg 'tileDrawn'
     @_tileOnLoad.call(tile)
     true
 
@@ -380,11 +364,9 @@ L.DomTileLayer = L.Class.extend
 
     layer._tilesToLoad--
     layer.fire "load"  unless layer._tilesToLoad
-    dbg '_tileOnLoad'
     true
 
   _tileOnError: (e) ->
-    dbg '_tileOnError'
     layer = @_layer
     layer.fire "tileerror",
       tile: this
@@ -395,8 +377,6 @@ L.DomTileLayer = L.Class.extend
     true
 
   _onTileUnload: (e) ->
-    dbg e
-    dbg '_onTileUnload !'
     # $(e.tile).doTimeout 'populateDelay' #cancels the timer
     # console.log 'tile to unload:'
     # console.log e.tile
