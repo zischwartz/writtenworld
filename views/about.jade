@@ -11,7 +11,9 @@ block contents
 
           hr 
           
-          h2 News
+          h2 News/Changelog
+          h4 May 7, 2012
+          p Disabled the autopan-as-you-type thing, sadly. It was causing typed letters to be dropped if you typed fast enough. Which wasn't cool. 
           
           h4 May 7, 2012
           p Default color was silly. Switched to randomly assigning colors, and let people change it from there. 
@@ -29,10 +31,15 @@ block contents
 
           h4 You put me in the wrong place. Why?
           p HTML5 geolocation is an experimental feature. It doesn't work perfectly. Try restarting your browser. 
+          p Sometimes it works with very high accuracy (down to a few meters) and sometimes it only tells us the city you're in. In the latter case, you're placed in a semi-random location within the larger area, so everyone doesn't start off at the exact same place.
 
           h4 Why can't I write sometimes? And what's all this "echo" business?
           p The idea behind echos and when you can or can't write is based on the now ubiquitous idea of upvoting and downvoting content.
           p In short, echoes are analogous to upvotes, and overwriting is analogous to downvotes. You can't echo a character you've written or already echoed, and you can't overwrite a character you've already overwritten. 
+
+          h4 Who made this? 
+          p <a href="http://zachschwartz.com/">Zach Schwartz</a>, as part of my master's thesis for <a href="http://itp.nyu.edu/itp/"> ITP</a>. It's based on a project I did with Martin Bravo and Nara Kasbergen, which is in turn based on an excellent project by Andew Badr, called <a href="http://www.yourworldoftext.com/"> Your World of Text</a>.
+          
 
           hr
           h2 Acknowledgements and Attribution
@@ -40,6 +47,5 @@ block contents
             a(href="http://www.openstreetmap.org/") OpenStreetMap 
             | contributors, CC-BY-SA. 
             | Tiles created using Mapnik, and a bunch of other tools. Clientside map is based on Leaflet.
-          p A major conceptual debt is owed to Andrew Badr and his excellent project <a href="http://www.yourworldoftext.com/"> Your World of Text</a>
 
         div(class="span3") .

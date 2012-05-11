@@ -8,7 +8,7 @@
 
   window.VARYLATLNG = false;
 
-  window.MapBoxBadZoomOffset = 2;
+  window.MapBoxBadZoomOffset = 3;
 
   s3Url = "http://s3.amazonaws.com/ww-tiles/wwtiles/{z}/{x}/{y}.png";
 
@@ -32,8 +32,7 @@
         };
       };
       this.tileServeUrl = function() {
-        var _ref;
-        return (_ref = spec.tileServeUrl) != null ? _ref : tileServeUrl;
+        return mapBoxUrl;
       };
       this.maxZoom = function() {
         var _ref;
