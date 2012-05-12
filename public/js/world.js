@@ -733,32 +733,25 @@
       ctx = canvas.getContext('2d');
       return now.getZoomedOutTile(absTilePoint, state.numRows(), function(tileData, atp) {
         var density, densityOffset, x, y, _results;
-        if (tileData.density) {
-          densityOffset = state.numRows() * state.numRows();
-          density = 100 - (tileData.density / densityOffset) * 500;
-          if (density <= 1) {
-            return;
-          }
-          console.log('density', density);
-          ctx.fillStyle = "rgba(095, 145, 125, 0.6 )";
-          x = 0;
-          y = 0;
-          _results = [];
-          while (!(x >= 192)) {
-            x = x + density;
-            y = 0;
-            _results.push((function() {
-              var _results1;
-              _results1 = [];
-              while (!(y >= 256)) {
-                ctx.fillRect(x, y, 10, 10);
-                _results1.push(y = y + density);
-              }
-              return _results1;
-            })());
-          }
-          return _results;
+        densityOffset = state.numRows() * state.numRows();
+        density = 100 - (tileData.density / densityOffset) * 500;
+        if (density <= 1) {
+          return;
         }
+        ctx.fillStyle = "rgba(095, 145, 125, 1.6 )";
+        ctx.font = "" + (state.cellHeight() * 0.9) + "pt Calibri";
+        x = 0;
+        y = 0;
+        _results = [];
+        while (!(x >= 192)) {
+          y = 0;
+          while (!(y >= 256)) {
+            ctx.fillText('z', x, y);
+            y = y + state.cellHeight();
+          }
+          _results.push(x = x + state.cellWidth());
+        }
+        return _results;
       });
     };
     canvasTiles.getTilePointAbsoluteBounds = function() {
