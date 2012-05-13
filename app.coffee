@@ -32,6 +32,7 @@ assetManagerGroups =
       'libs/bootstrap-alert.js'
       'libs/dotimeout.js'
       'libs/jquery.jrumble.min.js'
+      'libs/JSLitmus.js'
       'leaflet-src.js'
       'config_client.js'
       'geo.js'
