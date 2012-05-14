@@ -1,3 +1,7 @@
+DEBUG = true
+if 'prod' in process.argv
+  DEBUG=false
+
 util = require('util')
 events = require('events')
 
@@ -133,10 +137,20 @@ UserSchema = new Schema
   powers:
     jumpDistance: {type: Number, default: 500}
 
+console.log 'debug?', DEBUG
+
 UserSchema.plugin mongooseAuth,
     everymodule:
       everyauth:
         User: -> exports.User
+    twitter:
+      everyauth:
+        myHostname: if DEBUG then 'http://0.0.0.0:3000' else 'http://writtenworld.org'
+        consumerKey: if DEBUG then 'DEIaTcd5DQ7yceARLk6KLA' else 'CaOVgX2g6tJoJCHDoBUVg'
+        consumerSecret: if DEBUG then 'NFKIDiVyQpRIXVu0T7nVEIylErrpdPcMFrewAgWDbjM' else 'pwC2JFsI96ApwCqtPwwU1HEqFwOGOAj0PcTmxpOjsfA'
+        redirectPath: '/'
+        #findOrCreateUser logic here, sigh
+        
     password:
       # loginWith: 'email',
       extraParams:
@@ -152,7 +166,6 @@ UserSchema.plugin mongooseAuth,
         registerSuccessRedirect: '/'
 
         respondToRegistrationSucceed: (res, user, data) ->
-          # console.log user, data
           personal= new exports.World {personal:true, owner:user._id, name:"#{user.login}'s History", ownerlogin: user.login }
           personal.save (err, doc)->
             user.personalWorld = personal._id
@@ -162,9 +175,7 @@ UserSchema.plugin mongooseAuth,
           else
             res.writeHead 303, {'Location': '/'}  # data.session.redirectTo}
           res.end()
-
-          true
-
+          return true
 
 exports.User= mongoose.model('User', UserSchema)
 
