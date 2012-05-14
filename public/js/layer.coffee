@@ -1,5 +1,15 @@
 
+# window.times =[]
+# 
+# window.avtimes = ->
+#   sum = 0
+#   for t in times
+#    sum+=t
+#   console.log 'average time', sum/times.length
+# 
+
 betterBuildTile= (tile, tileData, absTilePoint)->
+  # begin = new Date().getTime()
   tile._cells = [] #this would be good to use for removing old cells
   frag = document.createDocumentFragment()
   for r in [0..state.numRows()-1]
@@ -11,6 +21,7 @@ betterBuildTile= (tile, tileData, absTilePoint)->
         cell= Cell.getOrCreate r,c, tile
       frag.appendChild(cell.span)
       tile._cells.push(cell)
+  # times.push(new Date().getTime() - begin)
   return frag
 
 # this is ridiculous TODO fix

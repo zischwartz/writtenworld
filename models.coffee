@@ -119,8 +119,6 @@ CellSchema.index {world:1, x:1, y:1}, {unique:true}
 
 exports.Cell = mongoose.model('Cell', CellSchema)
 
-
-
 mongooseAuth=require('mongoose-auth')
 
 UserSchema = new Schema

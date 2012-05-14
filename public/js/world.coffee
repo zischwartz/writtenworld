@@ -43,7 +43,7 @@ window.setCursor = (cell) ->  # takes the object, not the dom element
   true
 
 
-moveCursor = (direction, from = state.selectedCell) ->
+moveCursor = (direction, from = state.selectedCell, force=false) ->
   target = cellKeyToXY(from.key)
   
   switch direction
@@ -62,8 +62,8 @@ moveCursor = (direction, from = state.selectedCell) ->
     return false
      # throw 'cell does not exist'
   else
-
-    panIfAppropriate(direction) if config.autoPan()
+    if config.autoPan() or force
+      panIfAppropriate(direction)
     setCursor(targetCell)
     return targetCell
 
@@ -150,19 +150,19 @@ initializeInterface = ->
         e.preventDefault()
         return false
       when 38
-        moveCursor('up')
+        moveCursor('up', null, true)
       when 40
-        moveCursor('down')
+        moveCursor('down', null, true)
       when 39
-        moveCursor('right')
+        moveCursor('right', null, true)
       when 37
-        moveCursor('left')
+        moveCursor('left', null, true)
       when 8 # delete
-        moveCursor 'left'
+        moveCursor 'left' , null
         state.selectedCell.clear()
         setCursor(state.selectedCell)
       when 13 #enter
-        t = moveCursor 'down', state.lastClickCell
+        t = moveCursor 'down', state.lastClickCell, true
         state.lastClickCell = t
       when 32 #space
         state.selectedCell.clear()

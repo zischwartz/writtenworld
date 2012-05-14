@@ -60,10 +60,13 @@
     return true;
   };
 
-  moveCursor = function(direction, from) {
+  moveCursor = function(direction, from, force) {
     var key, target, targetCell;
     if (from == null) {
       from = state.selectedCell;
+    }
+    if (force == null) {
+      force = false;
     }
     target = cellKeyToXY(from.key);
     switch (direction) {
@@ -84,7 +87,7 @@
     if (!targetCell) {
       return false;
     } else {
-      if (config.autoPan()) {
+      if (config.autoPan() || force) {
         panIfAppropriate(direction);
       }
       setCursor(targetCell);
@@ -170,19 +173,19 @@
           e.preventDefault();
           return false;
         case 38:
-          return moveCursor('up');
+          return moveCursor('up', null, true);
         case 40:
-          return moveCursor('down');
+          return moveCursor('down', null, true);
         case 39:
-          return moveCursor('right');
+          return moveCursor('right', null, true);
         case 37:
-          return moveCursor('left');
+          return moveCursor('left', null, true);
         case 8:
-          moveCursor('left');
+          moveCursor('left', null);
           state.selectedCell.clear();
           return setCursor(state.selectedCell);
         case 13:
-          t = moveCursor('down', state.lastClickCell);
+          t = moveCursor('down', state.lastClickCell, true);
           return state.lastClickCell = t;
         case 32:
           state.selectedCell.clear();
