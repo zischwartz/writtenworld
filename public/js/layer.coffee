@@ -38,7 +38,7 @@ L.WCanvas = L.TileLayer.extend(
       return
     dense= config.minLayerZoom()-zoom
     ctx = tile.getContext('2d')
-    ctx.fillStyle = "rgba(095, 095, 095, 0.6 )"
+    ctx.fillStyle = "rgba(195, 255, 195, 0.4 )"
     ctx.beginPath()
     ctx.arc(96, 128, 200*density*dense, 0, Math.PI*2, true)
     ctx.closePath()
