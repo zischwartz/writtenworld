@@ -119,8 +119,6 @@ CellSchema.index {world:1, x:1, y:1}, {unique:true}
 
 exports.Cell = mongoose.model('Cell', CellSchema)
 
-
-
 mongooseAuth=require('mongoose-auth')
 
 UserSchema = new Schema
@@ -132,7 +130,6 @@ UserSchema = new Schema
   email: String
   powers:
     jumpDistance: {type: Number, default: 500}
-    available_colors = ['c0', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6']
 
 UserSchema.plugin mongooseAuth,
     everymodule:
