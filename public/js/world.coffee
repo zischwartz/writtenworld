@@ -18,6 +18,7 @@ window.state =
   belowInputRateLimit: true
   topLayerStamp: null
   baseLayer: null
+  lastLayerStamp: null
   isTopLayerInteractive: true
   cursors: {}
 
@@ -109,7 +110,8 @@ initializeInterface = ->
     $("#loadingIndicator").fadeIn('fast')
     if map.getZoom() >= config.minLayerZoom() and not state.topLayerStamp
       turnOnMainLayer() #should be turnOnLastLayer 
-  
+      #TODO
+
   map.on 'dblclick', (e) ->
     $("#loadingIndicator").fadeIn('fast')
 
@@ -118,6 +120,8 @@ initializeInterface = ->
 
   inputEl.keypress (e) ->
     # console.log e.which
+    if not state.isTopLayerInteractive
+      return false
     if e.which in [0, 13, 32, 9, 8] # 40, 39, 38  were here, but that seems to be single quote?
       # console.log 'SPECIAL KEY, screw this keypress'
       return false
@@ -137,6 +141,9 @@ initializeInterface = ->
 
   inputEl.keydown (e) ->
     # e.stopPropagation() # e.stopImmediatePropagation()
+
+    if not state.isTopLayerInteractive
+      return false
 
     if not (state.belowInputRateLimit)
       return false
@@ -200,11 +207,12 @@ initializeInterface = ->
     return
 
   $(".leaflet-control-zoom-out").click (e) ->
-    if map.getZoom() <=config.minLayerZoom() and state.topLayerStamp
-      # removeLayerThenZoomOut()
+    if map.getZoom() <=config.minLayerZoom() and state.isTopLayerInteractive 
         removeLayerThenZoomAndReplace()
+        console.log 'zoomout replace'
     else
       map.zoomOut()
+      console.log 'just zoomout'
     return
 
   $(".trigger").live 'click', ->
@@ -223,7 +231,6 @@ initializeInterface = ->
     if action == 'setClientState' # unrelated to setClientStateFromServer 
       # console.log 'settingClientState', type
       state[type] = payload
-    
     
     #specific interfaces
 
@@ -557,7 +564,7 @@ window.Cell = class Cell
       cell = new Cell row, col, tile, contents, props
       return cell
 
-
+#LAYER SWITCH CODE
 removeLayerThenZoomOut=  ->
   Cell.killAll() #this is good, but not actually neccesary (noted, because it used to be neccesary)
   layer= map._layers[state.topLayerStamp]
@@ -575,64 +582,17 @@ removeLayerThenZoomAndReplace = ->
   layer= map._layers[state.topLayerStamp]
   $layer = $(".layer-#{state.topLayerStamp}")
   $layer.fadeOut('slow')
-  # console.log 'turn off layer replace with new'
   map.removeLayer(layer) if state.topLayerStamp
-  # now.setCurrentWorld(null)
   map.zoomOut()
-  # console.log 'and now for the new layer'
 
-  canvasTiles = new L.TileLayer.Canvas({tileSize:{x:192, y:256}})
-  canvasTiles.drawTile = (canvas, tilePoint, zoom) ->
-    console.log 'drawTile'
-    # console.log state.zoomDiff()
-    absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
-    ctx = canvas.getContext('2d')
-    now.getZoomedOutTile absTilePoint, state.numRows(), (tileData, atp)->
-    # now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-      # if tileData.density
-        densityOffset= state.numRows()*state.numRows()
-        density = 100-(tileData.density/densityOffset)*500
-        if density<=1
-          return
-        # console.log 'density', density
-        # ctx.fillStyle = "rgba(095, 095, 095, #{density})"
-        ctx.fillStyle = "rgba(095, 145, 125, 1.6 )"
-        # ctx.fillRect(0, 0, 192, 256)
-        # density= 30
-        # ctx.font = "40pt Calibri"
-        # ctx.fillText(tileData.density, 50, 50)
-        ctx.font = "#{state.cellHeight()*0.9}pt Calibri"
-        x=0
-        y=0
-        until x >= 192
-          y=0
-          until y >= 256
-            ctx.fillText('z', x, y)
-            # ctx.beginPath()
-            # ctx.arc(x, y, 10, 0, Math.PI*2, true)
-            # ctx.closePath()
-            # ctx.fill()
-            y= y+state.cellHeight()
-          x= x+state.cellWidth()
-
-  canvasTiles.getTilePointAbsoluteBounds= ->
-    if this._map
-      bounds = this._map.getPixelBounds()
-      tileSize= this.options.tileSize
-      offset = Math.pow 2, state.zoomDiff()
-      nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x)*offset, Math.floor(bounds.min.y / tileSize.y)*offset)
-      seTilePoint = new L.Point( Math.ceil(bounds.max.x / tileSize.x)*offset, Math.ceil(bounds.max.y / tileSize.y)*offset)
-      tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
-      return tileBounds
-    else
-      return false
+  canvasTiles = new L.WCanvas({tileSize:{x:192, y:256}})
 
   map.addLayer canvasTiles
   state.isTopLayerInteractive= false
   stamp= L.Util.stamp(canvasTiles)
 
-  now.setBounds canvasTiles.getTilePointAbsoluteBounds()
-  # console.log 'stamp', stamp
+  # now.setBounds canvasTiles.getTilePointAbsoluteBounds()
+  now.setBounds false 
   state.topLayerStamp = stamp
   return true
 
@@ -654,18 +614,21 @@ turnOffLayer = ->
 turnOnMainLayer= ->
   # console.log 'turn on layer'
   Cell.killAll()
-  now.setCurrentWorld(mainWorldId, personalWorldId)
+  now.setCurrentWorld(initialWorldId, personalWorldId)
+  # now.setCurrentWorld(mainWorldId, personalWorldId)
   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
   map.addLayer(domTiles)
   stamp= L.Util.stamp(domTiles)
-  # console.log 'stamp', stamp
   state.topLayerStamp = stamp
+  state.isTopLayerInteractive= true
   now.setBounds domTiles.getTilePointAbsoluteBounds()
   inputEl.focus()
   centerCursor()
 
+
+
+#not used
 switchToLayer= (worldId) ->
-  #todo load ruleset/config from now
   Cell.killAll()
   map.removeLayer(getLayer(state.topLayerStamp)) if state.topLayerStamp
   now.setCurrentWorld(worldId)

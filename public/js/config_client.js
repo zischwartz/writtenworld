@@ -40,7 +40,7 @@
       };
       this.minZoom = function() {
         var _ref;
-        return (_ref = spec.minZoom) != null ? _ref : 15;
+        return (_ref = spec.minZoom) != null ? _ref : 11;
       };
       this.defZoom = function() {
         var _ref;

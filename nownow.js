@@ -49,6 +49,9 @@
     });
     everyone.now.setBounds = function(bounds) {
       var b;
+      if (!bounds) {
+        return false;
+      }
       b = new leaflet.L.Bounds(bounds.max, bounds.min);
       return CUser.byCid(this.user.cid).bounds = b;
     };
@@ -119,17 +122,21 @@
       });
       return true;
     };
-    everyone.now.getZoomedOutTile = function(absTilePoint, numRows, callback) {
+    everyone.now.getZoomedOutTile = function(absTilePoint, numRows, numCols, callback) {
       var _this = this;
       if (!this.user.currentWorldId) {
         return false;
       }
-      return models.Cell.where('world', this.user.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).run(function(err, docs) {
-        var results;
-        results = {};
-        if (docs.length) {
+      return models.Cell.where('world', this.user.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numCols).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).count(function(err, count) {
+        var density, results;
+        if (count) {
+          density = count / (numRows * numCols);
           results = {
-            density: docs.length
+            density: density
+          };
+        } else {
+          results = {
+            density: 0
           };
         }
         return callback(results, absTilePoint);
@@ -225,7 +232,7 @@
       var cid, userId,
         _this = this;
       console.log('setUserOption', type, payload);
-      if (type = 'color') {
+      if (type === 'color') {
         cid = this.user.clientId;
         CUser.byCid(cid).color = payload;
         this.user.session.color = payload;
@@ -238,7 +245,6 @@
             }
             doc.color = payload;
             doc.save();
-            console.log('USER COLORCHANGE', doc);
             return _this.now.insertMessage('hi', 'nice color');
           });
         }

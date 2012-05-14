@@ -1,3 +1,76 @@
+L.WCanvas = L.TileLayer.extend(
+  options:
+    async: false
+      
+  initialize: (options) ->
+    L.Util.setOptions this, options
+    
+  redraw: ->
+    tiles = @_tiles
+    for i of tiles
+      @_redrawTile tiles[i]  if tiles.hasOwnProperty(i)
+    
+  _redrawTile: (tile) ->
+    @drawTile tile, tile._tilePoint, tile._zoom
+      
+  _createTileProto: ->
+    proto = @_canvasProto = L.DomUtil.create("canvas", "leaflet-tile")
+    tileSize = @options.tileSize
+    proto.width = tileSize.x
+    proto.height = tileSize.y
+    
+  _createTile: ->
+    tile = @_canvasProto.cloneNode(false)
+    tile.onselectstart = tile.onmousemove = L.Util.falseFn
+    tile
+      
+  _loadTile: (tile, tilePoint, zoom) ->
+    tile._layer = this
+    tile._tilePoint = tilePoint
+    tile._zoom = zoom
+    absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
+    now.getZoomedOutTile absTilePoint, state.numRows(), state.numCols(), (tileData, atp) =>
+      @drawTile tile, tilePoint, zoom, tileData.density
+      @tileDrawn tile  unless @options.async
+      
+  drawTile: (tile, tilePoint, zoom, density) ->
+    if not density
+      return
+    dense= config.minLayerZoom()-zoom
+    ctx = tile.getContext('2d')
+    ctx.fillStyle = "rgba(095, 095, 095, 0.6 )"
+    ctx.beginPath()
+    ctx.arc(96, 128, 200*density*dense, 0, Math.PI*2, true)
+    ctx.closePath()
+    ctx.fill()
+    return
+    
+  tileDrawn: (tile) ->
+    @_tileOnLoad.call tile
+    
+  getTilePointAbsoluteBounds: ->
+    getTilePointAbsoluteBounds: ->
+    if this._map
+      bounds = this._map.getPixelBounds()
+      tileSize= this.options.tileSize
+      offset = Math.pow 2, state.zoomDiff()
+      nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x)*offset, Math.floor(bounds.min.y / tileSize.y)*offset)
+      seTilePoint = new L.Point( Math.ceil(bounds.max.x / tileSize.x)*offset, Math.ceil(bounds.max.y / tileSize.y)*offset)
+      tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
+      return tileBounds
+    else
+      return false
+
+  getCenterTile: ->
+    bounds= @getTilePointAbsoluteBounds()
+    if bounds #this is always used inside a poll, as it's hard to see if our tiles really have loaded
+      center = bounds.getCenter()
+      return center
+    else
+      return false
+)
+
+
 
 # window.times =[]
 # 

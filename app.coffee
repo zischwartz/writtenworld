@@ -95,7 +95,7 @@ app.get '/', (req, res) ->
     personalWorldId:personalWorldId
     worldSpec: JSON.stringify(models.mainWorld.config)
     availableColors: availableColors
-
+    isPersonal: false
 
 app.get '/home', (req, res) ->
   if req.loggedIn
@@ -149,6 +149,8 @@ app.get '/uw/:slug', (req, res)->
             mainWorldId: models.mainWorldId
             personalWorldId: world._id
             worldSpec: JSON.stringify(world.config)
+            availableColors : powers.getAvailableColors req.user.totalEchoes
+            isPersonal: true
           # res.write 'error'
           # res.end()
       else #it's not personal/private

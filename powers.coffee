@@ -17,9 +17,7 @@ powers=
 
 module.exports=
   getAvailableColors: (echoes) ->
-    console.log 'echoes', echoes
     if echoes <= 0
-      console.log 'ok'
       return powers.echo0.colors
     if echoes ==1
       return powers.echo1.colors

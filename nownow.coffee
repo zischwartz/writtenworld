@@ -18,6 +18,7 @@ module.exports = (app, SessionModel) ->
       this.user.currentWorldId=currentWorldId
     else
       this.user.currentWorldId=false
+
     # if currentWorldId != models.mainWorldId.toString() and currentWorldId != personalWorldId
     #   console.log 'NOT MAIN, NOT PERSONAL'
     #   this.user.specialWorld = true
@@ -42,6 +43,8 @@ module.exports = (app, SessionModel) ->
     return
 
   everyone.now.setBounds = (bounds) ->
+    if not bounds
+      return false
     b = new leaflet.L.Bounds bounds.max, bounds.min
     CUser.byCid(this.user.cid).bounds=b
 
@@ -83,20 +86,18 @@ module.exports = (app, SessionModel) ->
     return true
 
 
-  everyone.now.getZoomedOutTile= (absTilePoint, numRows, callback) ->
+  everyone.now.getZoomedOutTile= (absTilePoint, numRows, numCols, callback) ->
     if not this.user.currentWorldId
       return false
     models.Cell.where('world', this.user.currentWorldId)
-      .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
+      .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numCols)
       .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
-      # .populate('current')
-      .run (err,docs) =>
-        # console.log docs if docs
-        results = {}
-        # console.log docs.length
-        # console.log docs
-        if docs.length
-          results= {density: docs.length}
+      .count (err,count) =>
+        if count
+          density= count/(numRows*numCols)
+          results= {density: density}
+        else
+          results= {density: 0}
         callback(results, absTilePoint)
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
@@ -160,7 +161,7 @@ module.exports = (app, SessionModel) ->
 
   everyone.now.setUserOption = (type, payload) ->
     console.log 'setUserOption', type, payload
-    if type = 'color'
+    if type == 'color'
       cid=this.user.clientId
       CUser.byCid(cid).color= payload
       this.user.session.color=payload
@@ -171,7 +172,7 @@ module.exports = (app, SessionModel) ->
           console.log err if err
           doc.color= payload
           doc.save()
-          console.log 'USER COLORCHANGE', doc
+          # console.log 'USER COLORCHANGE', doc
           this.now.insertMessage('hi', 'nice color')
 
   # can I impliment this on CUser  instead....

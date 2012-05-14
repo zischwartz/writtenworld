@@ -72,8 +72,12 @@
                     span#username(href='#') #{user.login} 
                       b.caret 
                   ul.dropdown-menu
-                    li
-                      a(href='/wid/#{user.personalWorld}') Your (History) World 
+                    - if (isPersonal)
+                      li
+                        a(href='/') Main World
+                    - else
+                      li
+                        a(href='/wid/#{user.personalWorld}') Your (History) World 
                     li.divider
                     li
                       a(href="/logout") Log out

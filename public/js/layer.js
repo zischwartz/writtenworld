@@ -2,6 +2,104 @@
 (function() {
   var betterBuildTile, getTileLocally;
 
+  L.WCanvas = L.TileLayer.extend({
+    options: {
+      async: false
+    },
+    initialize: function(options) {
+      return L.Util.setOptions(this, options);
+    },
+    redraw: function() {
+      var i, tiles, _results;
+      tiles = this._tiles;
+      _results = [];
+      for (i in tiles) {
+        if (tiles.hasOwnProperty(i)) {
+          _results.push(this._redrawTile(tiles[i]));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    },
+    _redrawTile: function(tile) {
+      return this.drawTile(tile, tile._tilePoint, tile._zoom);
+    },
+    _createTileProto: function() {
+      var proto, tileSize;
+      proto = this._canvasProto = L.DomUtil.create("canvas", "leaflet-tile");
+      tileSize = this.options.tileSize;
+      proto.width = tileSize.x;
+      return proto.height = tileSize.y;
+    },
+    _createTile: function() {
+      var tile;
+      tile = this._canvasProto.cloneNode(false);
+      tile.onselectstart = tile.onmousemove = L.Util.falseFn;
+      return tile;
+    },
+    _loadTile: function(tile, tilePoint, zoom) {
+      var absTilePoint,
+        _this = this;
+      tile._layer = this;
+      tile._tilePoint = tilePoint;
+      tile._zoom = zoom;
+      absTilePoint = {
+        x: tilePoint.x * Math.pow(2, state.zoomDiff()),
+        y: tilePoint.y * Math.pow(2, state.zoomDiff())
+      };
+      return now.getZoomedOutTile(absTilePoint, state.numRows(), state.numCols(), function(tileData, atp) {
+        _this.drawTile(tile, tilePoint, zoom, tileData.density);
+        if (!_this.options.async) {
+          return _this.tileDrawn(tile);
+        }
+      });
+    },
+    drawTile: function(tile, tilePoint, zoom, density) {
+      var ctx, dense;
+      if (!density) {
+        return;
+      }
+      dense = config.minLayerZoom() - zoom;
+      ctx = tile.getContext('2d');
+      ctx.fillStyle = "rgba(095, 095, 095, 0.6 )";
+      ctx.beginPath();
+      ctx.arc(96, 128, 200 * density * dense, 0, Math.PI * 2, true);
+      ctx.closePath();
+      ctx.fill();
+    },
+    tileDrawn: function(tile) {
+      return this._tileOnLoad.call(tile);
+    },
+    getTilePointAbsoluteBounds: function() {
+      var bounds, nwTilePoint, offset, seTilePoint, tileBounds, tileSize;
+      ({
+        getTilePointAbsoluteBounds: function() {}
+      });
+      if (this._map) {
+        bounds = this._map.getPixelBounds();
+        tileSize = this.options.tileSize;
+        offset = Math.pow(2, state.zoomDiff());
+        nwTilePoint = new L.Point(Math.floor(bounds.min.x / tileSize.x) * offset, Math.floor(bounds.min.y / tileSize.y) * offset);
+        seTilePoint = new L.Point(Math.ceil(bounds.max.x / tileSize.x) * offset, Math.ceil(bounds.max.y / tileSize.y) * offset);
+        tileBounds = new L.Bounds(nwTilePoint, seTilePoint);
+        return tileBounds;
+      } else {
+        return false;
+      }
+    },
+    getCenterTile: function() {
+      var bounds, center;
+      bounds = this.getTilePointAbsoluteBounds();
+      if (bounds) {
+        center = bounds.getCenter();
+        return center;
+      } else {
+        return false;
+      }
+    }
+  });
+
   betterBuildTile = function(tile, tileData, absTilePoint) {
     var c, cell, cellData, frag, r, _i, _j, _ref, _ref1;
     tile._cells = [];

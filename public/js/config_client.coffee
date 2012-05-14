@@ -15,7 +15,7 @@ Configuration = class Configuration
     @tileServeUrl = -> mapBoxUrl #spec.tileServeUrl ? mapBoxUrl # tileServeUrl
 
     @maxZoom = -> spec.maxZoom ? 20 # this is super important and sets the resolution. was 18, current image tiles are only 18
-    @minZoom = -> spec.minZoom ? 15 # was 16
+    @minZoom = -> spec.minZoom ? 11 # was 16
     @defZoom = -> spec.defZoom ? 16 # was 17 till weds night before thesis
     @minLayerZoom = -> spec.minLayerZoom ? 16 #turn off the layer at this zoom
 

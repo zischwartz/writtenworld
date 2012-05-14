@@ -30,6 +30,7 @@
     belowInputRateLimit: true,
     topLayerStamp: null,
     baseLayer: null,
+    lastLayerStamp: null,
     isTopLayerInteractive: true,
     cursors: {}
   };
@@ -148,6 +149,9 @@
     });
     inputEl.keypress(function(e) {
       var c, userTotalRites, _ref;
+      if (!state.isTopLayerInteractive) {
+        return false;
+      }
       if ((_ref = e.which) === 0 || _ref === 13 || _ref === 32 || _ref === 9 || _ref === 8) {
         return false;
       } else {
@@ -160,6 +164,9 @@
     });
     inputEl.keydown(function(e) {
       var t;
+      if (!state.isTopLayerInteractive) {
+        return false;
+      }
       if (!state.belowInputRateLimit) {
         return false;
       }
@@ -225,10 +232,12 @@
       map.zoomIn();
     });
     $(".leaflet-control-zoom-out").click(function(e) {
-      if (map.getZoom() <= config.minLayerZoom() && state.topLayerStamp) {
+      if (map.getZoom() <= config.minLayerZoom() && state.isTopLayerInteractive) {
         removeLayerThenZoomAndReplace();
+        console.log('zoomout replace');
       } else {
         map.zoomOut();
+        console.log('just zoomout');
       }
     });
     return $(".trigger").live('click', function() {
@@ -720,61 +729,16 @@
       map.removeLayer(layer);
     }
     map.zoomOut();
-    canvasTiles = new L.TileLayer.Canvas({
+    canvasTiles = new L.WCanvas({
       tileSize: {
         x: 192,
         y: 256
       }
     });
-    canvasTiles.drawTile = function(canvas, tilePoint, zoom) {
-      var absTilePoint, ctx;
-      console.log('drawTile');
-      absTilePoint = {
-        x: tilePoint.x * Math.pow(2, state.zoomDiff()),
-        y: tilePoint.y * Math.pow(2, state.zoomDiff())
-      };
-      ctx = canvas.getContext('2d');
-      return now.getZoomedOutTile(absTilePoint, state.numRows(), function(tileData, atp) {
-        var density, densityOffset, x, y, _results;
-        densityOffset = state.numRows() * state.numRows();
-        density = 100 - (tileData.density / densityOffset) * 500;
-        if (density <= 1) {
-          return;
-        }
-        ctx.fillStyle = "rgba(095, 145, 125, 1.6 )";
-        ctx.font = "" + (state.cellHeight() * 0.9) + "pt Calibri";
-        x = 0;
-        y = 0;
-        _results = [];
-        while (!(x >= 192)) {
-          y = 0;
-          while (!(y >= 256)) {
-            ctx.fillText('z', x, y);
-            y = y + state.cellHeight();
-          }
-          _results.push(x = x + state.cellWidth());
-        }
-        return _results;
-      });
-    };
-    canvasTiles.getTilePointAbsoluteBounds = function() {
-      var bounds, nwTilePoint, offset, seTilePoint, tileBounds, tileSize;
-      if (this._map) {
-        bounds = this._map.getPixelBounds();
-        tileSize = this.options.tileSize;
-        offset = Math.pow(2, state.zoomDiff());
-        nwTilePoint = new L.Point(Math.floor(bounds.min.x / tileSize.x) * offset, Math.floor(bounds.min.y / tileSize.y) * offset);
-        seTilePoint = new L.Point(Math.ceil(bounds.max.x / tileSize.x) * offset, Math.ceil(bounds.max.y / tileSize.y) * offset);
-        tileBounds = new L.Bounds(nwTilePoint, seTilePoint);
-        return tileBounds;
-      } else {
-        return false;
-      }
-    };
     map.addLayer(canvasTiles);
     state.isTopLayerInteractive = false;
     stamp = L.Util.stamp(canvasTiles);
-    now.setBounds(canvasTiles.getTilePointAbsoluteBounds());
+    now.setBounds(false);
     state.topLayerStamp = stamp;
     return true;
   };
@@ -796,13 +760,14 @@
   turnOnMainLayer = function() {
     var domTiles, stamp;
     Cell.killAll();
-    now.setCurrentWorld(mainWorldId, personalWorldId);
+    now.setCurrentWorld(initialWorldId, personalWorldId);
     domTiles = new L.DomTileLayer({
       tileSize: config.tileSize()
     });
     map.addLayer(domTiles);
     stamp = L.Util.stamp(domTiles);
     state.topLayerStamp = stamp;
+    state.isTopLayerInteractive = true;
     now.setBounds(domTiles.getTilePointAbsoluteBounds());
     inputEl.focus();
     return centerCursor();
