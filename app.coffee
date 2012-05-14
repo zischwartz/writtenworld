@@ -2,6 +2,7 @@ express = require 'express'
 nowjs = require 'now'
 connect = require 'connect'
 
+
 require 'coffee-script'
 
 mongoose = require 'mongoose'
@@ -13,6 +14,7 @@ events = require('events')
 util = require('util')
 
 models= require './models'
+powers = require './powers'
 
 assetManager = require('connect-assetmanager')
 root = __dirname + '/public'
@@ -79,8 +81,12 @@ app.get '/', (req, res) ->
   initialWorldId = models.mainWorldId
   if req.loggedIn
     personalWorldId = req.user.personalWorld
+    console.log req.user.totalEchoes
+    availableColors = powers.getAvailableColors req.user.totalEchoes
+    console.log availableColors
   else
     personalWorldId = null
+    availableColors = powers.unregisteredColors()
 
   res.render 'map_base.jade',
     title: 'Written World'
@@ -88,6 +94,8 @@ app.get '/', (req, res) ->
     initialWorldId:models.mainWorldId
     personalWorldId:personalWorldId
     worldSpec: JSON.stringify(models.mainWorld.config)
+    availableColors: availableColors
+
 
 app.get '/home', (req, res) ->
   if req.loggedIn

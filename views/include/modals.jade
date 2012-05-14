@@ -1,7 +1,3 @@
--if (!everyauth.loggedIn)
-  - var colors = {gray:'c0', blue: 'c1', purple: 'c2', green: 'c3' } 
--else
-  - var colors = {gray:'c0', blue: 'c1', purple: 'c2', green: 'c3', blue2: 'c4'}
 
 link(rel='stylesheet', href="/css/bootstrap.css")
 
@@ -10,9 +6,9 @@ link(rel='stylesheet', href="/css/bootstrap.css")
       a.close(data-dismiss='modal') ×
       h3 Pick A Color 
     .modal-body.colorOption
-      p Any color. As long as it's one of these. Want more options? Get some echoes (and an account).
-      each val, key in colors
-        a.btn.btn-large.btn-inverse.trigger(class=val, data-payload=val, data-type='color', data-action='set', data-dismiss='modal') #{key} 
+      p Any color. As long as it's one of these. Want more colors? Get some echoes.
+      each val in availableColors
+        a.btn.btn-large.btn-inverse.trigger(class=val, data-payload=val, data-type='color', data-action='set', data-dismiss='modal') Color 
     .modal-footer
       a.btn(href='#', data-dismiss='modal') Close
 

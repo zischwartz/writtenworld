@@ -132,6 +132,7 @@ UserSchema = new Schema
   email: String
   powers:
     jumpDistance: {type: Number, default: 500}
+    available_colors = ['c0', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6']
 
 UserSchema.plugin mongooseAuth,
     everymodule:

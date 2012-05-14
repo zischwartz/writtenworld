@@ -243,8 +243,9 @@ module.exports = (app, SessionModel) ->
 defaultUserPowers= ->
   powers =
     jumpDistance:50
+    
 
-#this one isn't used, yet
-defaultRegisteredPowers = ->
-  powers=
-    jumpDistance: 500
+#this is just a reminder of whats in the model
+# defaultRegisteredPowers = ->
+#   powers=
+#     jumpDistance: 500
