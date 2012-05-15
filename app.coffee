@@ -178,9 +178,9 @@ app.get '/uw/:slug', (req, res)->
 models.mongooseAuth.helpExpress(app)
 
 port = app.settings.port
-# if 'prod' in process.argv
-  # console.log 'DIRTY PRODUCTION MODE ENABLED'
-  # port = 80
+if 'prod' in process.argv
+  console.log 'DIRTY PRODUCTION MODE ENABLED'
+  port = 80
   # disabled in favor of iptables
   
 app.listen(port)
