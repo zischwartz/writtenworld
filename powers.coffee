@@ -17,12 +17,17 @@ powers=
 
 module.exports=
   getAvailableColors: (echoes) ->
-    if echoes <= 0
+    if echoes<1
+      # console.log 'was 0'
       return powers.echo0.colors
-    if echoes ==1
+    if 1<=echoes<5
+      # console.log 'was 1+'
       return powers.echo1.colors
     if echoes >=5
+      # console.log 'was 5+'
       return powers.echo5.colors
+    # console.log 'unreg'
+    return powers.unregistered.colors
 
   unregisteredColors: ->
     powers.unregistered.colors

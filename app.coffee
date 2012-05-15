@@ -81,9 +81,8 @@ app.get '/', (req, res) ->
   initialWorldId = models.mainWorldId
   if req.loggedIn
     personalWorldId = req.user.personalWorld
-    console.log req.user.totalEchoes
+    # console.log req.user.totalEchoes
     availableColors = powers.getAvailableColors req.user.totalEchoes
-    console.log availableColors
   else
     personalWorldId = null
     availableColors = powers.unregisteredColors()

@@ -56,15 +56,19 @@
       });
     },
     drawTile: function(tile, tilePoint, zoom, density) {
-      var ctx, dense;
+      var ctx, offset, radius;
       if (!density) {
         return;
       }
-      dense = config.minLayerZoom() - zoom;
+      offset = config.minLayerZoom() - zoom;
+      radius = density * offset * 128;
+      if (radius > 96) {
+        radius = 96;
+      }
       ctx = tile.getContext('2d');
       ctx.fillStyle = "rgba(195, 255, 195, 0.4 )";
       ctx.beginPath();
-      ctx.arc(96, 128, 200 * density * dense, 0, Math.PI * 2, true);
+      ctx.arc(96, 128, radius, 0, Math.PI * 2, true);
       ctx.closePath();
       ctx.fill();
     },
