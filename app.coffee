@@ -73,7 +73,8 @@ app.configure 'production', ->
   app.use express.logger({ format: ':method :url' })
   app.set 'view options', { layout: false }
   app.use express.errorHandler()
-  app.set 'port', 80
+  app.set 'port', 3000
+  # app.set 'port', 80
 
 nownow = require('./nownow')(app, SessionModel)
 
@@ -177,16 +178,17 @@ app.get '/uw/:slug', (req, res)->
 models.mongooseAuth.helpExpress(app)
 
 port = app.settings.port
-if 'prod' in process.argv
-  console.log 'DIRTY PRODUCTION MODE ENABLED'
-  port = 80
-
+# if 'prod' in process.argv
+  # console.log 'DIRTY PRODUCTION MODE ENABLED'
+  # port = 80
+  # disabled in favor of iptables
+  
 app.listen(port)
 
-# console.log 'process.env.node_env:'
-# console.log process.env.NODE_ENV
-# console.log 'app.settings.env:'
-# console.log app.settings.env
+console.log 'process.env.node_env:'
+console.log process.env.NODE_ENV
+console.log 'app.settings.env:'
+console.log app.settings.env
 
 console.log 'SCRIBVERSE is running on :'
 console.log app.address()
