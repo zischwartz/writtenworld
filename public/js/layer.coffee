@@ -156,7 +156,6 @@ L.DomTileLayer = L.Class.extend
     true
 
   onAdd: (map, insertAtTheBottom) ->
-    console.log map
     @_map = map
     @_insertAtTheBottom = insertAtTheBottom
     @_initContainer()

@@ -223,6 +223,7 @@ initializeInterface = ->
         return false
     if map.getZoom() <=config.minLayerZoom() and state.isTopLayerInteractive 
         removeLayerThenZoomAndReplace()
+        insertMessage('No Writing', " You've zoomed out too far to write. The text density is now represented by circles. Zoom back in to read and write again.")
         # console.log 'zoomout replace'
     else
       map.zoomOut()
@@ -298,6 +299,10 @@ panIfAppropriate = (direction)->
 
 
 jQuery ->
+
+  $("#welcome").doTimeout 15000, ->
+    $("#welcome").fadeOut()
+
   tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()})
   state.baseLayer= tileServeLayer
 
@@ -482,7 +487,7 @@ window.Cell = class Cell
 
   write: (c) ->
     cellPoint = cellKeyToXY @key
-    now.writeCell(cellPoint, c, state.isLocal)
+    now.writeCell(cellPoint, c)
     # TODO this is so simple, but really we should be handling this client side. lag will be frustrating.
 
   # COMMAND PATTERN

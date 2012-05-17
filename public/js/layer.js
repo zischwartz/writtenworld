@@ -188,7 +188,6 @@
       return true;
     },
     onAdd: function(map, insertAtTheBottom) {
-      console.log(map);
       this._map = map;
       this._insertAtTheBottom = insertAtTheBottom;
       this._initContainer();

@@ -4,14 +4,11 @@
     __hasProp = {}.hasOwnProperty;
 
   window.initializeGeo = function() {
-    var body;
     $.doTimeout('GeoPermissionTimer', 10 * 1000, function() {
       geoAlternative();
       return false;
     });
     if (navigator.geolocation) {
-      body = "If your browser asks you to use location, please click <b> allow</b>. Otherwise, we'll try to find you based on your IP in a few seconds. <br> <a href='#' data-dismiss='alert' class='cancelAltGeo btn'>Or click here to stay right here</a>";
-      window.insertMessage('Welcome', body, 'major alert-info geoHelper', 12);
       navigator.geolocation.getCurrentPosition(geoSucceeded, geoFailed);
     } else {
       geoAlternative();
@@ -26,7 +23,6 @@
   };
 
   geoSucceeded = function(position) {
-    $('.geoHelper').remove();
     $.doTimeout('GeoPermissionTimer');
     geoHasPosition(position);
     return true;
@@ -38,7 +34,6 @@
 
   geoAlternative = function() {
     return $.getScript('http://j.maxmind.com/app/geoip.js', function(data, textStatus) {
-      $('.geoHelper').remove();
       geoHasPosition({
         coords: {
           latitude: geoip_latitude(),
@@ -52,6 +47,7 @@
 
   geoHasPosition = function(position) {
     var closest, distance, distanceToClosest, inOfficialCity, key, msgbody, p, val;
+    $("p#geo").hide();
     inOfficialCity = false;
     closest = '';
     distanceToClosest = 10000000000000000000000000000000;

@@ -250,6 +250,7 @@
       }
       if (map.getZoom() <= config.minLayerZoom() && state.isTopLayerInteractive) {
         removeLayerThenZoomAndReplace();
+        insertMessage('No Writing', " You've zoomed out too far to write. The text density is now represented by circles. Zoom back in to read and write again.");
       } else {
         map.zoomOut();
       }
@@ -332,6 +333,9 @@
 
   jQuery(function() {
     var centerPoint, mapOptions, tileServeLayer;
+    $("#welcome").doTimeout(15000, function() {
+      return $("#welcome").fadeOut();
+    });
     tileServeLayer = new L.TileLayer(config.tileServeUrl(), {
       maxZoom: config.maxZoom()
     });
@@ -563,7 +567,7 @@
     Cell.prototype.write = function(c) {
       var cellPoint;
       cellPoint = cellKeyToXY(this.key);
-      return now.writeCell(cellPoint, c, state.isLocal);
+      return now.writeCell(cellPoint, c);
     };
 
     Cell.prototype.normalRite = function(rite) {

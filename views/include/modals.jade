@@ -80,5 +80,16 @@ div.modal.fade.hide#feedbackModal
       button.btn.btn-primary.trigger(data-type='submitfeedback') Submit!
       a.btn(href='#', data-dismiss='modal') Nevermind 
 
-
-
+// not a modal
+-if (!everyauth.loggedIn)
+  div.alert.alert-block.major#welcome.fade.in
+    a.close(data-dismiss="alert", href="#") x
+    h4.alert-heading Welcome to WrittenWorld.org!
+    p The glowing cursor is waiting for you to type. You can move around with the keyboard arrows, by dragging the map, zooming out, or searching for an address.
+    hr
+    p
+      a(href="#registerModal", data-toggle="modal") Sign up for an account
+      |, and get your own private history world, more colors, notifications, and the ability to go further afield. For more info, check out the <a href="/about"> FAQ</a>.
+    hr
+    p#geo If your browser asks you to use your location, please click <b>allow</b>. It's probably at the top of the screen.  Or <a href='#' data-dismiss='alert' class='cancelAltGeo'>click here to stay right here</a>. Otherwise, we'll try to take you to an approximate location.
+    

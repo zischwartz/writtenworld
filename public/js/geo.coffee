@@ -17,8 +17,8 @@ window.initializeGeo = ->
     return false # don't poll
 
   if (navigator.geolocation)
-      body = "If your browser asks you to use location, please click <b> allow</b>. Otherwise, we'll try to find you based on your IP in a few seconds. <br> <a href='#' data-dismiss='alert' class='cancelAltGeo btn'>Or click here to stay right here</a>" 
-      window.insertMessage 'Welcome', body, 'major alert-info geoHelper', 12
+      # body = "If your browser asks you to use location, please click <b> allow</b>. Otherwise, we'll try to find you based on your IP in a few seconds. <br> <a href='#' data-dismiss='alert' class='cancelAltGeo btn'>Or click here to stay right here</a>" 
+      # window.insertMessage '', body, 'major alert-info geoHelper', 9
       # console.log('Geolocation is supported!')
       navigator.geolocation.getCurrentPosition(geoSucceeded, geoFailed)
       # navigator.geolocation.watchPosition geoWatch #possibly use this for mobile
@@ -37,7 +37,7 @@ geoFailed = (error) ->
 geoSucceeded = (position) ->
   # console.log 'geo succeed'
   # window.clearMessages()
-  $('.geoHelper').remove()
+  # $('.geoHelper').remove()
   $.doTimeout 'GeoPermissionTimer' #cancel the timer
   geoHasPosition position
   true
@@ -50,7 +50,7 @@ geoWatch = (position) ->
 
 geoAlternative = ->
   $.getScript 'http://j.maxmind.com/app/geoip.js', (data, textStatus) ->
-    $('.geoHelper').remove()
+    # $('.geoHelper').remove()
     geoHasPosition {coords:{latitude: geoip_latitude(), longitude: geoip_longitude(), accuracy:-1}}
     true
 
@@ -59,6 +59,7 @@ geoAlternative = ->
 # la = new L.LatLng(34.052234,-118.243685) # for testing
 
 geoHasPosition = (position) ->
+  $("p#geo").hide()
   inOfficialCity = false
   closest= ''
   distanceToClosest = 10000000000000000000000000000000
