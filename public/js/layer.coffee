@@ -122,8 +122,8 @@ getTileLocally =(absTilePoint, tile) ->
 L.DomTileLayer = L.Class.extend
   includes: L.Mixin.Events
   options:
-    minZoom: config.minZoom()
-    maxZoom: config.maxZoom() #18
+    minZoom: config.minLayerZoom()-1 # we're handling this elsewhere, but we don't want it accidentally loading this layer way zoomed out, like on reload 
+    maxZoom: config.maxZoom()
     tileSize:
       x: 256
       y: 256
@@ -156,7 +156,7 @@ L.DomTileLayer = L.Class.extend
     true
 
   onAdd: (map, insertAtTheBottom) ->
-    
+    console.log map
     @_map = map
     @_insertAtTheBottom = insertAtTheBottom
     @_initContainer()

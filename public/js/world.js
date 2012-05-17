@@ -210,7 +210,6 @@
           result = data['ResultSet']['Results'][0];
           latlng = new L.LatLng(parseFloat(result.latitude), parseFloat(result.longitude));
           km = latlng.distanceTo(state.geoPos) / 1000;
-          console.log(km);
           if (km <= config.maxJumpDistance()) {
             map.panTo(latlng);
             state.geoPos = latlng;
@@ -362,7 +361,6 @@
     });
     state.topLayerStamp = L.Util.stamp(domTiles);
     now.isLocal = state.isLocal;
-    console.log(now);
     now.setCurrentWorld(initialWorldId, personalWorldId);
     map.addLayer(domTiles);
     setTileStyle();

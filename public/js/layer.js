@@ -150,7 +150,7 @@
   L.DomTileLayer = L.Class.extend({
     includes: L.Mixin.Events,
     options: {
-      minZoom: config.minZoom(),
+      minZoom: config.minLayerZoom() - 1,
       maxZoom: config.maxZoom(),
       tileSize: {
         x: 256,
@@ -188,6 +188,7 @@
       return true;
     },
     onAdd: function(map, insertAtTheBottom) {
+      console.log(map);
       this._map = map;
       this._insertAtTheBottom = insertAtTheBottom;
       this._initContainer();

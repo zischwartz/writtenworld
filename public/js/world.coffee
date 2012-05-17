@@ -185,7 +185,7 @@ initializeInterface = ->
         result =  data['ResultSet']['Results'][0]
         latlng = new L.LatLng parseFloat(result.latitude), parseFloat(result.longitude)
         km=latlng.distanceTo(state.geoPos)/1000
-        console.log km
+        # console.log km
         # console.log state.userPowers.jumpDistance
         # if km <= state.userPowers.jumpDistance
         if km<=config.maxJumpDistance()
@@ -327,7 +327,6 @@ doNowInit= (now)->
     state.topLayerStamp = L.Util.stamp domTiles
     now.isLocal= state.isLocal
 
-    console.log now
     now.setCurrentWorld(initialWorldId, personalWorldId)
     map.addLayer(domTiles)
     setTileStyle() #set initial
