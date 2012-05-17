@@ -40,12 +40,10 @@ form.modal.fade.hide#locationSearch
     .modal-body
       p Where would you like to go?
       -if (!everyauth.loggedIn)
-        p You can only jump 50km at once. With an account, you can jump up to 500km at once. With echoes, even more. 
-      -else
-        p You can jump 500km at once. With echoes, even more. 
+        p You can only jump 50km at once. With an account, you can jump up to way more. 
       .well 
         input.span5#locationSearchInput
-      p Hint: Include the state, in the US, or country, if not. Americas only for now.
+      p Hint: Include the state, in the US, or country if outside the US.
     .modal-footer
       button.btn.btn-primary(type="submit") Go!
       a.btn(href='#', data-dismiss='modal') Nevermind 

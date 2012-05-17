@@ -21,6 +21,7 @@
     Configuration.name = 'Configuration';
 
     function Configuration(spec) {
+      var isReallyAuth;
       if (spec == null) {
         spec = {};
       }
@@ -70,6 +71,13 @@
       };
       this.updateWhenIdle = function() {
         return false;
+      };
+      isReallyAuth = isAuth;
+      this.isAuth = function() {
+        return isReallyAuth != null ? isReallyAuth : false;
+      };
+      this.maxJumpDistance = function() {
+        return 100;
       };
     }
 

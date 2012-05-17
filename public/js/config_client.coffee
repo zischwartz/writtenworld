@@ -28,10 +28,10 @@ Configuration = class Configuration
     @autoPan = -> false
     @updateWhenIdle = -> false
   
-    
+    isReallyAuth= isAuth
+    @isAuth = -> isReallyAuth ? false
 
-    #not implimented
-    # @maxJumpDistance = spec.maxJumpDistance ? 0 # 0 no max, -1=no jumps, units are cells I supose 
+    @maxJumpDistance = -> 100
 
 window.config = new Configuration(window.worldSpec)
 

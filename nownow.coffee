@@ -74,8 +74,8 @@ module.exports = (app, SessionModel) ->
       return false
     currentWorldId = this.user.currentWorldId
     cid = this.user.clientId
-
-    bridge.processRite cellPoint, content, this.user, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->
+      
+    bridge.processRite cellPoint, content, this.user, this.now.isLocal, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
       getWhoCanSee cellPoint, currentWorldId, (toUpdate)->
         for i of toUpdate
@@ -160,7 +160,7 @@ module.exports = (app, SessionModel) ->
     feedback.save (err) -> console.log err if err
 
   everyone.now.setUserOption = (type, payload) ->
-    console.log 'setUserOption', type, payload
+    # console.log 'setUserOption', type, payload
     if type == 'color'
       cid=this.user.clientId
       CUser.byCid(cid).color= payload
@@ -231,14 +231,14 @@ module.exports = (app, SessionModel) ->
         models.User.findById @uid, (err, doc) =>
             @login = doc.login
             @nowUser.login = doc.login
-            @nowUser.powers = doc.powers
-            @nowUser.session?.powers = doc.powers
+            # @nowUser.powers = doc.powers
+            # @nowUser.session?.powers = doc.powers
       else
         SessionModel.findOne {'sid': @sid } , (err, doc) =>
           @uid = doc._id
           @nowUser.soid=doc._id
-          @nowUser.powers = defaultUserPowers()
-          @nowUser.session?.powers = defaultUserPowers()
+          # @nowUser.powers = defaultUserPowers()
+          # @nowUser.session?.powers = defaultUserPowers()
       
       allByCid[@cid] = this
       allBySid[@sid] = this
@@ -257,10 +257,10 @@ module.exports = (app, SessionModel) ->
 
   # return true
   return everyone
-
-defaultUserPowers= ->
-  powers =
-    jumpDistance:50
+# 
+# defaultUserPowers= ->
+#   powers =
+#     jumpDistance:50
     
 
 #this is just a reminder of whats in the model

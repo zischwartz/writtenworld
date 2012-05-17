@@ -21,6 +21,7 @@ window.state =
   lastLayerStamp: null
   isTopLayerInteractive: true
   cursors: {}
+  isLocal: true
 
 setTileStyle = ->
  width = state.cellWidth()
@@ -176,7 +177,6 @@ initializeInterface = ->
         moveCursor state.writeDirection
     # return false
 
-  # todo limit 
   $("#locationSearch").submit ->
     locationString= $("#locationSearchInput").val()
     $.ajax
@@ -185,13 +185,19 @@ initializeInterface = ->
         result =  data['ResultSet']['Results'][0]
         latlng = new L.LatLng parseFloat(result.latitude), parseFloat(result.longitude)
         km=latlng.distanceTo(state.geoPos)/1000
-        # console.log km
+        console.log km
         # console.log state.userPowers.jumpDistance
-        if km <= state.userPowers.jumpDistance
+        # if km <= state.userPowers.jumpDistance
+        if km<=config.maxJumpDistance()
           map.panTo(latlng)
           state.geoPos= latlng
+        else if config.isAuth()
+          state.isLocal = false
+          map.panTo(latlng)
+          state.geoPos= latlng
+          now.isLocal= false
         else
-          insertMessage('Too Far!', "Sorry, you can't jump that far. Get some echoes to go further than #{state.userPowers.jumpDistance}km.")
+          insertMessage('Too Far!', "Sorry, you can't jump that far. Signup to go further than #{config.maxJumpDistance()} km.")
         $('#locationSearch').modal('hide')
         centerCursor()
     return false
@@ -203,16 +209,24 @@ initializeInterface = ->
     inputEl.focus()
 
   $(".leaflet-control-zoom-in").click (e) ->
+    if map.getZoom() ==config.maxZoom()
+        insertMessage('Zoomed In', "That's as far as you can zoom out right now..")
+        $("#loadingIndicator").fadeOut('slow')
+        return false
     map.zoomIn()
     return
 
   $(".leaflet-control-zoom-out").click (e) ->
+    if map.getZoom() ==config.minZoom()
+        insertMessage('Zoomed Out', "That's as far as you can zoom out right now..")
+        $("#loadingIndicator").fadeOut('slow')
+        return false
     if map.getZoom() <=config.minLayerZoom() and state.isTopLayerInteractive 
         removeLayerThenZoomAndReplace()
-        console.log 'zoomout replace'
+        # console.log 'zoomout replace'
     else
       map.zoomOut()
-      console.log 'just zoomout'
+      # console.log 'just zoomout'
     return
 
   $(".trigger").live 'click', ->
@@ -297,9 +311,8 @@ jQuery ->
     minZoom: config.minZoom()
     maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset
   window.map= new L.Map('map', mapOptions).addLayer(tileServeLayer)
-
-  initializeGeo()
   
+  initializeGeo()
 
   now.ready ->
     doNowInit(now)
@@ -312,7 +325,9 @@ jQuery ->
 doNowInit= (now)->
     domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
     state.topLayerStamp = L.Util.stamp domTiles
+    now.isLocal= state.isLocal
 
+    console.log now
     now.setCurrentWorld(initialWorldId, personalWorldId)
     map.addLayer(domTiles)
     setTileStyle() #set initial
@@ -468,7 +483,7 @@ window.Cell = class Cell
 
   write: (c) ->
     cellPoint = cellKeyToXY @key
-    now.writeCell(cellPoint,c)
+    now.writeCell(cellPoint, c, state.isLocal)
     # TODO this is so simple, but really we should be handling this client side. lag will be frustrating.
 
   # COMMAND PATTERN

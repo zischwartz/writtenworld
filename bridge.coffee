@@ -8,18 +8,17 @@ leaflet = require './lib/leaflet-custom-src.js'
 
 module.exports = (everyone, SessionModel) ->
   
-  processRite = (cellPoint, contents, nowUser, currentWorldId, callback) ->
+  processRite = (cellPoint, contents, nowUser, isLocal, currentWorldId, callback) ->
     cid = nowUser.clientId
     sid= decodeURIComponent nowUser.cookie['connect.sid']
     color= nowUser.session?.color
-    
-    #otherwise, main or personal
+
     # If user has an account and is logged in
     if nowUser.session.auth
       personalWorld = models.ObjectIdFromString(nowUser.personalWorldId)
       
       riter=nowUser.session.auth.userId
-      rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], echoes:-1, downroters:[], color: color}})
+      rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], isLocal: isLocal, echoes:-1, downroters:[], color: color}})
       models.Cell .findOne({world: personalWorld, x:cellPoint.x, y: cellPoint.y}) .populate('current')
       .run (err, cell) ->
           console.log err if err
@@ -29,12 +28,13 @@ module.exports = (everyone, SessionModel) ->
             cell.current= rite._id
             cell.save()
       if nowUser.personalWorldId.toString() is currentWorldId  #check if they're already in their own world (heh)
-        console.log 'was actually writing directly to yr world, so skip the echo behavior below'
+        # console.log 'was actually writing directly to yr world, so skip the echo behavior below'
         callback('normalRite', rite, cellPoint)
         return
     else # Not logged in
       riter = nowUser.soid #session object id
 
+    # console.log riter
     models.Cell
     .findOne({world: currentWorldId, x:cellPoint.x, y: cellPoint.y})
     .populate('current')
@@ -65,11 +65,11 @@ module.exports = (everyone, SessionModel) ->
         logic.legitDownrote= not logic.blankCurrently and not logic.potentialEcho and already != 'downroter'
         originalOwner = cell.current?.owner
 
-        debug = ' '
-        for k, v of logic
-         debug+="#{k} : #{v}  .  "
+        # debug = ' '
+        # for k, v of logic
+        #  debug+="#{k} : #{v}  .  "
         
-        rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], echoes:-1, downroters:[], color: color}})
+        rite = new models.Rite({contents: contents, owner:riter, props:{isLocal:isLocal, echoers:[], echoes:-1, downroters:[], color: color}})
         console.log ' '
         # console.log ' '
         # console.log 'riter ', riter

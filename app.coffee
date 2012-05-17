@@ -96,6 +96,7 @@ app.get '/', (req, res) ->
     worldSpec: JSON.stringify(models.mainWorld.config)
     availableColors: availableColors
     isPersonal: false
+    isAuth: req.loggedIn
 
 app.get '/home', (req, res) ->
   if req.loggedIn

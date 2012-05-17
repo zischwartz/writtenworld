@@ -84,6 +84,7 @@ geoHasPosition = (position) ->
   if inOfficialCity
     map.setView(p, config.defZoom() )
     window.centerCursor()
+    state.isLocal=true
     # console.log 'we have the position, one way or the other! and yr in an official city'
   else
     # console.log 'dang you arent in an official city'
@@ -93,8 +94,9 @@ geoHasPosition = (position) ->
     else
       # console.log 'not varying ltlng'
       map.setView(officialCities[closest], config.defZoom() )
-    msgbody="Written World is in beta, so we're limited  a few cities for now. We took you to <b>#{closest}</b>.<br><br>Want a head start writing on your actual location? It may be kinda empty. <br><br><a href='#' class='goToActualPos btn btn-success' data-dismiss='alert'>Click here to go to your location</a> <a href='#' class= btn btn-primary' data-dismiss='alert'>Stay Here</a>"
+    msgbody="Written World is in beta, so we're limited to a few cities for now. We took you to <b>#{closest}</b>.<br><br>Want a head start writing on your actual location? It may be kinda empty. <br><br><a href='#' class='goToActualPos btn btn-success' data-dismiss='alert'>Click here to go to your location</a> <a href='#' class= btn btn-primary' data-dismiss='alert'>Stay Here</a>"
     window.insertMessage "&quotHey, That's Not Where I Am!&quot", msgbody, 'major alert-info', 45
+    state.isLocal=false
   return true
 
 $('.cancelAltGeo').live 'click', ->
@@ -102,6 +104,7 @@ $('.cancelAltGeo').live 'click', ->
 
 $('.goToActualPos').live 'click', ->
   map.setView(state.geoPos, config.defZoom() )
+  state.isLocal=true
   window.centerCursor()
   true
 

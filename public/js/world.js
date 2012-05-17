@@ -32,7 +32,8 @@
     baseLayer: null,
     lastLayerStamp: null,
     isTopLayerInteractive: true,
-    cursors: {}
+    cursors: {},
+    isLocal: true
   };
 
   setTileStyle = function() {
@@ -209,11 +210,17 @@
           result = data['ResultSet']['Results'][0];
           latlng = new L.LatLng(parseFloat(result.latitude), parseFloat(result.longitude));
           km = latlng.distanceTo(state.geoPos) / 1000;
-          if (km <= state.userPowers.jumpDistance) {
+          console.log(km);
+          if (km <= config.maxJumpDistance()) {
             map.panTo(latlng);
             state.geoPos = latlng;
+          } else if (config.isAuth()) {
+            state.isLocal = false;
+            map.panTo(latlng);
+            state.geoPos = latlng;
+            now.isLocal = false;
           } else {
-            insertMessage('Too Far!', "Sorry, you can't jump that far. Get some echoes to go further than " + state.userPowers.jumpDistance + "km.");
+            insertMessage('Too Far!', "Sorry, you can't jump that far. Signup to go further than " + (config.maxJumpDistance()) + " km.");
           }
           $('#locationSearch').modal('hide');
           return centerCursor();
@@ -229,15 +236,23 @@
       return inputEl.focus();
     });
     $(".leaflet-control-zoom-in").click(function(e) {
+      if (map.getZoom() === config.maxZoom()) {
+        insertMessage('Zoomed In', "That's as far as you can zoom out right now..");
+        $("#loadingIndicator").fadeOut('slow');
+        return false;
+      }
       map.zoomIn();
     });
     $(".leaflet-control-zoom-out").click(function(e) {
+      if (map.getZoom() === config.minZoom()) {
+        insertMessage('Zoomed Out', "That's as far as you can zoom out right now..");
+        $("#loadingIndicator").fadeOut('slow');
+        return false;
+      }
       if (map.getZoom() <= config.minLayerZoom() && state.isTopLayerInteractive) {
         removeLayerThenZoomAndReplace();
-        console.log('zoomout replace');
       } else {
         map.zoomOut();
-        console.log('just zoomout');
       }
     });
     return $(".trigger").live('click', function() {
@@ -346,6 +361,8 @@
       tileSize: config.tileSize()
     });
     state.topLayerStamp = L.Util.stamp(domTiles);
+    now.isLocal = state.isLocal;
+    console.log(now);
     now.setCurrentWorld(initialWorldId, personalWorldId);
     map.addLayer(domTiles);
     setTileStyle();
@@ -548,7 +565,7 @@
     Cell.prototype.write = function(c) {
       var cellPoint;
       cellPoint = cellKeyToXY(this.key);
-      return now.writeCell(cellPoint, c);
+      return now.writeCell(cellPoint, c, state.isLocal);
     };
 
     Cell.prototype.normalRite = function(rite) {

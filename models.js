@@ -248,7 +248,7 @@
     powers: {
       jumpDistance: {
         type: Number,
-        "default": 500
+        "default": 500000
       }
     }
   });

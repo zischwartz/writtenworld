@@ -129,7 +129,7 @@ UserSchema = new Schema
   personalWorld: ObjectId
   email: String
   powers:
-    jumpDistance: {type: Number, default: 500}
+    jumpDistance: {type: Number, default: 500000}
 
 UserSchema.plugin mongooseAuth,
     everymodule:
