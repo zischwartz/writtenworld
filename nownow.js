@@ -144,6 +144,7 @@
     };
     everyone.now.getTile = function(absTilePoint, numRows, callback) {
       var _this = this;
+      console.log('getTile');
       if (!this.user.currentWorldId) {
         return false;
       }
@@ -162,6 +163,7 @@
               };
               results["" + c.x + "x" + c.y] = pCell;
             }
+            console.log("results");
           }
           return callback(results, absTilePoint);
         } else {

@@ -49,7 +49,7 @@
       };
       this.minLayerZoom = function() {
         var _ref;
-        return (_ref = spec.minLayerZoom) != null ? _ref : 16;
+        return (_ref = spec.minLayerZoom) != null ? _ref : 15;
       };
       this.defaultChar = function() {
         var _ref;

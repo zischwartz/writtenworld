@@ -105,7 +105,13 @@ RiteSchema.methods.getOwner= (cb)->
 
 Rite = mongoose.model('Rite', RiteSchema)
 exports.Rite = Rite
-
+ 
+# TileSchema = new Schema
+#   world: ObjectId
+#   z: {type: Number, required: true}
+#   x: {type: Number, required: true}
+#   y: {type: Number, required: true}
+  
 
 CellSchema = new Schema
   world: ObjectId

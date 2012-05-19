@@ -1,3 +1,6 @@
+delay = (ms, func) -> setTimeout func, ms
+
+
 L.WCanvas = L.TileLayer.extend(
   options:
     async: false
@@ -407,14 +410,19 @@ L.DomTileLayer = L.Class.extend
     # else
 
     # check index of tiles otherwise TODO
-    frag=getTileLocally(absTilePoint, tile)
-    if frag
-      layer.populateTile(tile, tilePoint, zoom, frag)
-    else
-      now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-        frag=betterBuildTile(tile, tileData, atp)
+    delay 0, ->
+      frag=getTileLocally(absTilePoint, tile)
+      if frag
         layer.populateTile(tile, tilePoint, zoom, frag)
-    tile
+      else
+      now.getTile absTilePoint, state.numRows(), (tileData, atp)->
+        console.log 'getTile returned results'
+        delay 0, ->
+          frag=betterBuildTile(tile, tileData, atp)
+          console.log 'fragd'
+          layer.populateTile(tile, tilePoint, zoom, frag)
+
+    return tile
 
   drawTile: (tile, tilePoint, zoom, frag)->
     tile.appendChild(frag) # tile.appendChild(content.cloneNode(true))
