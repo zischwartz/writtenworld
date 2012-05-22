@@ -101,7 +101,7 @@ module.exports = (app, SessionModel) ->
         callback(results, absTilePoint)
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
-    console.log 'getTile'
+    # console.log 'getTile'
     if not this.user.currentWorldId
       return false
     models.Cell.where('world', this.user.currentWorldId)
@@ -115,7 +115,7 @@ module.exports = (app, SessionModel) ->
             if c.current
               pCell = {x: c.y, y: c.y, contents: c.current.contents, props: c.current.props}
               results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
-            console.log "results"
+            # console.log "results"
           callback(results, absTilePoint)
         else
           # console.log 'not found'
