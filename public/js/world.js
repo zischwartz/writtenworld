@@ -98,8 +98,12 @@
   };
 
   window.centerCursor = function() {
-    return $.doTimeout(400, function() {
+    $.doTimeout(400, function() {
       var key, layer, target, targetCell;
+      if (state.selectedCell && $(".selected").length) {
+        inputEl.focus();
+        return false;
+      }
       layer = getLayer(state.topLayerStamp);
       if (!layer) {
         return true;
@@ -112,10 +116,11 @@
       } else {
         setCursor(targetCell);
         state.lastClickCell = targetCell;
+        inputEl.focus();
         return false;
       }
-      return true;
     });
+    return true;
   };
 
   initializeInterface = function() {
@@ -340,7 +345,7 @@
       maxZoom: config.maxZoom()
     });
     state.baseLayer = tileServeLayer;
-    centerPoint = new L.LatLng(40.714269, -74.005972);
+    centerPoint = window.officialCities["New York City"];
     mapOptions = {
       center: centerPoint,
       zoomControl: false,

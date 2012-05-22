@@ -71,8 +71,9 @@ moveCursor = (direction, from = state.selectedCell, force=false) ->
 
 window.centerCursor = ->
   $.doTimeout 400, ->
-    # target = window.domTiles.getCenterTile()
-    # console.log state.topLayerStamp
+    if state.selectedCell and $(".selected").length
+      inputEl.focus()
+      return false # we're cool
     layer=getLayer(state.topLayerStamp)
     if not layer
       return true
@@ -85,8 +86,9 @@ window.centerCursor = ->
     else
       setCursor(targetCell)
       state.lastClickCell = targetCell
+      inputEl.focus()
       return false
-    true
+  return true
 
 #INTERFACE INITIALIZER 
 initializeInterface = ->
@@ -306,7 +308,7 @@ jQuery ->
   tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()})
   state.baseLayer= tileServeLayer
 
-  centerPoint= new L.LatLng(40.714269, -74.005972)
+  centerPoint= window.officialCities["New York City"]
   mapOptions =
     center: centerPoint
     zoomControl: false

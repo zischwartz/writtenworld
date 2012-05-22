@@ -476,10 +476,8 @@
 
         }
         return now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
-          console.log('getTile returned results');
           return delay(0, function() {
             frag = betterBuildTile(tile, tileData, atp);
-            console.log('fragd');
             return layer.populateTile(tile, tilePoint, zoom, frag);
           });
         });

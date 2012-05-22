@@ -396,19 +396,6 @@ L.DomTileLayer = L.Class.extend
     # dbg 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
     layer.tileDrawn(tile)
  
-    # if state.zoomDiff() > 4 # only doTimeout if its zoomed out far enough
-    #   dbg 'popualteDelay timer active'
-    #   $(tile).doTimeout 'populateDelay', 500, ->
-    #     frag=getTileLocally(absTilePoint, tile)
-    #     if frag
-    #       layer.populateTile(tile, tilePoint, zoom, frag)
-    #     else
-    #       now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-    #         frag=betterBuildTile(tile, tileData, atp)
-    #         layer.populateTile(tile, tilePoint, zoom, frag)
-    #     return false #so it doesn't poll
-    # else
-
     # check index of tiles otherwise TODO
     delay 0, ->
       frag=getTileLocally(absTilePoint, tile)
@@ -416,10 +403,8 @@ L.DomTileLayer = L.Class.extend
         layer.populateTile(tile, tilePoint, zoom, frag)
       else
       now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-        console.log 'getTile returned results'
         delay 0, ->
           frag=betterBuildTile(tile, tileData, atp)
-          console.log 'fragd'
           layer.populateTile(tile, tilePoint, zoom, frag)
 
     return tile
@@ -436,10 +421,6 @@ L.DomTileLayer = L.Class.extend
 
   tileDrawn: (tile) ->
     tile.className += ' leaflet-tile-drawn'
-    # $.doTimeout 200, ->
-    #   dbg 'tiledrawntimer'
-    #   tile.className += ' leaflet-tile-drawn'
-    #   return false
     @_tileOnLoad.call(tile)
     true
 
@@ -447,10 +428,6 @@ L.DomTileLayer = L.Class.extend
     # dbg '_tileOnLoad called'
     layer = @_layer
     @className += " leaflet-tile-loaded"
-    # $.doTimeout 500, =>
-    #   console.log 'tiledrawntimer'
-    #   @className += ' leaflet-tile-loaded'
-    #   return false
     layer.fire "tileload",
       tile: this
       url: @src
