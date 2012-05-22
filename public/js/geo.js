@@ -41,7 +41,6 @@
     }
     state.geoPos = p;
     state.initialGeoPos = new L.LatLng(p.lat, p.lng);
-    p = window.officialCities['New York City'];
     for (key in officialCities) {
       if (!__hasProp.call(officialCities, key)) continue;
       val = officialCities[key];
