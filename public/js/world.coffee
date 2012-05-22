@@ -223,6 +223,7 @@ initializeInterface = ->
         insertMessage('Zoomed Out', "That's as far as you can zoom out right now..")
         $("#loadingIndicator").fadeOut('slow')
         return false
+
     if map.getZoom() <=config.minLayerZoom() and state.isTopLayerInteractive 
         removeLayerThenZoomAndReplace()
         insertMessage('No Writing', " You've zoomed out too far to write. The text density is now represented by circles. Zoom back in to read and write again.")
@@ -301,9 +302,31 @@ panIfAppropriate = (direction)->
 
 
 jQuery ->
-
-  $("#welcome").doTimeout 15000, ->
-    $("#welcome").fadeOut()
+  # welcome_message=[]
+  # welcome_message.push c for c in "Hey. Try typing on the map./It'll be fun. I swear./Click + for more info. /Or just explore. "
+  # $.doTimeout 10000, ->
+  #   console.log 'welcome'
+  #   layer=getLayer(state.topLayerStamp)
+  #   if not layer then return true
+  #   target=layer.getCenterTile()
+  #   target.x-=15
+  #   target.y-=10
+  #   initial_x = target.x
+  #   key = "c#{target.x}x#{target.y}"
+  #   targetCell=Cell.all()[key]
+  #   if not targetCell then return true
+  #   $.doTimeout 150, ->
+  #     l = welcome_message.shift()
+  #     if l == '/'
+  #       target.y+=1
+  #       target.x = initial_x
+  #     else
+  #       target.x+=1
+  #       key = "c#{target.x}x#{target.y}"
+  #       targetCell=Cell.all()[key]
+  #       targetCell.animateTextInsert(2, l )
+  #     if welcome_message.length then return true  else return false
+  #   return false
 
   tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()})
   state.baseLayer= tileServeLayer
@@ -319,6 +342,11 @@ jQuery ->
     maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset
   window.map= new L.Map('map', mapOptions).addLayer(tileServeLayer)
   
+  map.preZoom= (zoomDelta,cb) ->
+    console.log zoomDelta
+    cb()
+    return
+
   initializeGeo()
 
   now.ready ->
@@ -331,12 +359,15 @@ jQuery ->
 
 doNowInit= (now)->
     domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+
     state.topLayerStamp = L.Util.stamp domTiles
     now.isLocal= state.isLocal
 
     now.setCurrentWorld(initialWorldId, personalWorldId)
     map.addLayer(domTiles)
     setTileStyle() #set initial
+
+
     map.on 'zoomend', ->
       setTileStyle()
     initializeInterface()
@@ -352,6 +383,7 @@ doNowInit= (now)->
     map.on 'moveend', (e)->
       now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
       $("#loadingIndicator").fadeOut('slow')
+
 
     map.on 'zoomend', (e)->
       if state.topLayerStamp
@@ -522,9 +554,6 @@ window.Cell = class Cell
     @write(config.defaultChar())
   
   animateTextInsert: (animateWith=0, c) ->
-    if not prefs.animate.writing
-      @span.innerHTML = c
-      return
     clone=  document.createElement('SPAN') #$(@span).clone().removeClass('selected')
     clone.className='cell ' + state.color
     clone.innerHTML=c
@@ -605,18 +634,29 @@ removeLayerThenZoomAndReplace = ->
   $layer.fadeOut('slow')
   map.removeLayer(layer) if state.topLayerStamp
   map.zoomOut()
-
   canvasTiles = new L.WCanvas({tileSize:{x:192, y:256}})
-
   map.addLayer canvasTiles
   state.isTopLayerInteractive= false
   stamp= L.Util.stamp(canvasTiles)
-
   # now.setBounds canvasTiles.getTilePointAbsoluteBounds()
   now.setBounds false 
   state.topLayerStamp = stamp
   return true
 
+#unused now
+removeLayerAndReplace = ->
+  Cell.killAll()
+  layer= map._layers[state.topLayerStamp]
+  $layer = $(".layer-#{state.topLayerStamp}")
+  $layer.fadeOut('slow')
+  map.removeLayer(layer) if state.topLayerStamp
+  canvasTiles = new L.WCanvas({tileSize:{x:192, y:256}})
+  map.addLayer canvasTiles
+  state.isTopLayerInteractive= false
+  stamp= L.Util.stamp(canvasTiles)
+  now.setBounds false 
+  state.topLayerStamp = stamp
+  return true
 
 turnOffLayer = ->
   #hide the layer first, with css?

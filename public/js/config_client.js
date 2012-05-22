@@ -49,7 +49,7 @@
       };
       this.minLayerZoom = function() {
         var _ref;
-        return (_ref = spec.minLayerZoom) != null ? _ref : 15;
+        return (_ref = spec.minLayerZoom) != null ? _ref : 16;
       };
       this.defaultChar = function() {
         var _ref;
@@ -64,7 +64,7 @@
         return (_ref = spec.maxDistanceFromOfficial) != null ? _ref : 10000;
       };
       this.scrollWheelZoom = function() {
-        return false;
+        return true;
       };
       this.autoPan = function() {
         return false;

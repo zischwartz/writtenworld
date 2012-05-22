@@ -3554,6 +3554,7 @@ L.Map.include(!(L.Transition && L.Transition.implemented()) ? {} : {
 		zoom = this._limitZoom(zoom);
 
 		var zoomChanged = (this._zoom !== zoom);
+    var zoomDiff = this._zoom -zoom;
 
 		if (this._loaded && !forceReset && this._layers) {
 			// difference between the new and current centers in pixels
@@ -3561,10 +3562,22 @@ L.Map.include(!(L.Transition && L.Transition.implemented()) ? {} : {
 
 			center = new L.LatLng(center.lat, center.lng);
 
-			var done = (zoomChanged ?
-					this._zoomToIfCenterInView && this._zoomToIfCenterInView(center, zoom, offset) :
-					this._panByIfClose(offset));
+      // Addded by zach, hackily
+      // var done= false;
 
+      if (this.preZoom && zoomChanged){
+          // console.log('prezooom');
+          var that = this;
+          this.preZoom(zoomDiff, function(){
+            done = (zoomChanged ?  that._zoomToIfCenterInView && that._zoomToIfCenterInView(center, zoom, offset) : that._panByIfClose(offset));
+            });
+        }
+      else
+      {
+        done = (zoomChanged ?  this._zoomToIfCenterInView && this._zoomToIfCenterInView(center, zoom, offset) : this._panByIfClose(offset));
+      }
+
+      // console.log('done?', done)
 			// exit if animated pan or zoom started
 			if (done) {
 				return this;
