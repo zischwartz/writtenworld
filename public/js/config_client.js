@@ -88,7 +88,11 @@
   window.config = new Configuration(window.worldSpec);
 
   window.officialCities = {
-    'New York City': new L.LatLng(40.73037270272987, -73.99361729621887)
+    'New York City': new L.LatLng(40.73037270272987, -73.99361729621887),
+    'Washington DC': new L.LatLng(38.898715, -77.037655),
+    'Boston': new L.LatLng(42.358431, -71.059773),
+    'Columbus': new L.LatLng(39.961176, -82.998794),
+    'San Francisco': new L.LatLng(37.77493, -122.419415)
   };
 
 }).call(this);
