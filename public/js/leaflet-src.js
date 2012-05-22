@@ -2618,7 +2618,8 @@ L.Map.ScrollWheelZoom = L.Handler.extend({
 			delta = Math.round(this._delta),
 			zoom = map.getZoom();
 
-		delta = Math.max(Math.min(delta, 4), -4);
+		// delta = Math.max(Math.min(delta, 4), -4);
+		delta = Math.max(Math.min(delta, 2), -2);
 		delta = map._limitZoom(zoom + delta) - zoom;
 
 		this._delta = 0;
@@ -3563,7 +3564,6 @@ L.Map.include(!(L.Transition && L.Transition.implemented()) ? {} : {
 			center = new L.LatLng(center.lat, center.lng);
 
       // Addded by zach, hackily
-      // var done= false;
 
       if (this.preZoom && zoomChanged){
           // console.log('prezooom');

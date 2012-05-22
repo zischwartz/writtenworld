@@ -54,11 +54,6 @@
     $(cell.span).addClass('selected');
     state.selectedCell = cell;
     now.setCursor(cellKeyToXY(cell.key));
-    if (cell.props) {
-      if (cell.props.decayed) {
-        cell.animateTextRemove(1);
-      }
-    }
     return true;
   };
 
@@ -139,19 +134,8 @@
     window.inputEl = $("#input");
     inputEl.focus();
     map.on('zoomend', function() {
-      return inputEl.focus();
-    });
-    map.on('viewreset', function(e) {
-      $("#loadingIndicator").fadeIn('fast');
-      if (map.getZoom() >= config.minLayerZoom() && !state.topLayerStamp) {
-        return turnOnMainLayer();
-      }
-    });
-    map.on('dblclick', function(e) {
-      return $("#loadingIndicator").fadeIn('fast');
-    });
-    $(".leaflet-control-zoom-in, .leaflet-control-zoom-out").click(function(e) {
-      return $("#loadingIndicator").fadeIn('fast');
+      inputEl.focus();
+      return $("#loadingIndicator").fadeOut('fast');
     });
     inputEl.keypress(function(e) {
       var c, userTotalRites, _ref;
@@ -239,27 +223,6 @@
     $(".modal").on('hidden', function() {
       return inputEl.focus();
     });
-    $(".leaflet-control-zoom-in").click(function(e) {
-      if (map.getZoom() === config.maxZoom()) {
-        insertMessage('Zoomed In', "That's as far as you can zoom out right now..");
-        $("#loadingIndicator").fadeOut('slow');
-        return false;
-      }
-      map.zoomIn();
-    });
-    $(".leaflet-control-zoom-out").click(function(e) {
-      if (map.getZoom() === config.minZoom()) {
-        insertMessage('Zoomed Out', "That's as far as you can zoom out right now..");
-        $("#loadingIndicator").fadeOut('slow');
-        return false;
-      }
-      if (map.getZoom() <= config.minLayerZoom() && state.isTopLayerInteractive) {
-        removeLayerThenZoomAndReplace();
-        insertMessage('No Writing', " You've zoomed out too far to write. The text density is now represented by circles. Zoom back in to read and write again.");
-      } else {
-        map.zoomOut();
-      }
-    });
     return $(".trigger").live('click', function() {
       var action, c, f, payload, t, text, type;
       action = $(this).data('action');
@@ -274,16 +237,6 @@
       }
       if (action === 'setClientState') {
         state[type] = payload;
-      }
-      if (type === 'layer') {
-        $("#worldLayer").html(text + '<b class="caret"></b>');
-        if (payload === 'off' && state.topLayerStamp) {
-          turnOffLayer();
-        } else if (payload === 'main') {
-          turnOnMainLayer();
-        } else {
-          switchToLayer(payload);
-        }
       }
       if (type === 'color') {
         $("#color").addClass(payload);
@@ -345,7 +298,6 @@
     centerPoint = window.officialCities["New York City"];
     mapOptions = {
       center: centerPoint,
-      zoomControl: false,
       attributionControl: false,
       zoom: config.defZoom(),
       scrollWheelZoom: config.scrollWheelZoom(),
@@ -391,16 +343,6 @@
         now.setBounds(getLayer(state.topLayerStamp).getTilePointAbsoluteBounds());
       }
       return $("#loadingIndicator").fadeOut('slow');
-    });
-    map.on('zoomend', function(e) {
-      if (state.topLayerStamp) {
-        now.setBounds(getLayer(state.topLayerStamp).getTilePointAbsoluteBounds());
-      }
-      if (map.getZoom() === config.minLayerZoom() && state.topLayerStamp && !state.isTopLayerInteractive) {
-        turnOffLayer();
-        turnOnMainLayer();
-        return $("#loadingIndicator").fadeOut('slow');
-      }
     });
     now.setClientStateFromServer(function(s) {
       var color_ops;

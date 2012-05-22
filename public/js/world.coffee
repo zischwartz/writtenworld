@@ -38,10 +38,8 @@ window.setCursor = (cell) ->  # takes the object, not the dom element
   $(cell.span).addClass('selected')
   state.selectedCell =cell
   now.setCursor cellKeyToXY cell.key
- 
-  if cell.props
-    if cell.props.decayed
-     cell.animateTextRemove(1)
+  # if cell.props?.decayed
+  #  cell.animateTextRemove(1)
   true
 
 
@@ -78,7 +76,6 @@ window.centerCursor = ->
     if not layer
       return true
     target=layer.getCenterTile()
-    # console.log('center cursor poll')
     key = "c#{target.x}x#{target.y}"
     targetCell=Cell.all()[key]
     if not targetCell
@@ -108,18 +105,19 @@ initializeInterface = ->
 
   map.on 'zoomend', ->
     inputEl.focus()
+    $("#loadingIndicator").fadeOut('fast')
+  
+  # map.on 'viewreset', (e) ->
+  #   $("#loadingIndicator").fadeIn('fast')
+  #   if map.getZoom() >= config.minLayerZoom() and not state.topLayerStamp
+  #     turnOnMainLayer() #should be turnOnLastLayer 
+  #     #TODO
 
-  map.on 'viewreset', (e) ->
-    $("#loadingIndicator").fadeIn('fast')
-    if map.getZoom() >= config.minLayerZoom() and not state.topLayerStamp
-      turnOnMainLayer() #should be turnOnLastLayer 
-      #TODO
+  # map.on 'dblclick', (e) ->
+  #   $("#loadingIndicator").fadeIn('fast')
 
-  map.on 'dblclick', (e) ->
-    $("#loadingIndicator").fadeIn('fast')
-
-  $(".leaflet-control-zoom-in, .leaflet-control-zoom-out").click (e) ->
-    $("#loadingIndicator").fadeIn('fast')
+  # $(".leaflet-control-zoom-in, .leaflet-control-zoom-out").click (e) ->
+  #   $("#loadingIndicator").fadeIn('fast')
 
   inputEl.keypress (e) ->
     # console.log e.which
@@ -138,13 +136,7 @@ initializeInterface = ->
 
       moveCursor(state.writeDirection)
 
-    # inp = String.fromCharCode(event.keyCode)
-    # if (/[a-zA-Z0-9-_ ]/.test(inp))
-      # console.log("input was a letter, number, hyphen, underscore or space")
-
   inputEl.keydown (e) ->
-    # e.stopPropagation() # e.stopImmediatePropagation()
-
     if not state.isTopLayerInteractive
       return false
 
@@ -187,9 +179,6 @@ initializeInterface = ->
         result =  data['ResultSet']['Results'][0]
         latlng = new L.LatLng parseFloat(result.latitude), parseFloat(result.longitude)
         km=latlng.distanceTo(state.geoPos)/1000
-        # console.log km
-        # console.log state.userPowers.jumpDistance
-        # if km <= state.userPowers.jumpDistance
         if km<=config.maxJumpDistance()
           map.panTo(latlng)
           state.geoPos= latlng
@@ -210,28 +199,28 @@ initializeInterface = ->
   $(".modal").on 'hidden', ->
     inputEl.focus()
 
-  $(".leaflet-control-zoom-in").click (e) ->
-    if map.getZoom() ==config.maxZoom()
-        insertMessage('Zoomed In', "That's as far as you can zoom out right now..")
-        $("#loadingIndicator").fadeOut('slow')
-        return false
-    map.zoomIn()
-    return
+  # $(".leaflet-control-zoom-in").click (e) ->
+  #   if map.getZoom() ==config.maxZoom()
+  #       insertMessage('Zoomed In', "That's as far as you can zoom out right now..")
+  #       $("#loadingIndicator").fadeOut('slow')
+  #       return false
+  #   map.zoomIn()
+  #   return
 
-  $(".leaflet-control-zoom-out").click (e) ->
-    if map.getZoom() ==config.minZoom()
-        insertMessage('Zoomed Out', "That's as far as you can zoom out right now..")
-        $("#loadingIndicator").fadeOut('slow')
-        return false
+  # $(".leaflet-control-zoom-out").click (e) ->
+  #   if map.getZoom() ==config.minZoom()
+  #       insertMessage('Zoomed Out', "That's as far as you can zoom out right now..")
+  #       $("#loadingIndicator").fadeOut('slow')
+  #       return false
 
-    if map.getZoom() <=config.minLayerZoom() and state.isTopLayerInteractive 
-        removeLayerThenZoomAndReplace()
-        insertMessage('No Writing', " You've zoomed out too far to write. The text density is now represented by circles. Zoom back in to read and write again.")
-        # console.log 'zoomout replace'
-    else
-      map.zoomOut()
-      # console.log 'just zoomout'
-    return
+  #   if map.getZoom() <=config.minLayerZoom() and state.isTopLayerInteractive 
+  #       removeLayerThenZoomAndReplace()
+  #       insertMessage('No Writing', " You've zoomed out too far to write. The text density is now represented by circles. Zoom back in to read and write again.")
+  #       # console.log 'zoomout replace'
+  #   else
+  #     map.zoomOut()
+  #     # console.log 'just zoomout'
+  #   return
 
   $(".trigger").live 'click', ->
     action= $(this).data('action')
@@ -243,24 +232,21 @@ initializeInterface = ->
     $(this).parent().addClass('active')
     # console.log 'trigger triggered'
 
-    if action == 'set' #change this (and setUserOption below) setServerState
+    if action == 'set' #setServerState, more properly, like color
       state[type]=payload
       now.setUserOption(type, payload)
-    if action == 'setClientState' # unrelated to setClientStateFromServer 
-      # console.log 'settingClientState', type
+    if action == 'setClientState' # unrelated to setClientStateFromServer, used for stuff like writedirection
       state[type] = payload
     
-    #specific interfaces
-
     # Layer Switching
-    if type=='layer'
-      $("#worldLayer").html(text+'<b class="caret"></b>' )
-      if payload=='off' and state.topLayerStamp
-        turnOffLayer()
-      else if payload=='main'
-        turnOnMainLayer()
-      else
-        switchToLayer(payload)
+    # if type=='layer'
+    #   $("#worldLayer").html(text+'<b class="caret"></b>' )
+    #   if payload=='off' and state.topLayerStamp
+    #     turnOffLayer()
+    #   else if payload=='main'
+    #     turnOnMainLayer()
+    #   else
+    #     switchToLayer(payload)
 
     if type == 'color'
       # console.log 'ch color'
@@ -334,7 +320,7 @@ jQuery ->
   centerPoint= window.officialCities["New York City"]
   mapOptions =
     center: centerPoint
-    zoomControl: false
+    # zoomControl: false
     attributionControl:false
     zoom: config.defZoom()
     scrollWheelZoom: config.scrollWheelZoom()
@@ -367,9 +353,9 @@ doNowInit= (now)->
     map.addLayer(domTiles)
     setTileStyle() #set initial
 
-
     map.on 'zoomend', ->
       setTileStyle()
+
     initializeInterface()
     $("#loadingIndicator").fadeOut('slow')
     
@@ -385,14 +371,14 @@ doNowInit= (now)->
       $("#loadingIndicator").fadeOut('slow')
 
 
-    map.on 'zoomend', (e)->
-      if state.topLayerStamp
-        now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds()
-      if map.getZoom()==config.minLayerZoom() and state.topLayerStamp and not state.isTopLayerInteractive
-        # console.log 'ZOOMIN SWITCH'
-        turnOffLayer()
-        turnOnMainLayer()
-        $("#loadingIndicator").fadeOut('slow')
+    # map.on 'zoomend', (e)->
+    #   if state.topLayerStamp
+    #     now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds()
+    #   if map.getZoom()==config.minLayerZoom() and state.topLayerStamp and not state.isTopLayerInteractive
+    #     # console.log 'ZOOMIN SWITCH'
+    #     turnOffLayer()
+    #     turnOnMainLayer()
+    #     $("#loadingIndicator").fadeOut('slow')
 
     now.setClientStateFromServer (s)->
       state.userPowers = s.powers
