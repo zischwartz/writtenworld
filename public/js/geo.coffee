@@ -31,7 +31,7 @@ geoHasPosition = (position) ->
     p = varyLatLng(p)
   state.geoPos = p
   state.initialGeoPos = new L.LatLng(p.lat, p.lng)
-  p = window.officialCities['New York City']
+  # p = window.officialCities['New York City']
   for own key, val of officialCities
     distance = p.distanceTo(val)
     if distance < config.maxDistanceFromOfficial()
