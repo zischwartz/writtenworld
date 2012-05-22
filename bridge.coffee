@@ -8,11 +8,12 @@ leaflet = require './lib/leaflet-custom-src.js'
 
 module.exports = (everyone, SessionModel) ->
   
-  processRite = (cellPoint, contents, nowUser, isLocal, currentWorldId, callback) ->
+  processRite = (cellPoint, absTilePoint, contents, nowUser, isLocal, currentWorldId, callback) ->
     cid = nowUser.clientId
     sid= decodeURIComponent nowUser.cookie['connect.sid']
     color= nowUser.session?.color
 
+    console.log absTilePoint
     # If user has an account and is logged in
     if nowUser.session.auth
       personalWorld = models.ObjectIdFromString(nowUser.personalWorldId)
@@ -41,6 +42,10 @@ module.exports = (everyone, SessionModel) ->
     .run (err, cell) ->
         console.log err if err
 
+        # What follows is so unfortunately complicated. The logic to determine what happens when a user writes to the main world
+        # involves knowing if they've previously written to that cell, echoed, or overwritten it, because you can only do the latter two once.
+        # Seems too complicated, but at least it works and is relatively clear, if long.
+
         if not cell or not cell.current
           # console.log 'no cell or blank cell'
           cell = new models.Cell {x:cellPoint.x, y:cellPoint.y, world:currentWorldId}
@@ -51,7 +56,6 @@ module.exports = (everyone, SessionModel) ->
           # console.log determineStatus(cell, riter)
           [already, alreadyPos] = determineStatus(cell, riter)
        
-        #todo load the world, outside of this function, it its not main or personal
         logic=
           blankCurrently : not cell?.current or cell?.current?.contents == models.mainWorld.config.defaultChar #TODO make this a config
           blankRite: contents == models.mainWorld.config.defaultChar

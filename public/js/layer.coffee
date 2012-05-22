@@ -181,7 +181,7 @@ L.DomTileLayer = L.Class.extend
     
 
     # $(@_container).remove()
-    console.log 'onRemove called'
+    # console.log 'onRemove called'
     map._panes.tilePane.removeChild @_container
     map.off "viewreset", @_resetCallback, this
     map.off "moveend", @_update, this
@@ -393,6 +393,7 @@ L.DomTileLayer = L.Class.extend
     # tile.src = @getTileUrl(tilePoint, zoom)
     tile._tilePoint = tilePoint
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
+    tile._absTilePoint = absTilePoint
     # dbg 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
     layer.tileDrawn(tile)
  
@@ -404,7 +405,7 @@ L.DomTileLayer = L.Class.extend
       else
         now.getTile absTilePoint, state.numRows(), (tileData, atp)->
           delay 0, ->
-            console.log tileData
+            # console.log tileData
             frag=betterBuildTile(tile, tileData, atp)
             layer.populateTile(tile, tilePoint, zoom, frag)
 

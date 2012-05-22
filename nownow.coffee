@@ -8,7 +8,6 @@ leaflet = require './lib/leaflet-custom-src.js'
 
 module.exports = (app, SessionModel, redis_client) ->
   everyone = nowjs.initialize app
-  # module.everyone = everyone
   bridge = require('./bridge')(everyone, SessionModel)
 
   everyone.now.setCurrentWorld = (currentWorldId, personalWorldId) ->
@@ -63,13 +62,13 @@ module.exports = (app, SessionModel, redis_client) ->
           nowjs.getClient i, ->
             this.now.updateCursors(update)
 
-  everyone.now.writeCell = (cellPoint, content) ->
+  everyone.now.writeCell = (content, cellPoint, absTilePoint) ->
     if not this.user.currentWorldId
       return false
     currentWorldId = this.user.currentWorldId
     cid = this.user.clientId
       
-    bridge.processRite cellPoint, content, this.user, this.now.isLocal, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->
+    bridge.processRite cellPoint, absTilePoint, content, this.user, this.now.isLocal, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
       getWhoCanSee cellPoint, currentWorldId, (toUpdate)->
         for i of toUpdate
@@ -98,15 +97,12 @@ module.exports = (app, SessionModel, redis_client) ->
     if not this.user.currentWorldId
       return false
 
-
-    # check if main world !!!!, only cache main world.
-    # console.log this.user
     worldId= this.user.currentWorldId.toString()
-    key="tile:#{worldId}:#{numRows}:#{absTilePoint.x}:#{absTilePoint.y}"
+    key="t:#{worldId}:#{numRows}:#{absTilePoint.x}:#{absTilePoint.y}"
     redis_client.exists key, (err, exists) ->
       if exists
         redis_client.hgetall key, (err, obj)->
-          console.log 'hit'
+          console.log 'hit ', key 
           for i of obj
             obj[i] = JSON.parse obj[i]
           callback(obj, absTilePoint)

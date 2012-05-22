@@ -206,7 +206,6 @@
       this._update();
     },
     onRemove: function(map) {
-      console.log('onRemove called');
       map._panes.tilePane.removeChild(this._container);
       map.off("viewreset", this._resetCallback, this);
       map.off("moveend", this._update, this);
@@ -466,6 +465,7 @@
         x: tilePoint.x * Math.pow(2, state.zoomDiff()),
         y: tilePoint.y * Math.pow(2, state.zoomDiff())
       };
+      tile._absTilePoint = absTilePoint;
       layer.tileDrawn(tile);
       delay(0, function() {
         var frag;
@@ -475,7 +475,6 @@
         } else {
           return now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
             return delay(0, function() {
-              console.log(tileData);
               frag = betterBuildTile(tile, tileData, atp);
               return layer.populateTile(tile, tilePoint, zoom, frag);
             });

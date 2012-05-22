@@ -493,7 +493,8 @@ window.Cell = class Cell
 
   write: (c) ->
     cellPoint = cellKeyToXY @key
-    now.writeCell(cellPoint, c)
+    # console.log @tile._absTilePoint
+    now.writeCell(c, cellPoint, @tile._absTilePoint)
     # TODO this is so simple, but really we should be handling this client side. lag will be frustrating.
 
   # COMMAND PATTERN

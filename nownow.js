@@ -88,14 +88,14 @@
         return _results;
       });
     };
-    everyone.now.writeCell = function(cellPoint, content) {
+    everyone.now.writeCell = function(content, cellPoint, absTilePoint) {
       var cid, currentWorldId;
       if (!this.user.currentWorldId) {
         return false;
       }
       currentWorldId = this.user.currentWorldId;
       cid = this.user.clientId;
-      bridge.processRite(cellPoint, content, this.user, this.now.isLocal, currentWorldId, function(commandType, rite, cellPoint, cellProps) {
+      bridge.processRite(cellPoint, absTilePoint, content, this.user, this.now.isLocal, currentWorldId, function(commandType, rite, cellPoint, cellProps) {
         if (rite == null) {
           rite = false;
         }
@@ -148,13 +148,13 @@
         return false;
       }
       worldId = this.user.currentWorldId.toString();
-      key = "tile:" + worldId + ":" + numRows + ":" + absTilePoint.x + ":" + absTilePoint.y;
+      key = "t:" + worldId + ":" + numRows + ":" + absTilePoint.x + ":" + absTilePoint.y;
       return redis_client.exists(key, function(err, exists) {
         var _this = this;
         if (exists) {
           return redis_client.hgetall(key, function(err, obj) {
             var i;
-            console.log('hit');
+            console.log('hit ', key);
             for (i in obj) {
               obj[i] = JSON.parse(obj[i]);
             }

@@ -569,7 +569,7 @@
     Cell.prototype.write = function(c) {
       var cellPoint;
       cellPoint = cellKeyToXY(this.key);
-      return now.writeCell(cellPoint, c);
+      return now.writeCell(c, cellPoint, this.tile._absTilePoint);
     };
 
     Cell.prototype.normalRite = function(rite) {
