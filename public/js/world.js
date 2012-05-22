@@ -526,27 +526,29 @@
       return "c" + this.x + "x" + this.y;
     };
 
-    function Cell(row, col, tile, contents, props, events) {
-      var $span;
+    function Cell(row, col, tile, contents, props) {
+      var $span, classString;
       this.row = row;
       this.col = col;
       this.tile = tile;
       this.contents = contents != null ? contents : config.defaultChar();
       this.props = props != null ? props : {};
-      this.events = events != null ? events : null;
       this.key = this.generateKey();
       all[this.key] = this;
       this.span = document.createElement('span');
       this.span.innerHTML = this.contents;
       this.span.id = this.key;
-      $(this.span).addClass('cell');
-      if (!this.props.color) {
+      classString = 'cell ';
+      if (this.props.color) {
+        classString += this.props.color;
+      } else {
+        classString += 'c0 ';
         this.props.color = 'c0';
       }
-      $(this.span).addClass(this.props.color);
       if (this.props.echoes) {
-        $(this.span).addClass("e" + this.props.echoes);
+        classString += " e" + this.props.echoes + " ";
       }
+      this.span.className = classString;
       this.watch("contents", function(id, oldval, newval) {
         this.span.innerHTML = newval;
         return newval;

@@ -92,7 +92,7 @@ betterBuildTile= (tile, tileData, absTilePoint)->
   frag = document.createDocumentFragment()
   for r in [0..state.numRows()-1]
     for c in [0..state.numCols()-1]
-      cellData=tileData["#{absTilePoint.x+c}x#{absTilePoint.y+r}"]
+      cellData=tileData?["#{absTilePoint.x+c}x#{absTilePoint.y+r}"]
       if cellData
         cell=Cell.getOrCreate r, c, tile, cellData.contents, cellData.props
       else
@@ -396,31 +396,17 @@ L.DomTileLayer = L.Class.extend
     # dbg 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
     layer.tileDrawn(tile)
  
-    # if state.zoomDiff() > 4 # only doTimeout if its zoomed out far enough
-    #   dbg 'popualteDelay timer active'
-    #   $(tile).doTimeout 'populateDelay', 500, ->
-    #     frag=getTileLocally(absTilePoint, tile)
-    #     if frag
-    #       layer.populateTile(tile, tilePoint, zoom, frag)
-    #     else
-    #       now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-    #         frag=betterBuildTile(tile, tileData, atp)
-    #         layer.populateTile(tile, tilePoint, zoom, frag)
-    #     return false #so it doesn't poll
-    # else
-
-    # check index of tiles otherwise TODO
     delay 0, ->
+      # console.log 'local'
       frag=getTileLocally(absTilePoint, tile)
       if frag
         layer.populateTile(tile, tilePoint, zoom, frag)
       else
-      now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-        console.log 'getTile returned results'
-        delay 0, ->
-          frag=betterBuildTile(tile, tileData, atp)
-          console.log 'fragd'
-          layer.populateTile(tile, tilePoint, zoom, frag)
+        now.getTile absTilePoint, state.numRows(), (tileData, atp)->
+          delay 0, ->
+            console.log tileData
+            frag=betterBuildTile(tile, tileData, atp)
+            layer.populateTile(tile, tilePoint, zoom, frag)
 
     return tile
 

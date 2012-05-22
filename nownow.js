@@ -9,7 +9,7 @@
 
   leaflet = require('./lib/leaflet-custom-src.js');
 
-  module.exports = function(app, SessionModel) {
+  module.exports = function(app, SessionModel, redis_client) {
     var CUser, bridge, everyone, getWhoCanSee;
     everyone = nowjs.initialize(app);
     bridge = require('./bridge')(everyone, SessionModel);
@@ -143,31 +143,48 @@
       });
     };
     everyone.now.getTile = function(absTilePoint, numRows, callback) {
-      var _this = this;
-      console.log('getTile');
+      var key, worldId;
       if (!this.user.currentWorldId) {
         return false;
       }
-      return models.Cell.where('world', this.user.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
-        var c, pCell, results, _i, _len;
-        results = {};
-        if (docs.length) {
-          for (_i = 0, _len = docs.length; _i < _len; _i++) {
-            c = docs[_i];
-            if (c.current) {
-              pCell = {
-                x: c.y,
-                y: c.y,
-                contents: c.current.contents,
-                props: c.current.props
-              };
-              results["" + c.x + "x" + c.y] = pCell;
+      worldId = this.user.currentWorldId.toString();
+      key = "tile:" + worldId + ":" + numRows + ":" + absTilePoint.x + ":" + absTilePoint.y;
+      return redis_client.exists(key, function(err, exists) {
+        var _this = this;
+        if (exists) {
+          return redis_client.hgetall(key, function(err, obj) {
+            var i;
+            console.log('hit');
+            for (i in obj) {
+              obj[i] = JSON.parse(obj[i]);
             }
-            console.log("results");
-          }
-          return callback(results, absTilePoint);
+            return callback(obj, absTilePoint);
+          });
         } else {
-          return callback(results, absTilePoint);
+          return models.Cell.where('world', worldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
+            var c, pCell, results, _i, _len;
+            console.log('miss');
+            results = {};
+            if (docs.length) {
+              for (_i = 0, _len = docs.length; _i < _len; _i++) {
+                c = docs[_i];
+                if (c.current) {
+                  pCell = {
+                    x: c.y,
+                    y: c.y,
+                    contents: c.current.contents,
+                    props: c.current.props
+                  };
+                  results["" + c.x + "x" + c.y] = pCell;
+                  redis_client.hmset(key, "" + c.x + "x" + c.y, JSON.stringify(pCell));
+                }
+              }
+              return callback(results, absTilePoint);
+            } else {
+              redis_client.set(key, results);
+              return callback(results, absTilePoint);
+            }
+          });
         }
       });
     };

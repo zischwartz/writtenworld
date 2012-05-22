@@ -6,7 +6,7 @@ nowjs = require 'now'
 
 leaflet = require './lib/leaflet-custom-src.js'
 
-module.exports = (app, SessionModel) ->
+module.exports = (app, SessionModel, redis_client) ->
   everyone = nowjs.initialize app
   # module.everyone = everyone
   bridge = require('./bridge')(everyone, SessionModel)
@@ -18,12 +18,6 @@ module.exports = (app, SessionModel) ->
       this.user.currentWorldId=currentWorldId
     else
       this.user.currentWorldId=false
-
-    # if currentWorldId != models.mainWorldId.toString() and currentWorldId != personalWorldId
-    #   console.log 'NOT MAIN, NOT PERSONAL'
-    #   this.user.specialWorld = true
-    #   models.World.findById currentWorldId, (err, world) =>
-    #     this.user.specialWorldName= world.name
 
   nowjs.on 'connect', ->
     this.user.cid = this.user.clientId
@@ -101,25 +95,39 @@ module.exports = (app, SessionModel) ->
         callback(results, absTilePoint)
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
-    console.log 'getTile'
     if not this.user.currentWorldId
       return false
-    models.Cell.where('world', this.user.currentWorldId)
-      .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
-      .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
-      .populate('current')
-      .run (err,docs) =>
-        results = {}
-        if docs.length
-          for c in docs
-            if c.current
-              pCell = {x: c.y, y: c.y, contents: c.current.contents, props: c.current.props}
-              results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
-            console.log "results"
-          callback(results, absTilePoint)
-        else
-          # console.log 'not found'
-          callback(results, absTilePoint)
+
+
+    # check if main world !!!!, only cache main world.
+    # console.log this.user
+    worldId= this.user.currentWorldId.toString()
+    key="tile:#{worldId}:#{numRows}:#{absTilePoint.x}:#{absTilePoint.y}"
+    redis_client.exists key, (err, exists) ->
+      if exists
+        redis_client.hgetall key, (err, obj)->
+          console.log 'hit'
+          for i of obj
+            obj[i] = JSON.parse obj[i]
+          callback(obj, absTilePoint)
+      else
+        models.Cell.where('world', worldId)
+          .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
+          .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
+          .populate('current')
+          .run (err,docs) =>
+            console.log 'miss'
+            results = {}
+            if docs.length
+              for c in docs
+                if c.current
+                  pCell = {x: c.y, y: c.y, contents: c.current.contents, props: c.current.props}
+                  results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
+                  redis_client.hmset key, "#{c.x}x#{c.y}", JSON.stringify(pCell)
+              callback(results, absTilePoint)
+            else
+              redis_client.set key, results
+              callback(results, absTilePoint)
 
   #utility for above 
   getWhoCanSee = (cellPoint, worldId, cb ) ->

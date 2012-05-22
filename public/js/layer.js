@@ -114,7 +114,7 @@
     frag = document.createDocumentFragment();
     for (r = _i = 0, _ref = state.numRows() - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; r = 0 <= _ref ? ++_i : --_i) {
       for (c = _j = 0, _ref1 = state.numCols() - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; c = 0 <= _ref1 ? ++_j : --_j) {
-        cellData = tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)];
+        cellData = tileData != null ? tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)] : void 0;
         if (cellData) {
           cell = Cell.getOrCreate(r, c, tile, cellData.contents, cellData.props);
         } else {
@@ -471,18 +471,16 @@
         var frag;
         frag = getTileLocally(absTilePoint, tile);
         if (frag) {
-          layer.populateTile(tile, tilePoint, zoom, frag);
+          return layer.populateTile(tile, tilePoint, zoom, frag);
         } else {
-
-        }
-        return now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
-          console.log('getTile returned results');
-          return delay(0, function() {
-            frag = betterBuildTile(tile, tileData, atp);
-            console.log('fragd');
-            return layer.populateTile(tile, tilePoint, zoom, frag);
+          return now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
+            return delay(0, function() {
+              console.log(tileData);
+              frag = betterBuildTile(tile, tileData, atp);
+              return layer.populateTile(tile, tilePoint, zoom, frag);
+            });
           });
-        });
+        }
       });
       return tile;
     },

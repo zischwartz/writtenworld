@@ -453,18 +453,24 @@ window.Cell = class Cell
     @y = @tile._tilePoint.y * Math.pow(2, state.zoomDiff())+@row
     return "c#{@x}x#{@y}"
 
-  constructor: (@row, @col, @tile, @contents = config.defaultChar(), @props={}, @events=null) ->
+  constructor: (@row, @col, @tile, @contents = config.defaultChar(), @props={}) ->
     @key = this.generateKey()
     all[@key]=this
     @span = document.createElement('span')
     @span.innerHTML= @contents
     @span.id= @key
-    $(@span).addClass('cell')
-    if not @props.color
+
+    classString = 'cell '
+    if @props.color
+      classString+= @props.color
+    else
+      classString+= 'c0 '
       @props.color = 'c0'
-    $(@span).addClass(@props.color)
+
     if @props.echoes
-      $(@span).addClass("e#{@props.echoes}")
+      classString+=" e#{@props.echoes} "
+
+    @span.className = classString
     
     @watch "contents", (id, oldval, newval) ->
       @span.innerHTML=newval

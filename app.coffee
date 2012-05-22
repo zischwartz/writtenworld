@@ -2,12 +2,21 @@ express = require 'express'
 nowjs = require 'now'
 connect = require 'connect'
 
+if 'prod' in process.argv
+  DEBUG= false
+else
+  DEBUG= true
 
 require 'coffee-script'
 
 mongoose = require 'mongoose'
 mongoose.connect('mongodb://localhost/mapist')
 jade = require('jade')
+
+redis = require "redis"
+redis_client = redis.createClient()
+
+redis_client.on "error", (error)-> console.log "Redis Error"+error
 
 fs = require('fs')
 events = require('events')
@@ -24,6 +33,7 @@ assetManagerGroups =
     route: /\/assets\/js\/application\.js/
     path: root + '/js/'
     dataType: 'javascript'
+    debug: DEBUG
     files: [
       'libs/jquery.min.js'
       'libs/watch_shim.js'
@@ -76,7 +86,7 @@ app.configure 'production', ->
   app.set 'port', 3000
   # app.set 'port', 80
 
-nownow = require('./nownow')(app, SessionModel)
+nownow = require('./nownow')(app, SessionModel, redis_client)
 
 app.get '/', (req, res) ->
   initialWorldId = models.mainWorldId
@@ -110,7 +120,6 @@ app.get '/home', (req, res) ->
 
 app.get '/about', (req, res) ->
   res.render 'about.jade', { title: 'About'}
-
 
 app.get '/secretfeedback' , (req, res) ->
   models.Feedback.find (err, feedbacks)->
