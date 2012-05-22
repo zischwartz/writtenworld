@@ -42,6 +42,7 @@ L.WCanvas = L.TileLayer.extend(
     offset= config.minLayerZoom()-zoom
     radius = density*offset*128
     if radius>96 then radius=96
+    if radius<10 then radius=10
     ctx = tile.getContext('2d')
     ctx.fillStyle = "rgba(195, 255, 195, 0.4 )"
     ctx.beginPath()

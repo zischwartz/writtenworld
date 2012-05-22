@@ -69,6 +69,9 @@
       if (radius > 96) {
         radius = 96;
       }
+      if (radius < 10) {
+        radius = 10;
+      }
       ctx = tile.getContext('2d');
       ctx.fillStyle = "rgba(195, 255, 195, 0.4 )";
       ctx.beginPath();
