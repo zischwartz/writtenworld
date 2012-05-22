@@ -3692,6 +3692,7 @@ L.Map.include(!L.DomUtil.TRANSITION ? {} : {
 
 		clearTimeout(this._clearTileBgTimer);
 
+    // console.log('_runAnimation');
 		//dumb FireFox hack, I have no idea why this magic zero translate fixes the scale transition problem
 		if (L.Browser.gecko || window.opera) {
 			tileBg.style[transform] += ' translate(0,0)';
@@ -3769,13 +3770,22 @@ L.Map.include(!L.DomUtil.TRANSITION ? {} : {
 	},
 
 	_onZoomTransitionEnd: function () {
-		this._restoreTileFront();
 
-		L.Util.falseFn(this._tileBg.offsetWidth);
-		this._resetView(this._animateToCenter, this._animateToZoom, true, true);
-
-		this._mapPane.className = this._mapPane.className.replace(' leaflet-zoom-anim', ''); //TODO toggleClass util
-		this._animatingZoom = false;
+    // console.log('_onZoomTransitionEnd');
+    // if(this._zoom >= this._layersMaxZoom-window.MapBoxBadZoomOffset)
+    //   {
+    //     console.log('keepem');
+    //     this._animatingZoom = false;
+    //     return;
+    //   }
+    // else
+    // {
+      this._restoreTileFront();
+      L.Util.falseFn(this._tileBg.offsetWidth);
+      this._resetView(this._animateToCenter, this._animateToZoom, true, true);
+      this._mapPane.className = this._mapPane.className.replace(' leaflet-zoom-anim', ''); //TODO toggleClass util
+      this._animatingZoom = false;
+//    }
 	},
 
 	_restoreTileFront: function () {
