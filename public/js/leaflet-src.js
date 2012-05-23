@@ -2619,7 +2619,7 @@ L.Map.ScrollWheelZoom = L.Handler.extend({
 			zoom = map.getZoom();
 
 		// delta = Math.max(Math.min(delta, 4), -4);
-		delta = Math.max(Math.min(delta, 2), -2);
+		delta = Math.max(Math.min(delta, 1), -1);
 		delta = map._limitZoom(zoom + delta) - zoom;
 
 		this._delta = 0;

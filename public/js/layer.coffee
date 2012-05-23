@@ -181,7 +181,7 @@ L.DomTileLayer = L.Class.extend
     
 
     # $(@_container).remove()
-    console.log 'onRemove called'
+    # console.log 'onRemove called'
     map._panes.tilePane.removeChild @_container
     map.off "viewreset", @_resetCallback, this
     map.off "moveend", @_update, this
@@ -448,29 +448,17 @@ L.DomTileLayer = L.Class.extend
 
   _onTileUnload: (e) ->
     # $(e.tile).doTimeout 'populateDelay' #cancels the timer
-    # console.log 'tile to unload:'
-    # console.log e.tile
+    # console.log 'tile to unload:', e.tile
     tile = e.tile
     #the fix!
     tile.style.display = 'none'
-    #what was I doing below? tile doesn't have a ._zoom prop. I could give it one...
-    # better to hook in to the _remove func
  
-#     if e.tile._zoom == map.getZoom()
-#       dbg 'unload due to pan, easy'
-#       # for c in e.tile._cells
-#       #   c.kill()
-#       # e.tile = null #maybe dont' need to do this
-#     else if e.tile._zoom < map.getZoom()
-#       dbg 'unload due to zoom in, less easy'
-#     else if e.tile._zoom > map.getZoom()
-#       dbg 'zoom out' # this case requires nothing, every cell will still be there
     true
 
   _removeCellsFromTile: (tile) ->
     if tile._cells
       for c in tile._cells
-        c.kill
+        c.kill()
 
   getTilePointBounds: ->
     bounds = this._map.getPixelBounds()

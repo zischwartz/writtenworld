@@ -206,7 +206,6 @@
       this._update();
     },
     onRemove: function(map) {
-      console.log('onRemove called');
       map._panes.tilePane.removeChild(this._container);
       map.off("viewreset", this._resetCallback, this);
       map.off("moveend", this._update, this);
@@ -537,7 +536,7 @@
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           c = _ref[_i];
-          _results.push(c.kill);
+          _results.push(c.kill());
         }
         return _results;
       }

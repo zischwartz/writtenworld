@@ -1,5 +1,5 @@
 window.DEBUG = false
-window.USEMAP = true
+window.NOMAP = true
 window.VARYLATLNG = false
 window.MapBoxBadZoomOffset=3 #3 for mapbox, 2 for a ts with max zoom of 18
 
@@ -17,7 +17,7 @@ Configuration = class Configuration
     @maxZoom = -> spec.maxZoom ? 20 # this is super important and sets the resolution. was 18, current image tiles are only 18
     @minZoom = -> spec.minZoom ? 11 # was 16
     @defZoom = -> spec.defZoom ? 16 # was 17 till weds night before thesis
-    @minLayerZoom = -> spec.minLayerZoom ? 16 # was 16. turn off the layer at this zoom
+    @minLayerZoom = -> spec.minLayerZoom ? 16 # was 16. turn off the layer ABOVE this zoom (lower number)
 
     @defaultChar = -> spec.defaultChar ? " "
     @inputRateLimit = -> spec.inputRateLimit ? 20
