@@ -447,18 +447,17 @@ L.DomTileLayer = L.Class.extend
     true
 
   _onTileUnload: (e) ->
-    # $(e.tile).doTimeout 'populateDelay' #cancels the timer
     # console.log 'tile to unload:', e.tile
     tile = e.tile
-    #the fix!
     tile.style.display = 'none'
- 
-    true
+    return true
 
   _removeCellsFromTile: (tile) ->
     if tile._cells
       for c in tile._cells
         c.kill()
+      tile._cells = null
+    return
 
   getTilePointBounds: ->
     bounds = this._map.getPixelBounds()
@@ -466,7 +465,7 @@ L.DomTileLayer = L.Class.extend
     nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x), Math.floor(bounds.min.y / tileSize.y))
     seTilePoint = new L.Point( Math.floor(bounds.max.x / tileSize.x), Math.floor(bounds.max.y / tileSize.y))
     tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
-    tileBounds
+    return tileBounds
 
   # getTilePointAbsoluteBoundsTrue: -> #this version doesn't have the additional buffertile, for use with getCenterTile
   #   bounds = this._map.getPixelBounds()

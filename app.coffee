@@ -2,6 +2,12 @@ express = require 'express'
 nowjs = require 'now'
 connect = require 'connect'
 
+if 'prod' in process.argv
+  DEBUG= false
+else
+  DEBUG= true
+
+console.log 'DEBUG? ', DEBUG
 
 require 'coffee-script'
 
@@ -24,6 +30,7 @@ assetManagerGroups =
     route: /\/assets\/js\/application\.js/
     path: root + '/js/'
     dataType: 'javascript'
+    debug: DEBUG
     files: [
       'libs/jquery.min.js'
       'libs/watch_shim.js'
@@ -180,7 +187,7 @@ models.mongooseAuth.helpExpress(app)
 
 port = app.settings.port
 if 'prod' in process.argv
-  console.log 'DIRTY PRODUCTION MODE ENABLED'
+  console.log ' PRODUCTION MODE ENABLED'
   port = 80
   # disabled in favor of iptables
   

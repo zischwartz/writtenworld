@@ -530,15 +530,14 @@
       return true;
     },
     _removeCellsFromTile: function(tile) {
-      var c, _i, _len, _ref, _results;
+      var c, _i, _len, _ref;
       if (tile._cells) {
         _ref = tile._cells;
-        _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           c = _ref[_i];
-          _results.push(c.kill());
+          c.kill();
         }
-        return _results;
+        tile._cells = null;
       }
     },
     getTilePointBounds: function() {

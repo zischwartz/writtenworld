@@ -1,5 +1,5 @@
 window.DEBUG = false
-window.NOMAP = true
+window.NOMAP = false
 window.VARYLATLNG = false
 window.MapBoxBadZoomOffset=3 #3 for mapbox, 2 for a ts with max zoom of 18
 

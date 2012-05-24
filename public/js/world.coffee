@@ -16,7 +16,7 @@ window.state =
   cellHeight: ->
     config.tileSize().y/state.numRows()
 
-  topLayerStamp: null
+  topLayerStamp: null #assigning in init to domtiles
   # baseLayer: null #this seems to be unused?
   lastLayerStamp: null
   isTopLayerInteractive: true
@@ -113,6 +113,7 @@ initializeInterface = ->
   inputEl.keypress (e) ->
     # console.log e.which
     if not state.isTopLayerInteractive
+      console.log 'no'
       return false
     if e.which in [0, 13, 32, 9, 8] # 40, 39, 38  were here, but that seems to be single quote?
       return false
@@ -295,17 +296,17 @@ jQuery ->
   window.map= new L.Map('map', mapOptions).addLayer(tileServeLayer)
   
   map.preZoom= (zoomDelta,cb) ->
-    # zoomDelta= old-new  # positive is out, negative is in
     current= map.getZoom()
     if zoomDelta > 0 #zooming out
       if current <= config.minLayerZoom() and state.isTopLayerInteractive
-        console.log 'switch off layer'
+        layerUtils.remove(state.topLayerStamp)
+        layerUtils.addCanvas()
         insertMessage('No Writing', " You've zoomed out too far to write. The text density is now represented by circles. Zoom back in to read and write again.")
-        state.isTopLayerInteractive= false
     else if zoomDelta < 0  #zooming in
-      if current >= config.minLayerZoom() and not state.isTopLayerInteractive
-        console.log 'switch on layer'
-        state.isTopLayerInteractive= true
+      if current >= config.minLayerZoom()-1 and not state.isTopLayerInteractive
+        layerUtils.remove(state.topLayerStamp)
+        layerUtils.addDom()
+        #
         # now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds()
     
     if current==config.minZoom()
@@ -427,6 +428,7 @@ window.clearMessages = ->
 $().alert() #applies close functionality to all alerts
 
 #todo disable cell caching, because then they don't get liveupdated when not visible, duh...
+# possibly fixed, check with two screens
 
 window.Cell = class Cell
   all = {}
@@ -549,6 +551,10 @@ window.Cell = class Cell
       return false
 
   animateTextRemove: (animateWith=0) ->
+    
+    # animate_ops = ['a0', 'a1', 'a2', 'a3']
+    # state.color=color_ops[ Math.floor(Math.random() * 4)]
+
     span= @span #the original
     clone=  $(@span).clone()
     @span.innerHTML= config.defaultChar()
@@ -575,19 +581,36 @@ window.Cell = class Cell
       cell = new Cell row, col, tile, contents, props
       return cell
 
-#LAYER SWITCH CODE
-# removeLayerThenZoomOut=  ->
-#   Cell.killAll() #this is good, but not actually neccesary (noted, because it used to be neccesary)
-#   layer= map._layers[state.topLayerStamp]
-#   $layer = $(".layer-#{state.topLayerStamp}")
-#   $layer.fadeOut('slow')
-#   # console.log 'turn off layer'
-#   map.removeLayer(layer) if state.topLayerStamp
-#   state.topLayerStamp = 0
-#   now.setCurrentWorld(null)
-#   map.zoomOut()
-#   return
-# 
+
+layerUtils=
+  remove: (stamp) ->
+    layer= map._layers[stamp]
+    map.removeLayer(layer)
+    return
+  addCanvas: ->
+    canvasTiles = new L.WCanvas({tileSize:{x:192, y:256}})
+    map.addLayer canvasTiles
+    state.isTopLayerInteractive= false
+    state.topLayerStamp = L.Util.stamp(canvasTiles)
+    state.selectedCell = null
+    state.lastClickCell = null
+    now.setBounds false
+    return
+  addDom: ->
+    map.options.zoomAnimation = false
+    domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+    map.addLayer(domTiles)
+    state.topLayerStamp = L.Util.stamp(domTiles)
+    state.isTopLayerInteractive= true
+    now.setBounds domTiles.getTilePointAbsoluteBounds()
+    inputEl.focus()
+    centerCursor()
+    $.doTimeout 1000, ->
+      map.options.zoomAnimation =true
+      return false
+    return
+
+ 
 # removeLayerThenZoomAndReplace = ->
 #   Cell.killAll()
 #   layer= map._layers[state.topLayerStamp]
@@ -646,8 +669,6 @@ window.Cell = class Cell
 #   now.setBounds domTiles.getTilePointAbsoluteBounds()
 #   inputEl.focus()
 #   centerCursor()
-# 
-# 
 # 
 # #not used
 # switchToLayer= (worldId) ->
