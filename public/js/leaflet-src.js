@@ -2618,7 +2618,8 @@ L.Map.ScrollWheelZoom = L.Handler.extend({
 			delta = Math.round(this._delta),
 			zoom = map.getZoom();
 
-		delta = Math.max(Math.min(delta, 4), -4);
+		// delta = Math.max(Math.min(delta, 4), -4);
+		delta = Math.max(Math.min(delta, 1), -1);
 		delta = map._limitZoom(zoom + delta) - zoom;
 
 		this._delta = 0;
@@ -3554,6 +3555,7 @@ L.Map.include(!(L.Transition && L.Transition.implemented()) ? {} : {
 		zoom = this._limitZoom(zoom);
 
 		var zoomChanged = (this._zoom !== zoom);
+    var zoomDiff = this._zoom -zoom;
 
 		if (this._loaded && !forceReset && this._layers) {
 			// difference between the new and current centers in pixels
@@ -3561,10 +3563,21 @@ L.Map.include(!(L.Transition && L.Transition.implemented()) ? {} : {
 
 			center = new L.LatLng(center.lat, center.lng);
 
-			var done = (zoomChanged ?
-					this._zoomToIfCenterInView && this._zoomToIfCenterInView(center, zoom, offset) :
-					this._panByIfClose(offset));
+      // Addded by zach, hackily
 
+      if (this.preZoom && zoomChanged){
+          // console.log('prezooom');
+          var that = this;
+          this.preZoom(zoomDiff, function(){
+            done = (zoomChanged ?  that._zoomToIfCenterInView && that._zoomToIfCenterInView(center, zoom, offset) : that._panByIfClose(offset));
+            });
+        }
+      else
+      {
+        done = (zoomChanged ?  this._zoomToIfCenterInView && this._zoomToIfCenterInView(center, zoom, offset) : this._panByIfClose(offset));
+      }
+
+      // console.log('done?', done)
 			// exit if animated pan or zoom started
 			if (done) {
 				return this;
@@ -3679,6 +3692,7 @@ L.Map.include(!L.DomUtil.TRANSITION ? {} : {
 
 		clearTimeout(this._clearTileBgTimer);
 
+    // console.log('_runAnimation');
 		//dumb FireFox hack, I have no idea why this magic zero translate fixes the scale transition problem
 		if (L.Browser.gecko || window.opera) {
 			tileBg.style[transform] += ' translate(0,0)';
@@ -3756,13 +3770,22 @@ L.Map.include(!L.DomUtil.TRANSITION ? {} : {
 	},
 
 	_onZoomTransitionEnd: function () {
-		this._restoreTileFront();
 
-		L.Util.falseFn(this._tileBg.offsetWidth);
-		this._resetView(this._animateToCenter, this._animateToZoom, true, true);
-
-		this._mapPane.className = this._mapPane.className.replace(' leaflet-zoom-anim', ''); //TODO toggleClass util
-		this._animatingZoom = false;
+    // console.log('_onZoomTransitionEnd');
+    // if(this._zoom >= this._layersMaxZoom-window.MapBoxBadZoomOffset)
+    //   {
+    //     console.log('keepem');
+    //     this._animatingZoom = false;
+    //     return;
+    //   }
+    // else
+    // {
+      this._restoreTileFront();
+      L.Util.falseFn(this._tileBg.offsetWidth);
+      this._resetView(this._animateToCenter, this._animateToZoom, true, true);
+      this._mapPane.className = this._mapPane.className.replace(' leaflet-zoom-anim', ''); //TODO toggleClass util
+      this._animatingZoom = false;
+//    }
 	},
 
 	_restoreTileFront: function () {

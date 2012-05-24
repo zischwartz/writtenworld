@@ -15,13 +15,15 @@ window.state =
     config.tileSize().x/state.numCols()
   cellHeight: ->
     config.tileSize().y/state.numRows()
-  belowInputRateLimit: true
-  topLayerStamp: null
-  baseLayer: null
+
+  topLayerStamp: null #assigning in init to domtiles
+  # baseLayer: null #this seems to be unused?
   lastLayerStamp: null
   isTopLayerInteractive: true
+  
   cursors: {}
   isLocal: true
+  belowInputRateLimit: true
 
 setTileStyle = ->
  width = state.cellWidth()
@@ -31,6 +33,7 @@ setTileStyle = ->
  rules.push("div.leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
  $("#dynamicStyles").text rules.join("\n")
 
+# just yr cursor
 window.setCursor = (cell) ->  # takes the object, not the dom element
   if state.selectedEl
     $(state.selectedEl).removeClass('selected')
@@ -38,16 +41,12 @@ window.setCursor = (cell) ->  # takes the object, not the dom element
   $(cell.span).addClass('selected')
   state.selectedCell =cell
   now.setCursor cellKeyToXY cell.key
- 
-  if cell.props
-    if cell.props.decayed
-     cell.animateTextRemove(1)
-  true
-
+  # if cell.props?.decayed
+  #  cell.animateTextRemove(1)
+  return true
 
 moveCursor = (direction, from = state.selectedCell, force=false) ->
   target = cellKeyToXY(from.key)
-  
   switch direction
     when 'up'
       target.y =  target.y-1
@@ -73,12 +72,11 @@ window.centerCursor = ->
   $.doTimeout 400, ->
     if state.selectedCell and $(".selected").length
       inputEl.focus()
-      return false # we're cool
+      return false # they clicked and set it themselves, so don't center it
     layer=getLayer(state.topLayerStamp)
     if not layer
       return true
     target=layer.getCenterTile()
-    # console.log('center cursor poll')
     key = "c#{target.x}x#{target.y}"
     targetCell=Cell.all()[key]
     if not targetCell
@@ -108,43 +106,27 @@ initializeInterface = ->
 
   map.on 'zoomend', ->
     inputEl.focus()
-
-  map.on 'viewreset', (e) ->
-    $("#loadingIndicator").fadeIn('fast')
-    if map.getZoom() >= config.minLayerZoom() and not state.topLayerStamp
-      turnOnMainLayer() #should be turnOnLastLayer 
-      #TODO
-
-  map.on 'dblclick', (e) ->
-    $("#loadingIndicator").fadeIn('fast')
-
-  $(".leaflet-control-zoom-in, .leaflet-control-zoom-out").click (e) ->
-    $("#loadingIndicator").fadeIn('fast')
+    $("#loadingIndicator").fadeOut('fast')
+  
+  $userTotalRites = $("#userTotalRites")
 
   inputEl.keypress (e) ->
     # console.log e.which
     if not state.isTopLayerInteractive
+      console.log 'no'
       return false
     if e.which in [0, 13, 32, 9, 8] # 40, 39, 38  were here, but that seems to be single quote?
-      # console.log 'SPECIAL KEY, screw this keypress'
       return false
     else
       c = String.fromCharCode e.which
-      state.selectedCell.write( c)
+      state.selectedCell.write(c)
 
-      userTotalRites=parseInt($("#userTotalRites").text())
-      $("#userTotalRites").text(userTotalRites+1)
-      # cellPoint = cellKeyToXY state.selectedCell.key
-
+      userTotalRites=parseInt($userTotalRites.text())
+      $userTotalRites.text(userTotalRites+1)
       moveCursor(state.writeDirection)
-
-    # inp = String.fromCharCode(event.keyCode)
-    # if (/[a-zA-Z0-9-_ ]/.test(inp))
-      # console.log("input was a letter, number, hyphen, underscore or space")
+      return
 
   inputEl.keydown (e) ->
-    # e.stopPropagation() # e.stopImmediatePropagation()
-
     if not state.isTopLayerInteractive
       return false
 
@@ -187,9 +169,6 @@ initializeInterface = ->
         result =  data['ResultSet']['Results'][0]
         latlng = new L.LatLng parseFloat(result.latitude), parseFloat(result.longitude)
         km=latlng.distanceTo(state.geoPos)/1000
-        # console.log km
-        # console.log state.userPowers.jumpDistance
-        # if km <= state.userPowers.jumpDistance
         if km<=config.maxJumpDistance()
           map.panTo(latlng)
           state.geoPos= latlng
@@ -210,28 +189,6 @@ initializeInterface = ->
   $(".modal").on 'hidden', ->
     inputEl.focus()
 
-  $(".leaflet-control-zoom-in").click (e) ->
-    if map.getZoom() ==config.maxZoom()
-        insertMessage('Zoomed In', "That's as far as you can zoom out right now..")
-        $("#loadingIndicator").fadeOut('slow')
-        return false
-    map.zoomIn()
-    return
-
-  $(".leaflet-control-zoom-out").click (e) ->
-    if map.getZoom() ==config.minZoom()
-        insertMessage('Zoomed Out', "That's as far as you can zoom out right now..")
-        $("#loadingIndicator").fadeOut('slow')
-        return false
-    if map.getZoom() <=config.minLayerZoom() and state.isTopLayerInteractive 
-        removeLayerThenZoomAndReplace()
-        insertMessage('No Writing', " You've zoomed out too far to write. The text density is now represented by circles. Zoom back in to read and write again.")
-        # console.log 'zoomout replace'
-    else
-      map.zoomOut()
-      # console.log 'just zoomout'
-    return
-
   $(".trigger").live 'click', ->
     action= $(this).data('action')
     type= $(this).data('type')
@@ -242,24 +199,21 @@ initializeInterface = ->
     $(this).parent().addClass('active')
     # console.log 'trigger triggered'
 
-    if action == 'set' #change this (and setUserOption below) setServerState
+    if action == 'set' #setServerState, more properly, like color
       state[type]=payload
       now.setUserOption(type, payload)
-    if action == 'setClientState' # unrelated to setClientStateFromServer 
-      # console.log 'settingClientState', type
+    if action == 'setClientState' # unrelated to setClientStateFromServer, used for stuff like writedirection
       state[type] = payload
     
-    #specific interfaces
-
     # Layer Switching
-    if type=='layer'
-      $("#worldLayer").html(text+'<b class="caret"></b>' )
-      if payload=='off' and state.topLayerStamp
-        turnOffLayer()
-      else if payload=='main'
-        turnOnMainLayer()
-      else
-        switchToLayer(payload)
+    # if type=='layer'
+    #   $("#worldLayer").html(text+'<b class="caret"></b>' )
+    #   if payload=='off' and state.topLayerStamp
+    #     turnOffLayer()
+    #   else if payload=='main'
+    #     turnOnMainLayer()
+    #   else
+    #     switchToLayer(payload)
 
     if type == 'color'
       # console.log 'ch color'
@@ -301,17 +255,39 @@ panIfAppropriate = (direction)->
 
 
 jQuery ->
+  # welcome_message=[]
+  # welcome_message.push c for c in "Hey. Try typing on the map./It'll be fun. I swear./Click + for more info. /Or just explore. "
+  # $.doTimeout 10000, ->
+  #   console.log 'welcome'
+  #   layer=getLayer(state.topLayerStamp)
+  #   if not layer then return true
+  #   target=layer.getCenterTile()
+  #   target.x-=15
+  #   target.y-=10
+  #   initial_x = target.x
+  #   key = "c#{target.x}x#{target.y}"
+  #   targetCell=Cell.all()[key]
+  #   if not targetCell then return true
+  #   $.doTimeout 150, ->
+  #     l = welcome_message.shift()
+  #     if l == '/'
+  #       target.y+=1
+  #       target.x = initial_x
+  #     else
+  #       target.x+=1
+  #       key = "c#{target.x}x#{target.y}"
+  #       targetCell=Cell.all()[key]
+  #       targetCell.animateTextInsert(2, l )
+  #     if welcome_message.length then return true  else return false
+  #   return false
 
-  $("#welcome").doTimeout 15000, ->
-    $("#welcome").fadeOut()
-
-  tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()})
-  state.baseLayer= tileServeLayer
+  if not window.NOMAP then tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()}) else  tileServeLayer = new L.TileLayer('', {maxZoom: config.maxZoom()})
+  # state.baseLayer= tileServeLayer
 
   centerPoint= window.officialCities["New York City"]
   mapOptions =
     center: centerPoint
-    zoomControl: false
+    # zoomControl: false
     attributionControl:false
     zoom: config.defZoom()
     scrollWheelZoom: config.scrollWheelZoom()
@@ -319,26 +295,50 @@ jQuery ->
     maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset
   window.map= new L.Map('map', mapOptions).addLayer(tileServeLayer)
   
+  map.preZoom= (zoomDelta,cb) ->
+    current= map.getZoom()
+    if zoomDelta > 0 #zooming out
+      if current <= config.minLayerZoom() and state.isTopLayerInteractive
+        layerUtils.remove(state.topLayerStamp)
+        layerUtils.addCanvas()
+        insertMessage('No Writing', " You've zoomed out too far to write. The text density is now represented by circles. Zoom back in to read and write again.")
+    else if zoomDelta < 0  #zooming in
+      if current >= config.minLayerZoom()-1 and not state.isTopLayerInteractive
+        layerUtils.remove(state.topLayerStamp)
+        layerUtils.addDom()
+        #
+        # now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds()
+    
+    if current==config.minZoom()
+      insertMessage('Zoomed Out', "That's as far as you can zoom out right now.")
+      return false
+
+    cb()
+    return
+
   initializeGeo()
 
   now.ready ->
     doNowInit(now)
-    # now.core.socketio.on 'reconnect', ->
-    #   console.log 'reconnected!'
+    # now.core.socketio.on 'reconnect', -> #   console.log 'reconnected!'
     return # end now.ready
 
   return true # end doc.ready
 
 doNowInit= (now)->
     domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+
     state.topLayerStamp = L.Util.stamp domTiles
     now.isLocal= state.isLocal
 
     now.setCurrentWorld(initialWorldId, personalWorldId)
+
     map.addLayer(domTiles)
     setTileStyle() #set initial
+
     map.on 'zoomend', ->
       setTileStyle()
+
     initializeInterface()
     $("#loadingIndicator").fadeOut('slow')
     
@@ -353,14 +353,6 @@ doNowInit= (now)->
       now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
       $("#loadingIndicator").fadeOut('slow')
 
-    map.on 'zoomend', (e)->
-      if state.topLayerStamp
-        now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds()
-      if map.getZoom()==config.minLayerZoom() and state.topLayerStamp and not state.isTopLayerInteractive
-        # console.log 'ZOOMIN SWITCH'
-        turnOffLayer()
-        turnOnMainLayer()
-        $("#loadingIndicator").fadeOut('slow')
 
     now.setClientStateFromServer (s)->
       state.userPowers = s.powers
@@ -375,6 +367,7 @@ doNowInit= (now)->
     centerCursor()
 
     now.updateCursors = (updatedCursor) ->
+      #todo, what if they go out of bounds and come back? something here is buggy
       if state.cursors[updatedCursor.cid]
         cursor=state.cursors[updatedCursor.cid]
         selectedCell = Cell.get(cursor.x, cursor.y)
@@ -415,6 +408,7 @@ doNowInit= (now)->
       insertMessage(heading, message, cssclass)
 ## END doNowInit()
 
+
 # this shouldn't get called until docready anyway...
 window.insertMessage = (heading, message, cssclass="", timing=6 ) ->
   html = "<div class='alert alert-block fade  #{cssclass} '><a class='close' data-dismiss='alert'>×</a><h4 class='alert-heading'>#{heading}</h4>#{message}</div>"
@@ -434,6 +428,7 @@ window.clearMessages = ->
 $().alert() #applies close functionality to all alerts
 
 #todo disable cell caching, because then they don't get liveupdated when not visible, duh...
+# possibly fixed, check with two screens
 
 window.Cell = class Cell
   all = {}
@@ -522,9 +517,6 @@ window.Cell = class Cell
     @write(config.defaultChar())
   
   animateTextInsert: (animateWith=0, c) ->
-    if not prefs.animate.writing
-      @span.innerHTML = c
-      return
     clone=  document.createElement('SPAN') #$(@span).clone().removeClass('selected')
     clone.className='cell ' + state.color
     clone.innerHTML=c
@@ -559,6 +551,10 @@ window.Cell = class Cell
       return false
 
   animateTextRemove: (animateWith=0) ->
+    
+    # animate_ops = ['a0', 'a1', 'a2', 'a3']
+    # state.color=color_ops[ Math.floor(Math.random() * 4)]
+
     span= @span #the original
     clone=  $(@span).clone()
     @span.innerHTML= config.defaultChar()
@@ -585,80 +581,106 @@ window.Cell = class Cell
       cell = new Cell row, col, tile, contents, props
       return cell
 
-#LAYER SWITCH CODE
-removeLayerThenZoomOut=  ->
-  Cell.killAll() #this is good, but not actually neccesary (noted, because it used to be neccesary)
-  layer= map._layers[state.topLayerStamp]
-  $layer = $(".layer-#{state.topLayerStamp}")
-  $layer.fadeOut('slow')
-  # console.log 'turn off layer'
-  map.removeLayer(layer) if state.topLayerStamp
-  state.topLayerStamp = 0
-  now.setCurrentWorld(null)
-  map.zoomOut()
-  return
 
-removeLayerThenZoomAndReplace = ->
-  Cell.killAll()
-  layer= map._layers[state.topLayerStamp]
-  $layer = $(".layer-#{state.topLayerStamp}")
-  $layer.fadeOut('slow')
-  map.removeLayer(layer) if state.topLayerStamp
-  map.zoomOut()
+layerUtils=
+  remove: (stamp) ->
+    layer= map._layers[stamp]
+    map.removeLayer(layer)
+    return
+  addCanvas: ->
+    canvasTiles = new L.WCanvas({tileSize:{x:192, y:256}})
+    map.addLayer canvasTiles
+    state.isTopLayerInteractive= false
+    state.topLayerStamp = L.Util.stamp(canvasTiles)
+    state.selectedCell = null
+    state.lastClickCell = null
+    now.setBounds false
+    return
+  addDom: ->
+    map.options.zoomAnimation = false
+    domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+    map.addLayer(domTiles)
+    state.topLayerStamp = L.Util.stamp(domTiles)
+    state.isTopLayerInteractive= true
+    now.setBounds domTiles.getTilePointAbsoluteBounds()
+    inputEl.focus()
+    centerCursor()
+    $.doTimeout 1000, ->
+      map.options.zoomAnimation =true
+      return false
+    return
 
-  canvasTiles = new L.WCanvas({tileSize:{x:192, y:256}})
-
-  map.addLayer canvasTiles
-  state.isTopLayerInteractive= false
-  stamp= L.Util.stamp(canvasTiles)
-
-  # now.setBounds canvasTiles.getTilePointAbsoluteBounds()
-  now.setBounds false 
-  state.topLayerStamp = stamp
-  return true
-
-
-turnOffLayer = ->
-  #hide the layer first, with css?
-  Cell.killAll()
-  layer= map._layers[state.topLayerStamp]
-  $layer = $(".layer-#{state.topLayerStamp}")
-  $layer.fadeOut('slow')
-  $.doTimeout 500, ->
-    # console.log 'turn off layer'
-    map.removeLayer(layer) if state.topLayerStamp
-    # state.topLayerStamp = 0
-    # now.setCurrentWorld(null)
-    return false
-  return
-
-turnOnMainLayer= ->
-  # console.log 'turn on layer'
-  Cell.killAll()
-  now.setCurrentWorld(initialWorldId, personalWorldId)
-  # now.setCurrentWorld(mainWorldId, personalWorldId)
-  domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
-  map.addLayer(domTiles)
-  stamp= L.Util.stamp(domTiles)
-  state.topLayerStamp = stamp
-  state.isTopLayerInteractive= true
-  now.setBounds domTiles.getTilePointAbsoluteBounds()
-  inputEl.focus()
-  centerCursor()
-
-
-
-#not used
-switchToLayer= (worldId) ->
-  Cell.killAll()
-  map.removeLayer(getLayer(state.topLayerStamp)) if state.topLayerStamp
-  now.setCurrentWorld(worldId)
-  domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
-  map.addLayer(domTiles)
-  state.topLayerStamp = L.Util.stamp domTiles
-  now.setBounds domTiles.getTilePointAbsoluteBounds()
-  inputEl.focus()
-  centerCursor()
+ 
+# removeLayerThenZoomAndReplace = ->
+#   Cell.killAll()
+#   layer= map._layers[state.topLayerStamp]
+#   $layer = $(".layer-#{state.topLayerStamp}")
+#   $layer.fadeOut('slow')
+#   map.removeLayer(layer) if state.topLayerStamp
+#   map.zoomOut()
+#   canvasTiles = new L.WCanvas({tileSize:{x:192, y:256}})
+#   map.addLayer canvasTiles
+#   state.isTopLayerInteractive= false
+#   stamp= L.Util.stamp(canvasTiles)
+#   # now.setBounds canvasTiles.getTilePointAbsoluteBounds()
+#   now.setBounds false 
+#   state.topLayerStamp = stamp
+#   return true
+# 
+# #unused now
+# removeLayerAndReplace = ->
+#   Cell.killAll()
+#   layer= map._layers[state.topLayerStamp]
+#   $layer = $(".layer-#{state.topLayerStamp}")
+#   $layer.fadeOut('slow')
+#   map.removeLayer(layer) if state.topLayerStamp
+#   canvasTiles = new L.WCanvas({tileSize:{x:192, y:256}})
+#   map.addLayer canvasTiles
+#   state.isTopLayerInteractive= false
+#   stamp= L.Util.stamp(canvasTiles)
+#   now.setBounds false 
+#   state.topLayerStamp = stamp
+#   return true
+# 
+# turnOffLayer = ->
+#   #hide the layer first, with css?
+#   Cell.killAll()
+#   layer= map._layers[state.topLayerStamp]
+#   $layer = $(".layer-#{state.topLayerStamp}")
+#   $layer.fadeOut('slow')
+#   $.doTimeout 500, ->
+#     # console.log 'turn off layer'
+#     map.removeLayer(layer) if state.topLayerStamp
+#     # state.topLayerStamp = 0
+#     # now.setCurrentWorld(null)
+#     return false
+#   return
+# 
+# turnOnMainLayer= ->
+#   # console.log 'turn on layer'
+#   Cell.killAll()
+#   now.setCurrentWorld(initialWorldId, personalWorldId)
+#   # now.setCurrentWorld(mainWorldId, personalWorldId)
+#   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+#   map.addLayer(domTiles)
+#   stamp= L.Util.stamp(domTiles)
+#   state.topLayerStamp = stamp
+#   state.isTopLayerInteractive= true
+#   now.setBounds domTiles.getTilePointAbsoluteBounds()
+#   inputEl.focus()
+#   centerCursor()
+# 
+# #not used
+# switchToLayer= (worldId) ->
+#   Cell.killAll()
+#   map.removeLayer(getLayer(state.topLayerStamp)) if state.topLayerStamp
+#   now.setCurrentWorld(worldId)
+#   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+#   map.addLayer(domTiles)
+#   state.topLayerStamp = L.Util.stamp domTiles
+#   now.setBounds domTiles.getTilePointAbsoluteBounds()
+#   inputEl.focus()
+#   centerCursor()
 
 getLayer = (stamp) ->
   return map._layers[stamp]

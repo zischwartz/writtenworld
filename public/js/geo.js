@@ -8,13 +8,15 @@
       navigator.geolocation.getCurrentPosition(geoSucceeded, geoFailed);
     }
     return $.getScript('http://j.maxmind.com/app/geoip.js', function(data, textStatus) {
-      geoHasPosition({
-        coords: {
-          latitude: geoip_latitude(),
-          longitude: geoip_longitude(),
-          accuracy: -1
-        }
-      });
+      if (!state.geoPos) {
+        geoHasPosition({
+          coords: {
+            latitude: geoip_latitude(),
+            longitude: geoip_longitude(),
+            accuracy: -1
+          }
+        });
+      }
       return true;
     });
   };
@@ -24,7 +26,9 @@
   };
 
   geoSucceeded = function(position) {
-    geoHasPosition(position);
+    if (!state.geoPos) {
+      geoHasPosition(position);
+    }
     return true;
   };
 
@@ -36,7 +40,7 @@
     p = new L.LatLng(position.coords.latitude, position.coords.longitude);
     state.geoPos = p;
     state.geoAccuracy = position.coords.accuracy;
-    if (position.coords.accuracy > 2000 || position.coords.accuracy === -1) {
+    if (window.VARYLATLNG && position.coords.accuracy > 2000 || position.coords.accuracy === -1) {
       p = varyLatLng(p);
     }
     state.geoPos = p;

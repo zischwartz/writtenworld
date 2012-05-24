@@ -4,7 +4,7 @@
 
   window.DEBUG = false;
 
-  window.USEMAP = true;
+  window.NOMAP = false;
 
   window.VARYLATLNG = false;
 
@@ -64,7 +64,7 @@
         return (_ref = spec.maxDistanceFromOfficial) != null ? _ref : 10000;
       };
       this.scrollWheelZoom = function() {
-        return false;
+        return true;
       };
       this.autoPan = function() {
         return false;

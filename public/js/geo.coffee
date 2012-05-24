@@ -4,7 +4,7 @@ window.initializeGeo = ->
       navigator.geolocation.getCurrentPosition(geoSucceeded, geoFailed) # navigator.geolocation.watchPosition geoWatch #possibly use this for mobile
 
   $.getScript 'http://j.maxmind.com/app/geoip.js', (data, textStatus) ->
-    geoHasPosition {coords:{latitude: geoip_latitude(), longitude: geoip_longitude(), accuracy:-1}}
+    geoHasPosition {coords:{latitude: geoip_latitude(), longitude: geoip_longitude(), accuracy:-1}} if not state.geoPos
     return true
 
 
@@ -12,7 +12,7 @@ geoFailed = (error) ->
   return true
 
 geoSucceeded = (position) ->
-  geoHasPosition position
+  geoHasPosition position if not state.geoPos
   true
 
 # chicago = new L.LatLng(41.878114,-87.629798) # for testing
@@ -27,7 +27,7 @@ geoHasPosition = (position) ->
   p = new L.LatLng(position.coords.latitude,position.coords.longitude)
   state.geoPos = p
   state.geoAccuracy = position.coords.accuracy
-  if position.coords.accuracy > 2000 or position.coords.accuracy is -1
+  if window.VARYLATLNG and position.coords.accuracy > 2000 or position.coords.accuracy is -1
     p = varyLatLng(p)
   state.geoPos = p
   state.initialGeoPos = new L.LatLng(p.lat, p.lng)
