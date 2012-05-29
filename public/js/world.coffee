@@ -30,7 +30,8 @@ setTileStyle = ->
  height = state.cellHeight()
  fontSize = height*0.9
  rules = []
- rules.push("div.leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
+ # rules.push("div.leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
+ rules.push(".cell { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
  $("#dynamicStyles").text rules.join("\n")
 
 # just yr cursor
@@ -255,31 +256,7 @@ panIfAppropriate = (direction)->
 
 
 jQuery ->
-  # welcome_message=[]
-  # welcome_message.push c for c in "Hey. Try typing on the map./It'll be fun. I swear./Click + for more info. /Or just explore. "
-  # $.doTimeout 10000, ->
-  #   console.log 'welcome'
-  #   layer=getLayer(state.topLayerStamp)
-  #   if not layer then return true
-  #   target=layer.getCenterTile()
-  #   target.x-=15
-  #   target.y-=10
-  #   initial_x = target.x
-  #   key = "c#{target.x}x#{target.y}"
-  #   targetCell=Cell.all()[key]
-  #   if not targetCell then return true
-  #   $.doTimeout 150, ->
-  #     l = welcome_message.shift()
-  #     if l == '/'
-  #       target.y+=1
-  #       target.x = initial_x
-  #     else
-  #       target.x+=1
-  #       key = "c#{target.x}x#{target.y}"
-  #       targetCell=Cell.all()[key]
-  #       targetCell.animateTextInsert(2, l )
-  #     if welcome_message.length then return true  else return false
-  #   return false
+  welcome()
 
   if not window.NOMAP then tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()}) else  tileServeLayer = new L.TileLayer('', {maxZoom: config.maxZoom()})
   # state.baseLayer= tileServeLayer
@@ -287,7 +264,6 @@ jQuery ->
   centerPoint= window.officialCities["New York City"]
   mapOptions =
     center: centerPoint
-    # zoomControl: false
     attributionControl:false
     zoom: config.defZoom()
     scrollWheelZoom: config.scrollWheelZoom()
@@ -498,7 +474,7 @@ window.Cell = class Cell
     @props.color= cellProps.color
 
   overrite: (rite, cellProps) ->
-    @animateTextRemove(1)
+    @animateTextRemove()
     @contents = rite.contents
     @props.echoes =0
     @props.color= rite.props.color
@@ -516,19 +492,23 @@ window.Cell = class Cell
   clear: ->
     @write(config.defaultChar())
   
-  animateTextInsert: (animateWith=0, c) ->
+  animateTextInsert: (c, animateWith, color=state.color, welcome=false) ->
     clone=  document.createElement('SPAN') #$(@span).clone().removeClass('selected')
-    clone.className='cell ' + state.color
+    clone.className='cell ' + color
     clone.innerHTML=c
     span=@span
+    if not animateWith
+        animateWith=Math.floor(Math.random() * 3)+1
     $(clone).css('position', 'absolute').insertBefore('body').addClass('ai'+animateWith)
     offset= $(@span).offset()
     $(clone).css({'opacity': '1 !important', 'font-size': '1em'})
     $(clone).css({'position':'absolute', left: offset.left, top: offset.top})
-    $(clone).doTimeout 200, ->
-      span.innerHTML = c
-      $(clone).remove()
-      return false
+    if not welcome
+      $(clone).doTimeout 200, ->
+        span.innerHTML = c
+        span.className+=" #{color} "
+        $(clone).remove()
+        return false
   
   animateText: (animateWith=0) ->
     span= @span #the original
@@ -550,10 +530,10 @@ window.Cell = class Cell
         $(clone).remove()
       return false
 
-  animateTextRemove: (animateWith=0) ->
-    
-    # animate_ops = ['a0', 'a1', 'a2', 'a3']
-    # state.color=color_ops[ Math.floor(Math.random() * 4)]
+  animateTextRemove: (animateWith) ->
+   
+    if not animateWith
+      animateWith= Math.floor(Math.random() * 3)+1
 
     span= @span #the original
     clone=  $(@span).clone()
@@ -610,77 +590,45 @@ layerUtils=
       return false
     return
 
- 
-# removeLayerThenZoomAndReplace = ->
-#   Cell.killAll()
-#   layer= map._layers[state.topLayerStamp]
-#   $layer = $(".layer-#{state.topLayerStamp}")
-#   $layer.fadeOut('slow')
-#   map.removeLayer(layer) if state.topLayerStamp
-#   map.zoomOut()
-#   canvasTiles = new L.WCanvas({tileSize:{x:192, y:256}})
-#   map.addLayer canvasTiles
-#   state.isTopLayerInteractive= false
-#   stamp= L.Util.stamp(canvasTiles)
-#   # now.setBounds canvasTiles.getTilePointAbsoluteBounds()
-#   now.setBounds false 
-#   state.topLayerStamp = stamp
-#   return true
-# 
-# #unused now
-# removeLayerAndReplace = ->
-#   Cell.killAll()
-#   layer= map._layers[state.topLayerStamp]
-#   $layer = $(".layer-#{state.topLayerStamp}")
-#   $layer.fadeOut('slow')
-#   map.removeLayer(layer) if state.topLayerStamp
-#   canvasTiles = new L.WCanvas({tileSize:{x:192, y:256}})
-#   map.addLayer canvasTiles
-#   state.isTopLayerInteractive= false
-#   stamp= L.Util.stamp(canvasTiles)
-#   now.setBounds false 
-#   state.topLayerStamp = stamp
-#   return true
-# 
-# turnOffLayer = ->
-#   #hide the layer first, with css?
-#   Cell.killAll()
-#   layer= map._layers[state.topLayerStamp]
-#   $layer = $(".layer-#{state.topLayerStamp}")
-#   $layer.fadeOut('slow')
-#   $.doTimeout 500, ->
-#     # console.log 'turn off layer'
-#     map.removeLayer(layer) if state.topLayerStamp
-#     # state.topLayerStamp = 0
-#     # now.setCurrentWorld(null)
-#     return false
-#   return
-# 
-# turnOnMainLayer= ->
-#   # console.log 'turn on layer'
-#   Cell.killAll()
-#   now.setCurrentWorld(initialWorldId, personalWorldId)
-#   # now.setCurrentWorld(mainWorldId, personalWorldId)
-#   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
-#   map.addLayer(domTiles)
-#   stamp= L.Util.stamp(domTiles)
-#   state.topLayerStamp = stamp
-#   state.isTopLayerInteractive= true
-#   now.setBounds domTiles.getTilePointAbsoluteBounds()
-#   inputEl.focus()
-#   centerCursor()
-# 
-# #not used
-# switchToLayer= (worldId) ->
-#   Cell.killAll()
-#   map.removeLayer(getLayer(state.topLayerStamp)) if state.topLayerStamp
-#   now.setCurrentWorld(worldId)
-#   domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
-#   map.addLayer(domTiles)
-#   state.topLayerStamp = L.Util.stamp domTiles
-#   now.setBounds domTiles.getTilePointAbsoluteBounds()
-#   inputEl.focus()
-#   centerCursor()
+welcome = ->
+  welcome_message=[]
+  welcome_message.push c for c in "Hey. Try typing on the map./It'll be fun. I swear. "
+  welcome_cells=[]
+  $.doTimeout 10000, ->
+    map.on 'movestart', ->
+      $('.cS0').addClass('ar1').remove()
+    layer=getLayer(state.topLayerStamp)
+    if not layer then return true
+    target=layer.getCenterTile()
+    target.x-=15
+    target.y-=10
+    initial_x = target.x
+    key = "c#{target.x}x#{target.y}"
+    targetCell=Cell.all()[key]
+    if not targetCell then return true
+    $.doTimeout 120, ->
+      l = welcome_message.shift()
+      if l == '/'
+        target.y+=1
+        target.x = initial_x
+      else
+        target.x+=1
+        key = "c#{target.x}x#{target.y}"
+        targetCell=Cell.all()[key]
+        targetCell.animateTextInsert(l, 4, 'cS0', true)
+        welcome_cells.push targetCell
+      if welcome_message.length
+        return true
+      else
+        $('.cS0').click ->
+          $('.cS0').addClass('ar1')
+
+          
+        $.doTimeout 8000, ->
+          $('.cS0').addClass('ar1')
+          return false
+        return false
+    return
 
 getLayer = (stamp) ->
   return map._layers[stamp]
