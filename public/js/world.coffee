@@ -343,19 +343,24 @@ doNowInit= (now)->
     centerCursor()
 
     now.updateCursors = (updatedCursor) ->
+      # console.log updatedCursor
       #todo, what if they go out of bounds and come back? something here is buggy
       if state.cursors[updatedCursor.cid]
         cursor=state.cursors[updatedCursor.cid]
         selectedCell = Cell.get(cursor.x, cursor.y)
-        $(selectedCell.span).removeClass("c#{cursor.color} otherSelected")
+        console.log selectedCell
+        if selectedCell
+          $(selectedCell.span).removeClass("c#{cursor.color} otherSelected")
       state.cursors[updatedCursor.cid]= updatedCursor
       cursor= updatedCursor
       if cursor.x and cursor.y
         selectedCell = Cell.get(cursor.x, cursor.y)
-        $(selectedCell.span).addClass("c#{cursor.color} otherSelected")
+        if selectedCell
+          $(selectedCell.span).addClass("c#{cursor.color} otherSelected")
       else
         delete state.cursors[cursor.cid] # on disconnect, remove
-  
+      return
+
     $("#getNearby").click ->
       now.getCloseUsers (closeUsers)->
         # console.log closeUsers
@@ -594,9 +599,14 @@ welcome = ->
   welcome_message=[]
   welcome_message.push c for c in "Hey. Try typing on the map./It'll be fun. I swear. "
   welcome_cells=[]
-  $.doTimeout 10000, ->
+  $.doTimeout 8000, ->
+    $('.cS0').live 'click', ->
+      $.doTimeout 'welcome'
+      $('.cS0').addClass('ar1').doTimeout 200, -> @remove()
     map.on 'movestart', ->
-      $('.cS0').addClass('ar1').remove()
+      $('.cS0').addClass('ar1').doTimeout 200, -> @remove()
+      $.doTimeout 'welcome'
+      return false
     layer=getLayer(state.topLayerStamp)
     if not layer then return true
     target=layer.getCenterTile()
@@ -606,7 +616,7 @@ welcome = ->
     key = "c#{target.x}x#{target.y}"
     targetCell=Cell.all()[key]
     if not targetCell then return true
-    $.doTimeout 120, ->
+    $.doTimeout 'welcome', 120, ->
       l = welcome_message.shift()
       if l == '/'
         target.y+=1
@@ -620,12 +630,8 @@ welcome = ->
       if welcome_message.length
         return true
       else
-        $('.cS0').click ->
-          $('.cS0').addClass('ar1')
-
-          
         $.doTimeout 8000, ->
-          $('.cS0').addClass('ar1')
+          $('.cS0').addClass('ar1').doTimeout 200, -> @remove()
           return false
         return false
     return

@@ -386,15 +386,20 @@
       if (state.cursors[updatedCursor.cid]) {
         cursor = state.cursors[updatedCursor.cid];
         selectedCell = Cell.get(cursor.x, cursor.y);
-        $(selectedCell.span).removeClass("c" + cursor.color + " otherSelected");
+        console.log(selectedCell);
+        if (selectedCell) {
+          $(selectedCell.span).removeClass("c" + cursor.color + " otherSelected");
+        }
       }
       state.cursors[updatedCursor.cid] = updatedCursor;
       cursor = updatedCursor;
       if (cursor.x && cursor.y) {
         selectedCell = Cell.get(cursor.x, cursor.y);
-        return $(selectedCell.span).addClass("c" + cursor.color + " otherSelected");
+        if (selectedCell) {
+          $(selectedCell.span).addClass("c" + cursor.color + " otherSelected");
+        }
       } else {
-        return delete state.cursors[cursor.cid];
+        delete state.cursors[cursor.cid];
       }
     };
     $("#getNearby").click(function() {
@@ -751,10 +756,20 @@
       welcome_message.push(c);
     }
     welcome_cells = [];
-    return $.doTimeout(10000, function() {
+    return $.doTimeout(8000, function() {
       var initial_x, key, layer, target, targetCell;
+      $('.cS0').live('click', function() {
+        $.doTimeout('welcome');
+        return $('.cS0').addClass('ar1').doTimeout(200, function() {
+          return this.remove();
+        });
+      });
       map.on('movestart', function() {
-        return $('.cS0').addClass('ar1').remove();
+        $('.cS0').addClass('ar1').doTimeout(200, function() {
+          return this.remove();
+        });
+        $.doTimeout('welcome');
+        return false;
       });
       layer = getLayer(state.topLayerStamp);
       if (!layer) {
@@ -769,7 +784,7 @@
       if (!targetCell) {
         return true;
       }
-      $.doTimeout(120, function() {
+      $.doTimeout('welcome', 120, function() {
         var l;
         l = welcome_message.shift();
         if (l === '/') {
@@ -785,11 +800,10 @@
         if (welcome_message.length) {
           return true;
         } else {
-          $('.cS0').click(function() {
-            return $('.cS0').addClass('ar1');
-          });
           $.doTimeout(8000, function() {
-            $('.cS0').addClass('ar1');
+            $('.cS0').addClass('ar1').doTimeout(200, function() {
+              return this.remove();
+            });
             return false;
           });
           return false;
