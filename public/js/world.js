@@ -251,7 +251,7 @@
       $(this).parent().addClass('active');
       if (action === 'set') {
         state[type] = payload;
-        now.setUserOption(type, payload);
+        now.setServerState(type, payload);
       }
       if (action === 'setClientState') {
         state[type] = payload;
@@ -398,7 +398,7 @@
       } else {
         color_ops = ['c0', 'c1', 'c2', 'c3'];
         state.color = color_ops[Math.floor(Math.random() * 4)];
-        return now.setUserOption('color', state.color);
+        return now.setServerState('color', state.color);
       }
     });
     centerCursor();
@@ -576,6 +576,7 @@
         };
         now.writeCell(cellPoint, contents);
         state.linkurl = false;
+        now.setServerState('linked', true);
       } else {
         now.writeCell(cellPoint, c);
       }

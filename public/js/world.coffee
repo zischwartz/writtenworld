@@ -212,7 +212,7 @@ initializeInterface = ->
 
     if action == 'set' #setServerState, more properly, like color
       state[type]=payload
-      now.setUserOption(type, payload)
+      now.setServerState(type, payload)
     if action == 'setClientState' # unrelated to setClientStateFromServer, used for stuff like writedirection
       state[type] = payload
     
@@ -343,7 +343,7 @@ doNowInit= (now)->
         color_ops = ['c0', 'c1', 'c2', 'c3']
         state.color=color_ops[ Math.floor(Math.random() * 4)]
         # state.color = 'c0'
-        now.setUserOption('color',state.color)
+        now.setServerState('color',state.color)
       
     centerCursor()
 
@@ -479,6 +479,7 @@ window.Cell = class Cell
       contents={contents:c, linkurl: state.linkurl}
       now.writeCell(cellPoint, contents)
       state.linkurl=false
+      now.setServerState('linked', true)
     else
       now.writeCell(cellPoint, c)
     return

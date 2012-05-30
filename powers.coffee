@@ -31,6 +31,9 @@ module.exports=
   canLink: (user) ->
     yest = new Date
     yest.setHours(yest.getHours()-24)
+    if not user.powers
+      return false
+
     if user.powers.lastLinkOn
       if user.powers.lastLinkOn < yest
         console.log 'cool, link away'
@@ -38,5 +41,3 @@ module.exports=
       else
         console.log 'nope too recent'
         return false
-    else
-      return true #because the schema is new, but the moment you add a link, you'll have the field and won't hit this

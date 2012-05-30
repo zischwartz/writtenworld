@@ -108,7 +108,6 @@ app.get '/', (req, res) ->
     availableColors: availableColors
     isPersonal: false
     isAuth: req.loggedIn
-    canLink: canLink
 
 app.get '/home', (req, res) ->
   if req.loggedIn
@@ -163,6 +162,7 @@ app.get '/uw/:slug', (req, res)->
             personalWorldId: world._id
             worldSpec: JSON.stringify(world.config)
             availableColors : powers.getAvailableColors req.user.totalEchoes
+            isAuth: req.loggedIn
             isPersonal: true
           # res.write 'error'
           # res.end()

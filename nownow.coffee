@@ -2,6 +2,7 @@
 models= require './models'
 nowjs = require 'now'
 
+powers = require './powers'
 # async = require './lib/async.js'
 
 leaflet = require './lib/leaflet-custom-src.js'
@@ -68,11 +69,24 @@ module.exports = (app, SessionModel) ->
       return false
     currentWorldId = this.now.currentWorldId
     cid = this.user.clientId
-      
+
+    if typeof content isnt 'string'
+      for k,v of content
+        if k is 'linkurl'
+           process.nextTick =>
+              models.User.findById CUser.byCid(this.user.cid).uid, (err, doc) =>
+                doc.powers.lastLinkOn = new Date
+                doc.save()
+                this.user.powers.lastLinkOn= new Date
+                console.log doc
+                return
+          if not powers.canLink this.user
+              this.now.insertMessage "Sorry, 2 Link / Day", "For now. Sorry." , 'error'
+              return false #no write yo, maybe shake a bit
+
     bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
       getWhoCanSee cellPoint, currentWorldId, (toUpdate)->
-        # console.log rite
         for i of toUpdate
           # if i !=cid # ie not you, removed for my hack 
             if rite # it was a legit rite
@@ -156,7 +170,7 @@ module.exports = (app, SessionModel) ->
     feedback = new models.Feedback({contents: f, t:t})
     feedback.save (err) -> console.log err if err
 
-  everyone.now.setUserOption = (type, payload) ->
+  everyone.now.setServerState = (type, payload) ->
     # console.log 'setUserOption', type, payload
     if type == 'color'
       cid=this.user.clientId
