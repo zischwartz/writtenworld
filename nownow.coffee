@@ -11,19 +11,13 @@ module.exports = (app, SessionModel) ->
   # module.everyone = everyone
   bridge = require('./bridge')(everyone, SessionModel)
 
-  everyone.now.setCurrentWorld = (currentWorldId, personalWorldId) ->
-    this.user.personalWorldId = personalWorldId
+
+  everyone.now.setGroup = (currentWorldId) ->
     if currentWorldId
       group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId)
-      this.user.currentWorldId=currentWorldId
+      return
     else
-      this.user.currentWorldId=false
-
-    # if currentWorldId != models.mainWorldId.toString() and currentWorldId != personalWorldId
-    #   console.log 'NOT MAIN, NOT PERSONAL'
-    #   this.user.specialWorld = true
-    #   models.World.findById currentWorldId, (err, world) =>
-    #     this.user.specialWorldName= world.name
+      return false
 
   nowjs.on 'connect', ->
     this.user.cid = this.user.clientId
@@ -35,7 +29,7 @@ module.exports = (app, SessionModel) ->
     u=CUser.byCid(cid)
     update =
       cid: cid
-    getWhoCanSee u.cursor, this.user.currentWorldId, (toUpdate)->
+    getWhoCanSee u.cursor, this.now.currentWorldId, (toUpdate)->
       for i of toUpdate
           nowjs.getClient i, ->
             this.now.updateCursors(update)
@@ -53,7 +47,7 @@ module.exports = (app, SessionModel) ->
       callback(this.user.session)
 
   everyone.now.setCursor = (cellPoint) ->
-    if not this.user.currentWorldId
+    if not this.now.currentWorldId
       return false
     cid = this.user.clientId
     CUser.byCid(cid).cursor = cellPoint
@@ -63,34 +57,35 @@ module.exports = (app, SessionModel) ->
       y: cellPoint.y
       color: this.user.session.color if this.user.session
 
-    getWhoCanSee cellPoint, this.user.currentWorldId, (toUpdate)->
+    getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
       for i of toUpdate
         if i != cid #not you
           nowjs.getClient i, ->
             this.now.updateCursors(update)
 
-  everyone.now.writeCell = (cellPoint, content, linkurl=false) ->
-    console.log linkurl
-    if not this.user.currentWorldId
+  everyone.now.writeCell = (cellPoint, content) ->
+    if not this.now.currentWorldId
       return false
-    currentWorldId = this.user.currentWorldId
+    currentWorldId = this.now.currentWorldId
     cid = this.user.clientId
       
-    bridge.processRite cellPoint, content, this.user, this.now.isLocal, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->
+    bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
       getWhoCanSee cellPoint, currentWorldId, (toUpdate)->
+        # console.log rite
         for i of toUpdate
           # if i !=cid # ie not you, removed for my hack 
             if rite # it was a legit rite
               nowjs.getClient i, ->
+                # console.log i
                 this.now.drawRite(commandType, rite, cellPoint, cellProps)
     return true
 
 
   everyone.now.getZoomedOutTile= (absTilePoint, numRows, numCols, callback) ->
-    if not this.user.currentWorldId
+    if not this.now.currentWorldId
       return false
-    models.Cell.where('world', this.user.currentWorldId)
+    models.Cell.where('world', this.now.currentWorldId)
       .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numCols)
       .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
       .count (err,count) =>
@@ -103,9 +98,9 @@ module.exports = (app, SessionModel) ->
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
     # console.log 'getTile'
-    if not this.user.currentWorldId
+    if not this.now.currentWorldId
       return false
-    models.Cell.where('world', this.user.currentWorldId)
+    models.Cell.where('world', this.now.currentWorldId)
       .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
       .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
       .populate('current')
@@ -133,7 +128,7 @@ module.exports = (app, SessionModel) ->
       cb(toUpdate)
 
   everyone.now.getCloseUsers= (cb)->
-    if not this.user.currentWorldId
+    if not this.now.currentWorldId
       return false
     console.log 'getCloseUsers called'
     closeUsers= []
@@ -141,7 +136,7 @@ module.exports = (app, SessionModel) ->
     aC=CUser.byCid(cid).cursor
     # console.log cUsers[cid]
     # console.log 'ac', aC
-    nowjs.getGroup(this.user.currentWorldId).getUsers (users) ->
+    nowjs.getGroup(this.now.currentWorldId).getUsers (users) ->
       for i in users
         uC = CUser.byCid(i).cursor
         distance = Math.sqrt((aC.x-uC.x)*(aC.x-uC.x)+(aC.y-uC.y)*(aC.y-uC.y))
