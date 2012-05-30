@@ -112,6 +112,9 @@
         setCursor(targetCell);
         state.lastClickCell = targetCell;
         inputEl.focus();
+        $('.leaflet-tile a').tooltip({
+          placement: 'top'
+        });
         return false;
       }
     });
@@ -126,7 +129,10 @@
         cell = Cell.all()[e.target.id];
         state.lastClickCell = cell;
         setCursor(cell);
-        return inputEl.focus();
+        inputEl.focus();
+        return false;
+      } else if (e.target.href) {
+        return true;
       } else {
         inputEl.focus();
         return false;
@@ -145,7 +151,6 @@
     inputEl.keypress(function(e) {
       var c, userTotalRites, _ref;
       if (!state.isTopLayerInteractive) {
-        console.log('no');
         return false;
       }
       if ((_ref = e.which) === 0 || _ref === 13 || _ref === 32 || _ref === 9 || _ref === 8) {
@@ -222,6 +227,13 @@
       });
       return false;
     });
+    $("#linkModal").submit(function() {
+      var url;
+      $('#linkModal').modal('hide');
+      url = $("#linkurl").val();
+      state.linkurl = url;
+      return false;
+    });
     $(".modal").on('shown', function() {
       var _ref;
       return (_ref = $(this).find('input')[0]) != null ? _ref.focus() : void 0;
@@ -243,10 +255,6 @@
       }
       if (action === 'setClientState') {
         state[type] = payload;
-      }
-      if (type === 'link') {
-        console.log('link');
-        state.linkurl = $("#linkurl").val();
       }
       if (type === 'color') {
         $("#color").addClass(payload);
@@ -362,7 +370,10 @@
     map.addLayer(domTiles);
     setTileStyle();
     map.on('zoomend', function() {
-      return setTileStyle();
+      setTileStyle();
+      return $('.leaflet-tile a').tooltip({
+        placement: 'top'
+      });
     });
     initializeInterface();
     $("#loadingIndicator").fadeOut('slow');
@@ -396,7 +407,6 @@
       if (state.cursors[updatedCursor.cid]) {
         cursor = state.cursors[updatedCursor.cid];
         selectedCell = Cell.get(cursor.x, cursor.y);
-        console.log(selectedCell);
         if (selectedCell) {
           $(selectedCell.span).removeClass("c" + cursor.color + " otherSelected");
         }
@@ -443,7 +453,6 @@
     });
     now.drawRite = function(commandType, rite, cellPoint, cellProps) {
       var c;
-      console.log(commandType, rite, cellPoint);
       c = Cell.get(cellPoint.x, cellPoint.y);
       return c[commandType](rite, cellProps);
     };
@@ -527,6 +536,10 @@
       all[this.key] = this;
       this.span = document.createElement('span');
       this.span.innerHTML = this.contents;
+      if (this.props.linkurl) {
+        $(this.span).addClass('link');
+        this.span.innerHTML = "<a href='" + this.props.linkurl + "' TARGET='_blank' rel='tooltip' title='" + this.props.linkurl + "'>" + this.contents + "</a>";
+      }
       this.span.id = this.key;
       $(this.span).addClass('cell');
       if (!this.props.color) {
@@ -554,19 +567,28 @@
     }
 
     Cell.prototype.write = function(c) {
-      var cellPoint;
+      var cellPoint, contents;
       cellPoint = cellKeyToXY(this.key);
       if (state.linkurl) {
-        now.writeCell(cellPoint, c, state.linkurl);
+        contents = {
+          contents: c,
+          linkurl: state.linkurl
+        };
+        now.writeCell(cellPoint, contents);
         state.linkurl = false;
       } else {
         now.writeCell(cellPoint, c);
       }
     };
 
-    Cell.prototype.normalRite = function(rite) {
+    Cell.prototype.normalRite = function(rite, cellProps) {
       this.contents = rite.contents;
-      return this.props.color = rite.props.color;
+      this.props.color = rite.props.color;
+      if (rite.props.linkurl) {
+        this.props.linkurl = rite.props.linkurl;
+        $(this.span).addClass('link');
+        return this.span.innerHTML = "<a href='" + this.props.linkurl + "' TARGET='_blank' rel='tooltip' title='" + this.props.linkurl + "'>" + this.contents + "</a>";
+      }
     };
 
     Cell.prototype.echo = function(rite, cellProps) {
@@ -679,6 +701,7 @@
       span = this.span;
       clone = $(this.span).clone();
       this.span.innerHTML = config.defaultChar();
+      this.span.className = 'cell';
       offset = $(this.span).position();
       $(this.span).after(clone);
       $(clone).removeClass('selected');

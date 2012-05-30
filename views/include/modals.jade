@@ -1,16 +1,16 @@
 
 // link(rel='stylesheet', href="/css/bootstrap.css")
 
-.modal.fade.hide#linkModal
+form.modal.fade.hide#linkModal
   .modal-header
       a.close(data-dismiss='modal') ×
       h3 Add a Link 
     .modal-body.colorOption
       p Put the url of your link below.
       input#linkurl.span5(type='text', name='linkurl', value="http://")
-      p Then, the next character you write will be a link.
+      p Then, the next character you write will be a link. 
     .modal-footer
-      button.btn.btn-primary.trigger(data-type="link", type="submit", data-dismiss='modal') Link it!
+      button.btn.btn-primary(type="submit") Link!
       a.btn(href='#', data-dismiss='modal') Na
 
 .modal.fade.hide#colorModal

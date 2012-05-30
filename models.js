@@ -249,6 +249,10 @@
       jumpDistance: {
         type: Number,
         "default": 500000
+      },
+      lastLinkOn: {
+        type: Date,
+        "default": new Date(0)
       }
     }
   });

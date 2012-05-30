@@ -328,7 +328,8 @@
           this.uid = nowUser.session.auth.userId;
           models.User.findById(this.uid, function(err, doc) {
             _this.login = doc.login;
-            return _this.nowUser.login = doc.login;
+            _this.nowUser.login = doc.login;
+            return _this.nowUser.powers = doc.powers;
           });
         } else {
           SessionModel.findOne({

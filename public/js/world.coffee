@@ -86,6 +86,7 @@ window.centerCursor = ->
       setCursor(targetCell)
       state.lastClickCell = targetCell
       inputEl.focus()
+      $('.leaflet-tile a').tooltip({placement:'top'})
       return false
   return true
 
@@ -98,6 +99,9 @@ initializeInterface = ->
       state.lastClickCell = cell
       setCursor(cell)
       inputEl.focus()
+      return false
+    else if e.target.href
+      return true
     else
       inputEl.focus()
       return false
@@ -115,7 +119,6 @@ initializeInterface = ->
   inputEl.keypress (e) ->
     # console.log e.which
     if not state.isTopLayerInteractive
-      console.log 'no'
       return false
     if e.which in [0, 13, 32, 9, 8] # 40, 39, 38  were here, but that seems to be single quote?
       return false
@@ -185,6 +188,12 @@ initializeInterface = ->
         centerCursor()
     return false
 
+  $("#linkModal").submit ->
+    $('#linkModal').modal('hide')
+    url= $("#linkurl").val()
+    state.linkurl=url
+    return false
+
   $(".modal").on 'shown', ->
     $(this).find('input')[0]?.focus()
  
@@ -209,9 +218,6 @@ initializeInterface = ->
     
     # if type=='layer'
       # do something
-    if type == 'link'
-      console.log 'link'
-      state.linkurl=$("#linkurl").val()
   
     if type == 'color'
       # console.log 'ch color'
@@ -313,6 +319,7 @@ doNowInit= (now)->
 
     map.on 'zoomend', ->
       setTileStyle()
+      $('.leaflet-tile a').tooltip({placement:'top'})
 
     initializeInterface()
     $("#loadingIndicator").fadeOut('slow')
@@ -327,7 +334,6 @@ doNowInit= (now)->
     map.on 'moveend', (e)->
       now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
       $("#loadingIndicator").fadeOut('slow')
-
 
     now.setClientStateFromServer (s)->
       state.userPowers = s.powers
@@ -347,7 +353,7 @@ doNowInit= (now)->
       if state.cursors[updatedCursor.cid]
         cursor=state.cursors[updatedCursor.cid]
         selectedCell = Cell.get(cursor.x, cursor.y)
-        console.log selectedCell
+        # console.log selectedCell
         if selectedCell
           $(selectedCell.span).removeClass("c#{cursor.color} otherSelected")
       state.cursors[updatedCursor.cid]= updatedCursor
@@ -380,7 +386,7 @@ doNowInit= (now)->
         true
 
     now.drawRite = (commandType, rite, cellPoint, cellProps) ->
-      console.log(commandType, rite, cellPoint)
+      # console.log(commandType, rite, cellPoint)
       c=Cell.get(cellPoint.x, cellPoint.y)
       c[commandType](rite, cellProps)
 
@@ -435,6 +441,10 @@ window.Cell = class Cell
     all[@key]=this
     @span = document.createElement('span')
     @span.innerHTML= @contents
+    if @props.linkurl
+      $(@span).addClass('link')
+      @span.innerHTML= "<a href='#{@props.linkurl}' TARGET='_blank' rel='tooltip' title='#{@props.linkurl}'>#{@contents}</a>"
+
     @span.id= @key
     $(@span).addClass('cell')
     if not @props.color
@@ -462,10 +472,12 @@ window.Cell = class Cell
       $span.addClass(newval)
       return newval
 
+
   write: (c) ->
     cellPoint = cellKeyToXY @key
     if state.linkurl
-      now.writeCell(cellPoint, c, state.linkurl)
+      contents={contents:c, linkurl: state.linkurl}
+      now.writeCell(cellPoint, contents)
       state.linkurl=false
     else
       now.writeCell(cellPoint, c)
@@ -473,9 +485,13 @@ window.Cell = class Cell
     # TODO this is so simple, but really we should be handling this client side. lag will be frustrating.
 
   # COMMAND PATTERN
-  normalRite: (rite) ->
+  normalRite: (rite, cellProps) ->
     @contents = rite.contents
     @props.color= rite.props.color
+    if rite.props.linkurl
+      @props.linkurl=rite.props.linkurl
+      $(@span).addClass('link')
+      @span.innerHTML= "<a href='#{@props.linkurl}' TARGET='_blank' rel='tooltip' title='#{@props.linkurl}'>#{@contents}</a>"
 
   echo: (rite, cellProps) ->
     @props.echoes = cellProps.echoes
@@ -540,13 +556,12 @@ window.Cell = class Cell
       return false
 
   animateTextRemove: (animateWith) ->
-   
     if not animateWith
       animateWith= Math.floor(Math.random() * 3)+1
-
     span= @span #the original
     clone=  $(@span).clone()
     @span.innerHTML= config.defaultChar()
+    @span.className= 'cell'
     offset= $(@span).position()#offset()
     $(@span).after(clone)
     $(clone).removeClass('selected')

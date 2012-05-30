@@ -228,6 +228,8 @@ module.exports = (app, SessionModel) ->
         models.User.findById @uid, (err, doc) =>
             @login = doc.login
             @nowUser.login = doc.login
+            # console.log doc
+            @nowUser.powers = doc.powers
             # @nowUser.powers = doc.powers
             # @nowUser.session?.powers = doc.powers
       else

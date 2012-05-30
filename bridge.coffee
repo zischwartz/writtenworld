@@ -13,18 +13,24 @@ module.exports = (everyone, SessionModel) ->
     sid= decodeURIComponent nowUser.cookie['connect.sid']
     color= nowUser.session?.color
 
-    # if not typeof contents is 'string'
-    #   extras=contents
-    #   contents= extras.contents
-    #   delete extras.contents
-    #   console.log 'extras', extras
-    #   console.log 'contents', contents
+    # console.log contents
+    # console.log typeof contents
+    if typeof contents isnt 'string'
+      extras=contents
+      contents= extras.contents
+      delete extras.contents
+      # console.log 'extras', extras
+      # console.log 'contents', contents
 
     # If user has an account and is logged in
     if nowUser.session.auth
       personalWorld = models.ObjectIdFromString(nowThis.personalWorldId)
       riter=nowUser.session.auth.userId
       rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], isLocal: nowThis.isLocal, echoes:-1, downroters:[], color: color}})
+      if extras
+        for k,v of extras
+          rite.props[k]=v
+
       models.Cell .findOne({world: personalWorld, x:cellPoint.x, y: cellPoint.y}) .populate('current')
       .run (err, cell) ->
           console.log err if err
@@ -77,6 +83,9 @@ module.exports = (everyone, SessionModel) ->
         #  debug+="#{k} : #{v}  .  "
         
         rite = new models.Rite({contents: contents, owner:riter, props:{isLocal:nowThis.isLocal, echoers:[], echoes:-1, downroters:[], color: color}})
+        if extras
+          for k,v of extras
+            rite.props[k]=v
         # console.log debug
 
         if logic.blankCurrently

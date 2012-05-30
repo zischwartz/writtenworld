@@ -136,6 +136,7 @@ UserSchema = new Schema
   email: String
   powers:
     jumpDistance: {type: Number, default: 500000}
+    lastLinkOn: {type: Date, default: new Date(0)} #epoch
 
 UserSchema.plugin mongooseAuth,
     everymodule:

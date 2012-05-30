@@ -90,11 +90,14 @@ app.get '/', (req, res) ->
   initialWorldId = models.mainWorldId
   if req.loggedIn
     personalWorldId = req.user.personalWorld
-    # console.log req.user.totalEchoes
+    console.log req.user
     availableColors = powers.getAvailableColors req.user.totalEchoes
+    canLink = powers.canLink req.user
+    
   else
     personalWorldId = null
     availableColors = powers.unregisteredColors()
+    canLink=false
 
   res.render 'map_base.jade',
     title: 'Written World'
@@ -105,6 +108,7 @@ app.get '/', (req, res) ->
     availableColors: availableColors
     isPersonal: false
     isAuth: req.loggedIn
+    canLink: canLink
 
 app.get '/home', (req, res) ->
   if req.loggedIn
