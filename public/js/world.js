@@ -348,7 +348,9 @@
     });
     state.topLayerStamp = L.Util.stamp(domTiles);
     now.isLocal = state.isLocal;
-    now.setCurrentWorld(initialWorldId, personalWorldId);
+    now.setGroup(initialWorldId);
+    now.currentWorldId = initialWorldId;
+    now.personalWorldId = personalWorldId;
     map.addLayer(domTiles);
     setTileStyle();
     map.on('zoomend', function() {
@@ -433,6 +435,7 @@
     });
     now.drawRite = function(commandType, rite, cellPoint, cellProps) {
       var c;
+      console.log(commandType, rite, cellPoint);
       c = Cell.get(cellPoint.x, cellPoint.y);
       return c[commandType](rite, cellProps);
     };

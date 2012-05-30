@@ -17,7 +17,6 @@ window.state =
     config.tileSize().y/state.numRows()
 
   topLayerStamp: null #assigning in init to domtiles
-  # baseLayer: null #this seems to be unused?
   lastLayerStamp: null
   isTopLayerInteractive: true
   
@@ -307,7 +306,9 @@ doNowInit= (now)->
     state.topLayerStamp = L.Util.stamp domTiles
     now.isLocal= state.isLocal
 
-    now.setCurrentWorld(initialWorldId, personalWorldId)
+    now.setGroup(initialWorldId)
+    now.currentWorldId= initialWorldId
+    now.personalWorldId= personalWorldId #may be blank
 
     map.addLayer(domTiles)
     setTileStyle() #set initial
@@ -381,7 +382,7 @@ doNowInit= (now)->
         true
 
     now.drawRite = (commandType, rite, cellPoint, cellProps) ->
-      # console.log(commandType, rite, cellPoint)
+      console.log(commandType, rite, cellPoint)
       c=Cell.get(cellPoint.x, cellPoint.y)
       c[commandType](rite, cellProps)
 

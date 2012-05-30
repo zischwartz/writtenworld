@@ -13,14 +13,12 @@
     var CUser, bridge, everyone, getWhoCanSee;
     everyone = nowjs.initialize(app);
     bridge = require('./bridge')(everyone, SessionModel);
-    everyone.now.setCurrentWorld = function(currentWorldId, personalWorldId) {
+    everyone.now.setGroup = function(currentWorldId) {
       var group;
-      this.user.personalWorldId = personalWorldId;
       if (currentWorldId) {
         group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId);
-        return this.user.currentWorldId = currentWorldId;
       } else {
-        return this.user.currentWorldId = false;
+        return false;
       }
     };
     nowjs.on('connect', function() {
@@ -35,7 +33,7 @@
       update = {
         cid: cid
       };
-      getWhoCanSee(u.cursor, this.user.currentWorldId, function(toUpdate) {
+      getWhoCanSee(u.cursor, this.now.currentWorldId, function(toUpdate) {
         var i, _results;
         _results = [];
         for (i in toUpdate) {
@@ -62,7 +60,7 @@
     };
     everyone.now.setCursor = function(cellPoint) {
       var cid, update;
-      if (!this.user.currentWorldId) {
+      if (!this.now.currentWorldId) {
         return false;
       }
       cid = this.user.clientId;
@@ -73,7 +71,7 @@
         y: cellPoint.y,
         color: this.user.session ? this.user.session.color : void 0
       };
-      return getWhoCanSee(cellPoint, this.user.currentWorldId, function(toUpdate) {
+      return getWhoCanSee(cellPoint, this.now.currentWorldId, function(toUpdate) {
         var i, _results;
         _results = [];
         for (i in toUpdate) {
@@ -90,12 +88,12 @@
     };
     everyone.now.writeCell = function(cellPoint, content) {
       var cid, currentWorldId;
-      if (!this.user.currentWorldId) {
+      if (!this.now.currentWorldId) {
         return false;
       }
-      currentWorldId = this.user.currentWorldId;
+      currentWorldId = this.now.currentWorldId;
       cid = this.user.clientId;
-      bridge.processRite(cellPoint, content, this.user, this.now.isLocal, currentWorldId, function(commandType, rite, cellPoint, cellProps) {
+      bridge.processRite(cellPoint, content, this.user, this.now, currentWorldId, function(commandType, rite, cellPoint, cellProps) {
         if (rite == null) {
           rite = false;
         }
@@ -124,10 +122,10 @@
     };
     everyone.now.getZoomedOutTile = function(absTilePoint, numRows, numCols, callback) {
       var _this = this;
-      if (!this.user.currentWorldId) {
+      if (!this.now.currentWorldId) {
         return false;
       }
-      return models.Cell.where('world', this.user.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numCols).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).count(function(err, count) {
+      return models.Cell.where('world', this.now.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numCols).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).count(function(err, count) {
         var density, results;
         if (count) {
           density = count / (numRows * numCols);
@@ -144,10 +142,10 @@
     };
     everyone.now.getTile = function(absTilePoint, numRows, callback) {
       var _this = this;
-      if (!this.user.currentWorldId) {
+      if (!this.now.currentWorldId) {
         return false;
       }
-      return models.Cell.where('world', this.user.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
+      return models.Cell.where('world', this.now.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
         var c, pCell, results, _i, _len;
         results = {};
         if (docs.length) {
@@ -186,14 +184,14 @@
     };
     everyone.now.getCloseUsers = function(cb) {
       var aC, cid, closeUsers;
-      if (!this.user.currentWorldId) {
+      if (!this.now.currentWorldId) {
         return false;
       }
       console.log('getCloseUsers called');
       closeUsers = [];
       cid = this.user.clientId;
       aC = CUser.byCid(cid).cursor;
-      nowjs.getGroup(this.user.currentWorldId).getUsers(function(users) {
+      nowjs.getGroup(this.now.currentWorldId).getUsers(function(users) {
         var distance, i, key, u, uC, value, _i, _len, _ref;
         for (_i = 0, _len = users.length; _i < _len; _i++) {
           i = users[_i];
