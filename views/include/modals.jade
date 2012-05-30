@@ -1,5 +1,17 @@
 
-link(rel='stylesheet', href="/css/bootstrap.css")
+// link(rel='stylesheet', href="/css/bootstrap.css")
+
+.modal.fade.hide#linkModal
+  .modal-header
+      a.close(data-dismiss='modal') ×
+      h3 Add a Link 
+    .modal-body.colorOption
+      p Put the url of your link below.
+      input#linkurl.span5(type='text', name='linkurl', value="http://")
+      p Then, the next character you write will be a link.
+    .modal-footer
+      button.btn.btn-primary.trigger(data-type="link", type="submit", data-dismiss='modal') Link it!
+      a.btn(href='#', data-dismiss='modal') Na
 
 .modal.fade.hide#colorModal
   .modal-header
@@ -21,14 +33,14 @@ form.modal.fade.hide#registerModal(action="/register", method="POST")
       .well 
         label User name
         input.span4(type='text', name='login')
-        span.help-inline Your public name on Written World
+        span.help-inline Public 
         label Password 
         input.span4(type='password', name='password') 
         span.help-inline Shhhh, it's a secret
         label Email 
          i (Optional) 
         input.span4(type='email', name='email') 
-        span.help-inline Optional. We hate spam too. 
+        span.help-inline We hate spam too. 
     .modal-footer
       button.btn.btn-primary(type="submit") Sign up!
       a.btn(href='#', data-dismiss='modal') Nevermind 
@@ -40,7 +52,7 @@ form.modal.fade.hide#locationSearch
     .modal-body
       p Where would you like to go?
       -if (!everyauth.loggedIn)
-        p You can only jump 50km at once. With an account, you can jump up to way more. 
+        p You can only jump 50km at once. With an account, you can jump way more. 
       .well 
         input.span5#locationSearchInput
       p Hint: Include the state, in the US, or country if outside the US.

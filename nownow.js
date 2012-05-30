@@ -88,8 +88,12 @@
         return _results;
       });
     };
-    everyone.now.writeCell = function(cellPoint, content) {
+    everyone.now.writeCell = function(cellPoint, content, linkurl) {
       var cid, currentWorldId;
+      if (linkurl == null) {
+        linkurl = false;
+      }
+      console.log(linkurl);
       if (!this.user.currentWorldId) {
         return false;
       }

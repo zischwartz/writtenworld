@@ -32,7 +32,8 @@
     isTopLayerInteractive: true,
     cursors: {},
     isLocal: true,
-    belowInputRateLimit: true
+    belowInputRateLimit: true,
+    linkurl: false
   };
 
   setTileStyle = function() {
@@ -133,6 +134,9 @@
     });
     window.inputEl = $("#input");
     inputEl.focus();
+    $('.navbar a').tooltip({
+      placement: 'bottom'
+    });
     map.on('zoomend', function() {
       inputEl.focus();
       return $("#loadingIndicator").fadeOut('fast');
@@ -239,6 +243,10 @@
       }
       if (action === 'setClientState') {
         state[type] = payload;
+      }
+      if (type === 'link') {
+        console.log('link');
+        state.linkurl = $("#linkurl").val();
       }
       if (type === 'color') {
         $("#color").addClass(payload);
@@ -545,7 +553,12 @@
     Cell.prototype.write = function(c) {
       var cellPoint;
       cellPoint = cellKeyToXY(this.key);
-      return now.writeCell(cellPoint, c);
+      if (state.linkurl) {
+        now.writeCell(cellPoint, c, state.linkurl);
+        state.linkurl = false;
+      } else {
+        now.writeCell(cellPoint, c);
+      }
     };
 
     Cell.prototype.normalRite = function(rite) {

@@ -69,7 +69,8 @@ module.exports = (app, SessionModel) ->
           nowjs.getClient i, ->
             this.now.updateCursors(update)
 
-  everyone.now.writeCell = (cellPoint, content) ->
+  everyone.now.writeCell = (cellPoint, content, linkurl=false) ->
+    console.log linkurl
     if not this.user.currentWorldId
       return false
     currentWorldId = this.user.currentWorldId

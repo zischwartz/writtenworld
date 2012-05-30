@@ -24,6 +24,7 @@ window.state =
   cursors: {}
   isLocal: true
   belowInputRateLimit: true
+  linkurl:false
 
 setTileStyle = ->
  width = state.cellWidth()
@@ -104,6 +105,7 @@ initializeInterface = ->
 
   window.inputEl = $ "#input"
   inputEl.focus()
+  $('.navbar a').tooltip({placement:'bottom'})
 
   map.on 'zoomend', ->
     inputEl.focus()
@@ -206,16 +208,12 @@ initializeInterface = ->
     if action == 'setClientState' # unrelated to setClientStateFromServer, used for stuff like writedirection
       state[type] = payload
     
-    # Layer Switching
     # if type=='layer'
-    #   $("#worldLayer").html(text+'<b class="caret"></b>' )
-    #   if payload=='off' and state.topLayerStamp
-    #     turnOffLayer()
-    #   else if payload=='main'
-    #     turnOnMainLayer()
-    #   else
-    #     switchToLayer(payload)
-
+      # do something
+    if type == 'link'
+      console.log 'link'
+      state.linkurl=$("#linkurl").val()
+  
     if type == 'color'
       # console.log 'ch color'
       $("#color").addClass(payload)
@@ -465,7 +463,12 @@ window.Cell = class Cell
 
   write: (c) ->
     cellPoint = cellKeyToXY @key
-    now.writeCell(cellPoint, c)
+    if state.linkurl
+      now.writeCell(cellPoint, c, state.linkurl)
+      state.linkurl=false
+    else
+      now.writeCell(cellPoint, c)
+    return
     # TODO this is so simple, but really we should be handling this client side. lag will be frustrating.
 
   # COMMAND PATTERN

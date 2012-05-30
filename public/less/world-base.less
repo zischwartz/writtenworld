@@ -10,9 +10,6 @@ body
 {
   font-size: 15px;
   padding: 10px 20px 12px;
-  //font-family: fixed;
-  //color: @grayDark !important;
-  // text-shadow: 1px 1px 5px @black;
 }
 
 //for the zoom controls
@@ -21,28 +18,38 @@ body
 .leaflet-top
 {
   margin-top: @navbarHeight;
-  //padding: 8px;
 }
 
-a i.icon-search
+.navbar a i
 {
-  .opacity(50); 
+  font-size: 17px;
 }
 
-a:hover i.icon-search
+.tooltip.bottom
 {
-  .opacity(100) !important;
-} 
+  z-index: 3000;
+  margin-top: -12px;
 
-a.direction-dropdown
-{
+}
 
-  .opacity(50); 
-}
-a.direction-dropdown:hover
-{
-  .opacity(100) !important;
-}
+/*a i.icon-search*/
+/*{*/
+/*  .opacity(50); */
+/*}*/
+/**/
+/*a:hover i.icon-search*/
+/*{*/
+/*  .opacity(100) !important;*/
+/*} */
+
+/*a.direction-dropdown*/
+/*{*/
+/*  .opacity(50); */
+/*}*/
+/*a.direction-dropdown:hover*/
+/*{*/
+/*  .opacity(100) !important;*/
+/*}*/
 
 #username
 {

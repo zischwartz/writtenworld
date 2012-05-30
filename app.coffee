@@ -39,6 +39,7 @@ assetManagerGroups =
       'libs/bootstrap-modal.js'
       'libs/bootstrap-transition.js'
       'libs/bootstrap-alert.js'
+      'libs/bootstrap-tooltip.js'
       'libs/dotimeout.js'
       'libs/jquery.jrumble.min.js'
       # 'libs/JSLitmus.js'

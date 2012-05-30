@@ -28,18 +28,18 @@
                     li
                       a(href='#') More Worlds...
               li
-                a(href='#locationSearch', data-toggle="modal") 
+                a(href='#locationSearch', data-toggle="modal", rel="tooltip", title="Search for a place") 
                   i.icon-search.icon-white 
               li.dropdown
-                a#getNearby.dropdown-toggle(href='#', data-toggle='dropdown', data-action='get', data-type='nearby')
+                a#getNearby.dropdown-toggle(href='#', data-toggle='dropdown', data-action='get', data-type='nearby', rel="tooltip", title="Who else is nearby?")
                   | Nearby
                   b.caret
                 ul#nearby.dropdown-menu
               li
-                a#color(href='#colorModal', data-toggle="modal") Colors
+                a#color(href='#colorModal', data-toggle="modal", rel="tooltip", title="Change the color of your text") Colors
 
                li.dropdown
-                 a.dropdown-toggle.direction-dropdown(href='#', data-toggle='dropdown')
+                 a.dropdown-toggle.direction-dropdown(href='#', data-toggle='dropdown', rel="tooltip", title="Change which direction you write in")
                    i.icon-arrow-right.icon-white
                  ul.dropdown-menu
                    li
@@ -54,6 +54,14 @@
                    li
                     a.trigger(data-payload='down', data-type='writeDirection', data-action='setClientState', href="#")
                        i.icon-arrow-down
+
+              li
+                a#makeLink(data-toggle="modal", href="#linkModal", rel="tooltip", title="Add a link where your cursor is")
+                  i.icon-external-link
+
+              li
+                a#makeGeoLink
+                  i.icon-screenshot
 
             - if (!everyauth.loggedIn)
               p.navbar-text.pull-right#navToAuth
