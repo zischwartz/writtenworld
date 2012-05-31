@@ -125,6 +125,35 @@ CellSchema.index {world:1, x:1, y:1}, {unique:true}
 
 exports.Cell = mongoose.model('Cell', CellSchema)
 
+#              riteQueue.push {cellPoint: cellPoint, worldId:currentWorldId, rite: rite, commandType: commandType}
+# from outside, edit should be = [], but we'll fill it. with recursion!
+findEdits= (seed, edit, callback) ->
+
+  console.log seed, edit
+  #top
+  exports.Cell .findOne({world: seed.worldId, x:seed.cellPoint.x, y: seed.cellPoint.y-1}) .populate('current')
+  .run (err, cell) ->
+    if cell?.current
+       edit.push(cell)
+       findEdits {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit, ->
+          # right
+          exports.Cell .findOne({world: seed.worldId, x:seed.cellPoint.x+1, y: seed.cellPoint.y}) .populate('current')
+          .run (err, cell) ->
+            if cell?.current
+               edit.push(cell)
+            #below
+            exports.Cell .findOne({world: seed.worldId, x:seed.cellPoint.x, y: seed.cellPoint.y+1}) .populate('current')
+            .run (err, cell) ->
+              if cell?.current
+                 edit.push(cell)
+              exports.Cell .findOne({world: seed.worldId, x:seed.cellPoint.x-1, y: seed.cellPoint.y}) .populate('current')
+              .run (err, cell) ->
+                if cell?.current
+                   edit.push(cell)
+                callback(edit)
+
+exports.findEdits =findEdits
+
 mongooseAuth=require('mongoose-auth')
 
 UserSchema = new Schema

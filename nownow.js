@@ -12,9 +12,10 @@
   leaflet = require('./lib/leaflet-custom-src.js');
 
   module.exports = function(app, SessionModel) {
-    var CUser, bridge, everyone, getWhoCanSee;
+    var CUser, bridge, everyone, getWhoCanSee, riteQueue;
     everyone = nowjs.initialize(app);
     bridge = require('./bridge')(everyone, SessionModel);
+    riteQueue = [];
     everyone.now.setGroup = function(currentWorldId) {
       var group;
       if (currentWorldId) {
@@ -105,7 +106,6 @@
                 doc.powers.lastLinkOn = new Date;
                 doc.save();
                 _this.user.powers.lastLinkOn = new Date;
-                console.log(doc);
               });
             });
           }
@@ -130,6 +130,12 @@
           _results = [];
           for (i in toUpdate) {
             if (rite) {
+              riteQueue.push({
+                cellPoint: cellPoint,
+                worldId: currentWorldId,
+                rite: rite,
+                commandType: commandType
+              });
               _results.push(nowjs.getClient(i, function() {
                 return this.now.drawRite(commandType, rite, cellPoint, cellProps);
               }));
@@ -376,8 +382,7 @@
       return CUser;
 
     })();
-    exports.CUser = CUser;
-    return everyone;
+    return [everyone, riteQueue];
   };
 
 }).call(this);

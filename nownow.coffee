@@ -11,7 +11,7 @@ module.exports = (app, SessionModel) ->
   everyone = nowjs.initialize app
   # module.everyone = everyone
   bridge = require('./bridge')(everyone, SessionModel)
-
+  riteQueue=[]
 
   everyone.now.setGroup = (currentWorldId) ->
     if currentWorldId
@@ -78,11 +78,10 @@ module.exports = (app, SessionModel) ->
                 doc.powers.lastLinkOn = new Date
                 doc.save()
                 this.user.powers.lastLinkOn= new Date
-                console.log doc
                 return
           if not powers.canLink this.user
               this.now.insertMessage "Sorry, 1 Link/Hour", "For now. Sorry." , 'alert-error'
-              return false #no write yo, maybe shake a bit
+              return false 
 
     bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
@@ -90,6 +89,7 @@ module.exports = (app, SessionModel) ->
         for i of toUpdate
           # if i !=cid # ie not you, removed for my hack 
             if rite # it was a legit rite
+              riteQueue.push {cellPoint: cellPoint, worldId:currentWorldId, rite: rite, commandType: commandType}
               nowjs.getClient i, ->
                 # console.log i
                 this.now.drawRite(commandType, rite, cellPoint, cellProps)
@@ -266,10 +266,10 @@ module.exports = (app, SessionModel) ->
       # console.log this
       # delete this
 
-  exports.CUser = CUser
-
+  # exports.CUser = CUser
+  # exports.riteQueue = riteQueue
   # return true
-  return everyone
+  return [everyone, riteQueue]
 # 
 # defaultUserPowers= ->
 #   powers =
