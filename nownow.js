@@ -131,8 +131,9 @@
           for (i in toUpdate) {
             if (rite) {
               riteQueue.push({
-                cellPoint: cellPoint,
-                worldId: currentWorldId,
+                x: cellPoint.x,
+                y: cellPoint.y,
+                world: currentWorldId,
                 rite: rite,
                 commandType: commandType
               });

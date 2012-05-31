@@ -187,10 +187,9 @@ app.get '/uw/:slug', (req, res)->
 
 processEdits = ->
  if riteQueue.length
-   console.log 'POP!'
    seed= riteQueue.pop()
    models.findEdits seed, [], (edit)->
-    console.log 'EDIT FOUND, notify users or w/e'
+    console.log 'edits: '
     for c in edit
       console.log c.current.contents
     # console.log edit

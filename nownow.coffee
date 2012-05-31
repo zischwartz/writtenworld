@@ -89,7 +89,7 @@ module.exports = (app, SessionModel) ->
         for i of toUpdate
           # if i !=cid # ie not you, removed for my hack 
             if rite # it was a legit rite
-              riteQueue.push {cellPoint: cellPoint, worldId:currentWorldId, rite: rite, commandType: commandType}
+              riteQueue.push {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite: rite, commandType: commandType}
               nowjs.getClient i, ->
                 # console.log i
                 this.now.drawRite(commandType, rite, cellPoint, cellProps)

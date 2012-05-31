@@ -125,55 +125,112 @@ CellSchema.index {world:1, x:1, y:1}, {unique:true}
 
 exports.Cell = mongoose.model('Cell', CellSchema)
 
-#              riteQueue.push {cellPoint: cellPoint, worldId:currentWorldId, rite: rite, commandType: commandType}
-# from outside, edit should be = [], but we'll fill it. with recursion!
+#    riteQueue.push {cellPoint: cellPoint, worldId:currentWorldId, rite: rite, commandType: commandType}
 
-#needs a don't look back function.
+asyncReal=(data, callback) ->
+  process.nextTick ->
+    callback(data)
 
 makeSeedQs = (seed)->
-  up= {world: seed.worldId, x:seed.cellPoint.x, y: seed.cellPoint.y-1}
-  right= {world: seed.worldId, x:seed.cellPoint.x+1, y: seed.cellPoint.y}
-  down= {world: seed.worldId, x:seed.cellPoint.x, y: seed.cellPoint.y+1}
-  left= {world: seed.worldId, x:seed.cellPoint.x-1, y: seed.cellPoint.y}
+  if not seed then console.log 'NOT SEED in makeseedQs'
+  # if not seed then return false
+  up= {world: seed.world, x:seed.x, y: seed.y-1}
+  right= {world: seed.world, x:seed.x+1, y: seed.y}
+  down= {world: seed.world, x:seed.x, y: seed.y+1}
+  left= {world: seed.world, x:seed.x-1, y: seed.y}
   result = [up, right, down, left]
-  # result.splice(exclude,1)
   return result
 
-findEdits= (seed, edit, callback) ->
-  
-  findEditsRecurse = (seed,edit)->
-    console.log 'Findingrecursively'
-    qs = makeSeedQs(seed)
-    exports.Cell .findOne(qs[0]).populate('current').run (err, cell) ->
-      # console.log cell not in edit
-      if cell?.current #and cell not in edit
-         console.log "  "+cell.current.contents
-         edit.push(cell)
-         findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
-      else
-        exports.Cell .findOne(qs[1]).populate('current').run (err, cell) ->
-          if cell?.current
-             console.log "  "+cell.current.contents
-             edit.push(cell)
-             findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
-          else
-            exports.Cell .findOne(qs[2]).populate('current').run (err, cell) ->
-              if cell?.current
-                 console.log "  "+cell.current.contents
-                 edit.push(cell)
-                 findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
-              else
-                exports.Cell .findOne(qs[3]).populate('current').run (err, cell) ->
-                  if cell?.current
-                     console.log "  "+cell.current.contents
-                     edit.push(cell)
-                     findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
-                     return
-                  else
-                    return
 
-  findEditsRecurse(seed,edit)
-  callback(edit)  
+findEditsRecurse = (seed, edit, dir)->
+  console.log '...'
+  console.log 'recuSeed: ' , seed
+  qs = makeSeedQs(seed)
+  console.log 'recurse, for ', qs[dir]
+  exports.Cell .findOne(qs2[dir]).populate('current').run (err, cell) ->
+    if cell?.current
+      console.log cell
+      console.log 'r: ', cell.current.contents
+      findEditsRecurse(qs2[dir], edit, dir)
+
+findEdits= (seed, edit, callback) ->
+  qs = makeSeedQs(seed)
+  for i in [0..qs.length-1]
+    console.log qs[i]
+    qs2=clone qs
+    exports.Cell .findOne(qs[i]).populate('current').run (err, cell) ->
+      if cell?.current
+        console.log 'c: ', cell?.current.contents
+        console.log 'qs2[i]: ', qs2[i]
+        findEditsRecurse(clone qs2[i], edit, i)
+        # callback(edit)
+
+    # for i in [0..qs.length]
+      #only do it in the direction of writing. so one initial all four, then just go in the two resulting directions
+      #
+
+    # exports.Cell .findOne(qs[0]).populate('current').run (err, cell) ->
+    #   # console.log cell not in edit
+    #   if cell?.current #and cell not in edit
+    #      console.log "  "+cell.current.contents
+    #      edit.push(cell)
+    #      findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
+    #   else
+    #     if comingFrom isnt 3 then exports.Cell .findOne(qs[1]).populate('current').run (err, cell) ->
+    #       if cell?.current
+    #          console.log "  "+cell.current.contents
+    #          edit.push(cell)
+    #          findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
+    #       else
+    #         if comingFrom isnt 0 then exports.Cell .findOne(qs[2]).populate('current').run (err, cell) ->
+    #           if cell?.current
+    #              console.log "  "+cell.current.contents
+    #              edit.push(cell)
+    #              findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
+    #           else
+    #             if comingFrom isnt 1 then exports.Cell .findOne(qs[3]).populate('current').run (err, cell) ->
+    #               if cell?.current
+    #                  console.log "  "+cell.current.contents
+    #                  edit.push(cell)
+    #                  findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
+    #                  return
+    #               else
+    #                 return
+
+
+  # findEditsRecurse = (seed,edit)->
+  #   console.log 'Findingrecursively'
+  #   qs = makeSeedQs(seed)
+  #   exports.Cell .findOne(qs[0]).populate('current').run (err, cell) ->
+  #     # console.log cell not in edit
+  #     if cell?.current #and cell not in edit
+  #        console.log "  "+cell.current.contents
+  #        edit.push(cell)
+  #        findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
+  #     else
+  #       exports.Cell .findOne(qs[1]).populate('current').run (err, cell) ->
+  #         if cell?.current
+  #            console.log "  "+cell.current.contents
+  #            edit.push(cell)
+  #            findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
+  #         else
+  #           exports.Cell .findOne(qs[2]).populate('current').run (err, cell) ->
+  #             if cell?.current
+  #                console.log "  "+cell.current.contents
+  #                edit.push(cell)
+  #                findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
+  #             else
+  #               exports.Cell .findOne(qs[3]).populate('current').run (err, cell) ->
+  #                 if cell?.current
+  #                    console.log "  "+cell.current.contents
+  #                    edit.push(cell)
+  #                    findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
+  #                    return
+  #                 else
+  #                   return
+  #
+  # findEditsRecurse(seed,edit)
+  # callback(edit)
           
   # console.log seed, edit
   #top
@@ -284,3 +341,27 @@ Array::filter = (func) -> x for x in @ when func(x)
 # console.log util.inspect exports.User, true, 2, true
 
 exports.mongooseAuth= mongooseAuth
+
+
+
+clone = (obj) ->
+  if not obj? or typeof obj isnt 'object'
+    return obj
+
+  if obj instanceof Date
+    return new Date(obj.getTime()) 
+
+  if obj instanceof RegExp
+    flags = ''
+    flags += 'g' if obj.global?
+    flags += 'i' if obj.ignoreCase?
+    flags += 'm' if obj.multiline?
+    flags += 'y' if obj.sticky?
+    return new RegExp(obj.source, flags) 
+
+  newInstance = new obj.constructor()
+
+  for key of obj
+    newInstance[key] = clone obj[key]
+
+  return newInstance
