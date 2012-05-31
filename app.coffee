@@ -191,7 +191,9 @@ processEdits = ->
    seed= riteQueue.pop()
    models.findEdits seed, [], (edit)->
     console.log 'EDIT FOUND, notify users or w/e'
-    console.log edit
+    for c in edit
+      console.log c.current.contents
+    # console.log edit
  process.nextTick(processEdits)
 
 

@@ -127,30 +127,79 @@ exports.Cell = mongoose.model('Cell', CellSchema)
 
 #              riteQueue.push {cellPoint: cellPoint, worldId:currentWorldId, rite: rite, commandType: commandType}
 # from outside, edit should be = [], but we'll fill it. with recursion!
-findEdits= (seed, edit, callback) ->
 
-  console.log seed, edit
-  #top
-  exports.Cell .findOne({world: seed.worldId, x:seed.cellPoint.x, y: seed.cellPoint.y-1}) .populate('current')
-  .run (err, cell) ->
-    if cell?.current
-       edit.push(cell)
-       findEdits {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit, ->
-          # right
-          exports.Cell .findOne({world: seed.worldId, x:seed.cellPoint.x+1, y: seed.cellPoint.y}) .populate('current')
-          .run (err, cell) ->
-            if cell?.current
-               edit.push(cell)
-            #below
-            exports.Cell .findOne({world: seed.worldId, x:seed.cellPoint.x, y: seed.cellPoint.y+1}) .populate('current')
-            .run (err, cell) ->
+#needs a don't look back function.
+
+makeSeedQs = (seed)->
+  up= {world: seed.worldId, x:seed.cellPoint.x, y: seed.cellPoint.y-1}
+  right= {world: seed.worldId, x:seed.cellPoint.x+1, y: seed.cellPoint.y}
+  down= {world: seed.worldId, x:seed.cellPoint.x, y: seed.cellPoint.y+1}
+  left= {world: seed.worldId, x:seed.cellPoint.x-1, y: seed.cellPoint.y}
+  result = [up, right, down, left]
+  # result.splice(exclude,1)
+  return result
+
+findEdits= (seed, edit, callback) ->
+  
+  findEditsRecurse = (seed,edit)->
+    console.log 'Findingrecursively'
+    qs = makeSeedQs(seed)
+    exports.Cell .findOne(qs[0]).populate('current').run (err, cell) ->
+      # console.log cell not in edit
+      if cell?.current #and cell not in edit
+         console.log "  "+cell.current.contents
+         edit.push(cell)
+         findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
+      else
+        exports.Cell .findOne(qs[1]).populate('current').run (err, cell) ->
+          if cell?.current
+             console.log "  "+cell.current.contents
+             edit.push(cell)
+             findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
+          else
+            exports.Cell .findOne(qs[2]).populate('current').run (err, cell) ->
               if cell?.current
+                 console.log "  "+cell.current.contents
                  edit.push(cell)
-              exports.Cell .findOne({world: seed.worldId, x:seed.cellPoint.x-1, y: seed.cellPoint.y}) .populate('current')
-              .run (err, cell) ->
-                if cell?.current
-                   edit.push(cell)
-                callback(edit)
+                 findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
+              else
+                exports.Cell .findOne(qs[3]).populate('current').run (err, cell) ->
+                  if cell?.current
+                     console.log "  "+cell.current.contents
+                     edit.push(cell)
+                     findEditsRecurse {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit
+                     return
+                  else
+                    return
+
+  findEditsRecurse(seed,edit)
+  callback(edit)  
+          
+  # console.log seed, edit
+  #top
+  # exports.Cell .findOne({world: seed.worldId, x:seed.cellPoint.x, y: seed.cellPoint.y-1}) .populate('current')
+  # .run (err, cell) ->
+  #   if cell?.current
+  #      console.log "  "+cell.current.contents
+  #      edit.push(cell)
+  #      findEdits {cellPoint: {x:cell.x, y:cell.y}, worldId: seed.worldId, rite: cell.current}, edit, ->
+  #   # right
+  #   exports.Cell .findOne({world: seed.worldId, x:seed.cellPoint.x+1, y: seed.cellPoint.y}) .populate('current')
+  #   .run (err, cell) ->
+  #     if cell?.current
+  #        edit.push(cell)
+  #     #below
+  #     exports.Cell .findOne({world: seed.worldId, x:seed.cellPoint.x, y: seed.cellPoint.y+1}) .populate('current')
+  #     .run (err, cell) ->
+  #       if cell?.current
+  #          edit.push(cell)
+  #       exports.Cell .findOne({world: seed.worldId, x:seed.cellPoint.x-1, y: seed.cellPoint.y}) .populate('current')
+  #       .run (err, cell) ->
+  #         if cell?.current
+  #            edit.push(cell)
+  #         callback(edit)
+
+
 
 exports.findEdits =findEdits
 
