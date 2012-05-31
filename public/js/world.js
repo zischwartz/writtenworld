@@ -227,6 +227,14 @@
       });
       return false;
     });
+    $("a#makeLink").click(function() {
+      if (!config.isAuth()) {
+        insertMessage('Make an account', 'If you want to add links', "alert-error");
+        return false;
+      } else {
+        return true;
+      }
+    });
     $("#linkModal").submit(function() {
       var url;
       $('#linkModal').modal('hide');

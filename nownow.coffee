@@ -71,7 +71,7 @@ module.exports = (app, SessionModel) ->
     cid = this.user.clientId
 
     if typeof content isnt 'string'
-      for k,v of content
+      for k, v of content
         if k is 'linkurl'
            process.nextTick =>
               models.User.findById CUser.byCid(this.user.cid).uid, (err, doc) =>
@@ -81,7 +81,7 @@ module.exports = (app, SessionModel) ->
                 console.log doc
                 return
           if not powers.canLink this.user
-              this.now.insertMessage "Sorry, 2 Link / Day", "For now. Sorry." , 'error'
+              this.now.insertMessage "Sorry, 1 Link/Hour", "For now. Sorry." , 'alert-error'
               return false #no write yo, maybe shake a bit
 
     bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->

@@ -30,9 +30,7 @@ module.exports=
 
   canLink: (user) ->
     yest = new Date
-    yest.setHours(yest.getHours()-24)
-    if not user.powers
-      return false
+    yest.setHours(yest.getHours()-1)
 
     if user.powers.lastLinkOn
       if user.powers.lastLinkOn < yest
@@ -41,3 +39,6 @@ module.exports=
       else
         console.log 'nope too recent'
         return false
+     else
+       console.log 'never linked before, predates the field'
+       return true

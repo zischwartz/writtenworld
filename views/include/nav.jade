@@ -39,7 +39,7 @@
                 a#color(href='#colorModal', data-toggle="modal", rel="tooltip", title="Change the color of your text") Colors
 
                li.dropdown
-                 a.dropdown-toggle.direction-dropdown(href='#', data-toggle='dropdown', rel="tooltip", title="Change which direction you write in")
+                 a.dropdown-toggle.direction-dropdown(href='#', data-toggle='dropdown', rel="tooltip", title="Change writing direction")
                    i.icon-arrow-right.icon-white
                  ul.dropdown-menu
                    li
@@ -56,12 +56,13 @@
                        i.icon-arrow-down
 
               li
-                a#makeLink(data-toggle="modal", href="#linkModal", rel="tooltip", title="Add a link to a website to the next thing you write")
+                a#makeLink(data-toggle="modal", href="#linkModal", rel="tooltip", title="Add a link")
                   i.icon-external-link
 
-              li
-                a#makeGeoLink
-                  i.icon-screenshot
+              //
+                li
+                  a#makeGeoLink
+                    i.icon-screenshot
 
             - if (!everyauth.loggedIn)
               p.navbar-text.pull-right#navToAuth

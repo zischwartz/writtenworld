@@ -110,7 +110,7 @@
             });
           }
           if (!powers.canLink(this.user)) {
-            this.now.insertMessage("Sorry, 2 Link / Day", "For now. Sorry.", 'error');
+            this.now.insertMessage("Sorry, 1 Link/Hour", "For now. Sorry.", 'alert-error');
             return false;
           }
         }
