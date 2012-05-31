@@ -185,8 +185,11 @@ app.get '/uw/:slug', (req, res)->
 #               worldSpec: JSON.stringify(world.config)
 
 
+findEdits = ->
+ process.nextTick(findEdits)
 
 
+findEdits()
 
 models.mongooseAuth.helpExpress(app)
 
