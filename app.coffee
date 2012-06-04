@@ -84,7 +84,7 @@ app.configure 'production', ->
   app.set 'port', 3000
   # app.set 'port', 80
 
-[nownow, riteQueue] = require('./nownow')(app, SessionModel)
+[nownow, CUser] = require('./nownow')(app, SessionModel)
 
 app.get '/', (req, res) ->
   initialWorldId = models.mainWorldId
@@ -185,18 +185,17 @@ app.get '/uw/:slug', (req, res)->
 #               worldSpec: JSON.stringify(world.config)
 
 
-processEdits = ->
- if riteQueue.length
-   seed= riteQueue.pop()
-   models.findEdits seed, [], (edit)->
-    console.log 'edits: '
-    for c in edit
-      console.log c.current.contents
-    # console.log edit
- process.nextTick(processEdits)
+# processEdits = ->
+#  if riteQueue.length
+#    seed= riteQueue.pop()
+#    models.findEdits seed, [], (edit)->
+#     console.log 'edits: '
+#     for c in edit
+#       console.log c.current.contents
+#     # console.log edit
+#  process.nextTick(processEdits)
 
-
-processEdits()
+# processEdits()
 
 models.mongooseAuth.helpExpress(app)
 

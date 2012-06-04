@@ -11,7 +11,6 @@ module.exports = (app, SessionModel) ->
   everyone = nowjs.initialize app
   # module.everyone = everyone
   bridge = require('./bridge')(everyone, SessionModel)
-  riteQueue=[]
 
   everyone.now.setGroup = (currentWorldId) ->
     if currentWorldId
@@ -89,7 +88,7 @@ module.exports = (app, SessionModel) ->
         for i of toUpdate
           # if i !=cid # ie not you, removed for my hack 
             if rite # it was a legit rite
-              riteQueue.push {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite: rite, commandType: commandType}
+              CUser.byCid(cid).addToRiteQueue {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite: rite, commandType: commandType}
               nowjs.getClient i, ->
                 # console.log i
                 this.now.drawRite(commandType, rite, cellPoint, cellProps)
@@ -237,6 +236,7 @@ module.exports = (app, SessionModel) ->
     constructor: (@nowUser) ->
       @cid = @nowUser.clientId
       @sid = decodeURIComponent(@nowUser.cookie['connect.sid'])
+      @riteQueue = []
       if nowUser.session?.auth
         @uid= nowUser.session.auth.userId
         models.User.findById @uid, (err, doc) =>
@@ -256,8 +256,19 @@ module.exports = (app, SessionModel) ->
       allByCid[@cid] = this
       allBySid[@sid] = this
       allByUid[@uid] = this
-      
+    
+    addToRiteQueue: (edit) ->
+      @riteQueue.push edit
+      clearTimeout(@timerId)
+      @timerId= delay 1000*5, =>
+        console.log 'its been ten sec, process edits'
+        console.log @riteQueue.length
+        models.findEdits(@riteQueue)
+        @riteQueue=[]
 
+        # lastEditTime= @editQueue[nEdits-1].rite.date
+        # elapsed = edit.rite.date-lastEditTime
+      
     destroy: ->
       delete allByCid[@cid]
       delete allBySid[@sid]
@@ -266,10 +277,8 @@ module.exports = (app, SessionModel) ->
       # console.log this
       # delete this
 
-  # exports.CUser = CUser
-  # exports.riteQueue = riteQueue
   # return true
-  return [everyone, riteQueue]
+  return [everyone, CUser]
 # 
 # defaultUserPowers= ->
 #   powers =
@@ -280,3 +289,5 @@ module.exports = (app, SessionModel) ->
 # defaultRegisteredPowers = ->
 #   powers=
 #     jumpDistance: 500
+#
+delay = (ms, func) -> setTimeout func, ms
