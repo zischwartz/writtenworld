@@ -217,6 +217,12 @@ initializeInterface = ->
     $(this).parent().addClass('active')
     # console.log 'trigger triggered'
 
+    if type == 'geoLink'
+      offset=$(state.selectedEl).offset()
+      containerP = new L.Point(offset.left, offset.top)
+      latlng=map.containerPointToLatLng(containerP)
+      now.createGeoLink(latlng)
+
     if action == 'set' #setServerState, more properly, like color
       state[type]=payload
       now.setServerState(type, payload)
@@ -302,6 +308,7 @@ jQuery ->
     cb()
     return
 
+  state.geoLinked = window.location.hash.slice(1)
   initializeGeo()
 
   now.ready ->
@@ -312,8 +319,15 @@ jQuery ->
   return true # end doc.ready
 
 doNowInit= (now)->
-    domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+    # now.mapGoTo= (latlng) ->
+    #   console.log 'hi1', latlng
+    #   l = new L.LatLng(latlng.x, latlng.y)
+    #   map.setView(l)
 
+    now.goToGeoLink(state.geoLinked) if state.geoLinked
+
+    domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+    
     state.topLayerStamp = L.Util.stamp domTiles
     now.isLocal= state.isLocal
 
@@ -354,6 +368,10 @@ doNowInit= (now)->
       
     centerCursor()
 
+    now.goTo =(latlng) ->
+        map.panTo(latlng)
+        return
+      
     now.updateCursors = (updatedCursor) ->
       # console.log updatedCursor
       #todo, what if they go out of bounds and come back? something here is buggy

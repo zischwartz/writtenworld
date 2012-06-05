@@ -55,14 +55,17 @@
                     a.trigger(data-payload='down', data-type='writeDirection', data-action='setClientState', href="#")
                        i.icon-arrow-down
 
-              li
-                a#makeLink(data-toggle="modal", href="#linkModal", rel="tooltip", title="Add a link")
-                  i.icon-external-link
-
-              //
-                li
-                  a#makeGeoLink
-                    i.icon-screenshot
+              li.dropdown
+                a.dropdown-toggle(href='#', data-toggle='dropdown', rel="tooltip", title="Link to here or another website")
+                  i.icon-link
+                  b.caret
+                ul.dropdown-menu
+                  li
+                    a#makeLink(data-toggle="modal", href="#linkModal" )
+                      i.icon-external-link
+                  li
+                    a#makeGeoLink.trigger(data-type='geoLink') 
+                      i.icon-globe
 
             - if (!everyauth.loggedIn)
               p.navbar-text.pull-right#navToAuth

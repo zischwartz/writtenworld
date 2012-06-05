@@ -33,7 +33,17 @@
   };
 
   geoHasPosition = function(position) {
-    var closest, distance, distanceToClosest, inOfficialCity, key, msgbody, p, val;
+    var closest, distance, distanceToClosest, inOfficialCity, key, linkPos, msgbody, p, val;
+    linkPos = config.initialPos();
+    console.log(linkPos);
+    if (linkPos) {
+      state.isLocal = false;
+      p = new L.LatLng(linkPos.x, linkPos.y);
+      state.geoPos = p;
+      state.initialGeoPos = new L.LatLng(linkPos.x, linkPos.y);
+      map.setView(p, config.defZoom());
+      return true;
+    }
     inOfficialCity = false;
     closest = '';
     distanceToClosest = 10000000000000000000000000000000;

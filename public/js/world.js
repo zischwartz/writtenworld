@@ -250,13 +250,19 @@
       return inputEl.focus();
     });
     return $(".trigger").live('click', function() {
-      var action, c, f, payload, t, text, type;
+      var action, c, containerP, f, latlng, offset, payload, t, text, type;
       action = $(this).data('action');
       type = $(this).data('type');
       payload = $(this).data('payload');
       text = $(this).text();
       $(this).parent().parent().find('.active').removeClass('active');
       $(this).parent().addClass('active');
+      if (type === 'geoLink') {
+        offset = $(state.selectedEl).offset();
+        containerP = new L.Point(offset.left, offset.top);
+        latlng = map.containerPointToLatLng(containerP);
+        now.createGeoLink(latlng);
+      }
       if (action === 'set') {
         state[type] = payload;
         now.setServerState(type, payload);
@@ -358,6 +364,7 @@
       }
       cb();
     };
+    state.geoLinked = window.location.hash.slice(1);
     initializeGeo();
     now.ready(function() {
       doNowInit(now);
@@ -367,6 +374,9 @@
 
   doNowInit = function(now) {
     var domTiles;
+    if (state.geoLinked) {
+      now.goToGeoLink(state.geoLinked);
+    }
     domTiles = new L.DomTileLayer({
       tileSize: config.tileSize()
     });
@@ -410,6 +420,9 @@
       }
     });
     centerCursor();
+    now.goTo = function(latlng) {
+      map.panTo(latlng);
+    };
     now.updateCursors = function(updatedCursor) {
       var cursor, selectedCell;
       if (state.cursors[updatedCursor.cid]) {

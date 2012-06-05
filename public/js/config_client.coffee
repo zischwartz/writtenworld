@@ -28,6 +28,15 @@ Configuration = class Configuration
     @autoPan = -> false
     @updateWhenIdle = -> false
   
+    initialPosReal=initialPos
+    @initialPos= ->
+      console.log 'ip!', initialPosReal
+      if not initialPosReal
+        return false
+      else
+        l = {x:parseFloat(initialPosReal.x), y: parseFloat(initialPosReal.y)}
+        return l
+
     isReallyAuth= isAuth
     @isAuth = -> isReallyAuth ? false
 

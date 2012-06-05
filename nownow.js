@@ -275,6 +275,24 @@
         }
       }
     };
+    everyone.now.createGeoLink = function(geoLink) {
+      var b, geoLink64;
+      b = "" + geoLink.lat + ":" + geoLink.lng;
+      geoLink64 = new Buffer(b).toString('base64');
+      return this.now.insertMessage('Have a link:', geoLink64);
+    };
+    everyone.now.goToGeoLink = function(geoLink64) {
+      var b, g, latlng;
+      console.log('goto GEO');
+      b = new Buffer(geoLink64, 'base64').toString('ascii');
+      g = b.split(':');
+      console.log(g);
+      latlng = {
+        x: g[0],
+        y: g[1]
+      };
+      return console.log(latlng);
+    };
     models.User.prototype.on('receivedEcho', function(rite) {
       var userId;
       console.log('rcvd echo called');

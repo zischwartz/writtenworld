@@ -21,7 +21,7 @@
     Configuration.name = 'Configuration';
 
     function Configuration(spec) {
-      var isReallyAuth;
+      var initialPosReal, isReallyAuth;
       if (spec == null) {
         spec = {};
       }
@@ -71,6 +71,20 @@
       };
       this.updateWhenIdle = function() {
         return false;
+      };
+      initialPosReal = initialPos;
+      this.initialPos = function() {
+        var l;
+        console.log('ip!', initialPosReal);
+        if (!initialPosReal) {
+          return false;
+        } else {
+          l = {
+            x: parseFloat(initialPosReal.x),
+            y: parseFloat(initialPosReal.y)
+          };
+          return l;
+        }
       };
       isReallyAuth = isAuth;
       this.isAuth = function() {

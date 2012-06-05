@@ -86,19 +86,18 @@ app.configure 'production', ->
 
 [nownow, CUser] = require('./nownow')(app, SessionModel)
 
-app.get '/', (req, res) ->
+  
+render_world = (req, res, options={}) ->
   initialWorldId = models.mainWorldId
   if req.loggedIn
     personalWorldId = req.user.personalWorld
     console.log req.user
     availableColors = powers.getAvailableColors req.user.totalEchoes
     canLink = powers.canLink req.user
-    
   else
     personalWorldId = null
     availableColors = powers.unregisteredColors()
     canLink=false
-
   res.render 'map_base.jade',
     title: 'Written World'
     mainWorldId: models.mainWorldId
@@ -108,6 +107,18 @@ app.get '/', (req, res) ->
     availableColors: availableColors
     isPersonal: false
     isAuth: req.loggedIn
+    initialPos: JSON.stringify options.initialPos ? false
+
+
+app.get '/', (req, res) ->
+  render_world(req,res)
+
+app.get '/l/:l', (req, res) ->
+  # console.log 'loc based!!'
+  b=new Buffer(req.params.l, 'base64').toString('ascii')
+  g= b.split ':'
+  console.log g
+  render_world(req, res, {initialPos:{x:g[0], y:g[1]}})
 
 app.get '/home', (req, res) ->
   if req.loggedIn
@@ -171,6 +182,7 @@ app.get '/uw/:slug', (req, res)->
   else
     #first add a message saying you gota login
     res.redirect('/login')
+
 
 # a whole new world
 # app.get '/:slug', (req, res)->

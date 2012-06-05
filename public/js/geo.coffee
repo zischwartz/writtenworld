@@ -1,5 +1,5 @@
 
-window.initializeGeo = ->
+window.initializeGeo = ()->
   if (navigator.geolocation)
       navigator.geolocation.getCurrentPosition(geoSucceeded, geoFailed) # navigator.geolocation.watchPosition geoWatch #possibly use this for mobile
 
@@ -20,6 +20,18 @@ geoSucceeded = (position) ->
 # la = new L.LatLng(34.052234,-118.243685) # for testing
 
 geoHasPosition = (position) ->
+  
+  linkPos=config.initialPos()
+  console.log linkPos
+  if linkPos
+    state.isLocal=false
+    p = new L.LatLng(linkPos.x, linkPos.y)
+    state.geoPos = p
+    state.initialGeoPos = new L.LatLng(linkPos.x, linkPos.y)
+    map.setView(p, config.defZoom() )
+    return true
+
+  #normal (not from a geolink)
   inOfficialCity = false
   closest= ''
   distanceToClosest = 10000000000000000000000000000000
