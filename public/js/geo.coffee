@@ -1,18 +1,41 @@
 
 window.initializeGeo = ()->
   if (navigator.geolocation)
-      navigator.geolocation.getCurrentPosition(geoSucceeded, geoFailed) # navigator.geolocation.watchPosition geoWatch #possibly use this for mobile
+      navigator.geolocation.getCurrentPosition(geoSucceeded, geoFailed)
 
-  $.getScript 'http://j.maxmind.com/app/geoip.js', (data, textStatus) ->
-    geoHasPosition {coords:{latitude: geoip_latitude(), longitude: geoip_longitude(), accuracy:-1}} if not state.geoPos
-    return true
+      $.doTimeout 500,  ->
+        if (not state.geoPos) or (state.geoAccuracy ==-1)
+          window.insertMessage "Click Allow", "If your browser asks to track your location, please click <b>allow</b>." , 'alert-error'
+        return false
+  
+      watchID = navigator.geolocation.watchPosition (position)->
+        # console.log 'recieved new loc! ', position
+        if position.coords.accuracy < 500
+          # console.log 'more accurate loc found'
+          timeSinceLoad= new Date().getTime()-window.pageStartLoad
+          if not state.geoPos and (timeSinceLoad>1500)
+            window.insertMessage "We found you", "It took a second, but we've found your location more accurately. Moving you there shortly." , 'alert-info'
+            $.doTimeout 1000, geoHasPosition(position)
+          else
+            # console.log 'moving it without telling you'
+            geoHasPosition(position)
+          navigator.geolocation.clearWatch(watchID)
+
+  if not state.geoPos
+    $.getScript 'http://j.maxmind.com/app/geoip.js', (data, textStatus) ->
+      # console.log 'maxmind'
+      # console.log {coords:{latitude: geoip_latitude(), longitude: geoip_longitude(), accuracy:-1}}
+      geoHasPosition {coords:{latitude: geoip_latitude(), longitude: geoip_longitude(), accuracy:-1}} if not state.geoPos
+      return true
 
 
 geoFailed = (error) ->
+  # console.log 'geo position failed'
   return true
 
 geoSucceeded = (position) ->
   geoHasPosition position if not state.geoPos
+  # console.log 'position from geoSucceed', position
   true
 
 # chicago = new L.LatLng(41.878114,-87.629798) # for testing
@@ -22,7 +45,7 @@ geoSucceeded = (position) ->
 geoHasPosition = (position) ->
   
   linkPos=config.initialPos()
-  console.log linkPos
+  # console.log linkPos
   if linkPos
     state.isLocal=false
     p = new L.LatLng(linkPos.x, linkPos.y)
@@ -50,11 +73,14 @@ geoHasPosition = (position) ->
     if distance < distanceToClosest
       distanceToClosest = distance
       closest= key
+
   if inOfficialCity
     map.setView(p, config.defZoom() )
     window.centerCursor()
     state.isLocal=true
+
   else
+    # console.log 'not official city YO'
     if window.VARYLATLNG
       map.setView(varyLatLng(officialCities[closest]), config.defZoom() )
     else

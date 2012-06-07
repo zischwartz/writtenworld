@@ -21,7 +21,7 @@ Configuration = class Configuration
 
     @defaultChar = -> spec.defaultChar ? " "
     @inputRateLimit = -> spec.inputRateLimit ? 20
-    @maxDistanceFromOfficial = -> spec.maxDistanceFromOfficial ? 10000 # from official City, for rollout, see below
+    @maxDistanceFromOfficial = -> spec.maxDistanceFromOfficial ? 15000 # from official City, for rollout, see below
 
     # leaflet
     @scrollWheelZoom= -> true#false
@@ -30,7 +30,6 @@ Configuration = class Configuration
   
     initialPosReal=initialPos
     @initialPos= ->
-      console.log 'ip!', initialPosReal
       if not initialPosReal
         return false
       else

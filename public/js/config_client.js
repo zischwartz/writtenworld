@@ -61,7 +61,7 @@
       };
       this.maxDistanceFromOfficial = function() {
         var _ref;
-        return (_ref = spec.maxDistanceFromOfficial) != null ? _ref : 10000;
+        return (_ref = spec.maxDistanceFromOfficial) != null ? _ref : 15000;
       };
       this.scrollWheelZoom = function() {
         return true;
@@ -75,7 +75,6 @@
       initialPosReal = initialPos;
       this.initialPos = function() {
         var l;
-        console.log('ip!', initialPosReal);
         if (!initialPosReal) {
           return false;
         } else {

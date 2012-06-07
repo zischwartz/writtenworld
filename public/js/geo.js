@@ -4,21 +4,43 @@
     __hasProp = {}.hasOwnProperty;
 
   window.initializeGeo = function() {
+    var watchID;
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(geoSucceeded, geoFailed);
-    }
-    return $.getScript('http://j.maxmind.com/app/geoip.js', function(data, textStatus) {
-      if (!state.geoPos) {
-        geoHasPosition({
-          coords: {
-            latitude: geoip_latitude(),
-            longitude: geoip_longitude(),
-            accuracy: -1
+      $.doTimeout(500, function() {
+        if ((!state.geoPos) || (state.geoAccuracy === -1)) {
+          window.insertMessage("Click Allow", "If your browser asks to track your location, please click <b>allow</b>.", 'alert-error');
+        }
+        return false;
+      });
+      watchID = navigator.geolocation.watchPosition(function(position) {
+        var timeSinceLoad;
+        if (position.coords.accuracy < 500) {
+          timeSinceLoad = new Date().getTime() - window.pageStartLoad;
+          if (!state.geoPos && (timeSinceLoad > 1500)) {
+            window.insertMessage("We found you", "It took a second, but we've found your location more accurately. Moving you there shortly.", 'alert-info');
+            $.doTimeout(1000, geoHasPosition(position));
+          } else {
+            geoHasPosition(position);
           }
-        });
-      }
-      return true;
-    });
+          return navigator.geolocation.clearWatch(watchID);
+        }
+      });
+    }
+    if (!state.geoPos) {
+      return $.getScript('http://j.maxmind.com/app/geoip.js', function(data, textStatus) {
+        if (!state.geoPos) {
+          geoHasPosition({
+            coords: {
+              latitude: geoip_latitude(),
+              longitude: geoip_longitude(),
+              accuracy: -1
+            }
+          });
+        }
+        return true;
+      });
+    }
   };
 
   geoFailed = function(error) {
@@ -35,7 +57,6 @@
   geoHasPosition = function(position) {
     var closest, distance, distanceToClosest, inOfficialCity, key, linkPos, msgbody, p, val;
     linkPos = config.initialPos();
-    console.log(linkPos);
     if (linkPos) {
       state.isLocal = false;
       p = new L.LatLng(linkPos.x, linkPos.y);
