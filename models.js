@@ -231,17 +231,12 @@
   };
 
   findEdits = function(riteQueue) {
-    var i, r, results, rstring, _i, _j, _len, _ref, _ref1, _ref2;
-    console.log('findedits called');
+    var i, results, _i, _ref, _ref1, _ref2;
     results = [];
     riteQueue.sort(function(a, b) {
-      console.log('a :', a.x, a.y);
-      console.log('b :', b.x, b.y);
       if (a.y === b.y) {
-        console.log('sort by x');
         return a.x - b.x;
       } else {
-        console.log('just by y');
         return a.y - b.y;
       }
     });
@@ -252,13 +247,7 @@
         results.push(riteQueue[i]);
       }
     }
-    rstring = '';
-    for (_j = 0, _len = results.length; _j < _len; _j++) {
-      r = results[_j];
-      console.log(r.x);
-      rstring += r.rite.contents;
-    }
-    return console.log(rstring);
+    return results;
   };
 
   exports.findEdits = findEdits;

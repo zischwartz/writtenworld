@@ -117,7 +117,6 @@ CellSchema = new Schema
   world: ObjectId
   x: {type: Number, required: true, min: 0}
   y: {type: Number, required: true, min: 0}
-  # contents: {type: String, default: ' '}
   current: { type: Schema.ObjectId, ref: 'Rite' }
   history: [{ type: Schema.ObjectId, ref: 'Rite' }]
 
@@ -125,30 +124,18 @@ CellSchema.index {world:1, x:1, y:1}, {unique:true}
 
 exports.Cell = mongoose.model('Cell', CellSchema)
 
-#   riteQueue.push {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite: rite, commandType: commandType}
-
 asyncReal=(data, callback) ->
   process.nextTick ->
     callback(data)
 
-
-
 findEdits = (riteQueue) ->
-  console.log 'findedits called'
-  
   results=[]
-
   riteQueue.sort (a,b)->
-    console.log 'a :', a.x, a.y
-    console.log 'b :', b.x, b.y
-    # console.log typeof a.x
     if a.y == b.y
-      console.log 'sort by x'
       return a.x - b.x
     else
-      console.log 'just by y'
       return a.y - b.y
-  
+
   for i in [0..riteQueue.length-1]
     # console.log riteQueue[i].rite.contents
     if riteQueue[i].y == riteQueue[i+1]?.y
@@ -156,16 +143,10 @@ findEdits = (riteQueue) ->
     else if riteQueue[i].y == riteQueue[i-1]?.y #for the last el
       results.push riteQueue[i]
 
-
-  # results.sort (a,b) ->
-  #   a.x - b.x
-
-  rstring = ''
-  for r in results
-    console.log r.x
-    rstring+= r.rite.contents
-
-  console.log rstring
+  # rstring = ''
+  # for r in results
+  #   rstring+= r.rite.contents
+  return results
 
 exports.findEdits =findEdits
 

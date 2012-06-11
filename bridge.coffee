@@ -103,26 +103,26 @@ module.exports = (everyone, SessionModel) ->
         else if logic.legitEcho
             # console.log 'Legit echo, cool'
             echoIt(cell, rite, riter, logic)
-            callback('echo', rite, cellPoint, cell.current.props)
+            callback('echo', rite, cellPoint, cell.current.props, originalOwner)
         else if logic.cEchoes<=0
             # console.log 'Legit overrite, there were no echoes'
             overriteIt(cell, rite, riter, logic) # this changes c.current to the rite
-            callback('overrite', rite, cellPoint, cell.current.props)
+            callback('overrite', rite, cellPoint, cell.current.props, originalOwner)
         else if logic.cEchoes>=1
             console.log '.'
             if logic.already isnt 'echoer'
               # console.log 'Legit Downrote'
               downroteIt(cell, rite, riter, logic)
-              callback('downrote', rite, cellPoint, cell.current.props)
+              callback('downrote', rite, cellPoint, cell.current.props, originalOwner)
             else if logic.already == 'echoer'
               if logic.cEchoes ==1
                 # console.log 'Overrite something you echoed!'
                 overriteIt(cell, rite, riter, logic)
-                callback('overrite', rite, cellPoint, cell.current.props)
+                callback('overrite', rite, cellPoint, cell.current.props, originalOwner)
               else
                 # console.log 'Downroting something you echoed!'
                 downroteIt(cell, rite, riter, logic)
-                callback('downrote', rite, cellPoint, cell.current.props)
+                callback('downrote', rite, cellPoint, cell.current.props, originalOwner)
         else
           console.log 'WELL SHIT THIS SHOULDNT HAVE HAPPENED'
         
@@ -140,9 +140,11 @@ module.exports = (everyone, SessionModel) ->
             if user and logic.legitEcho
               user.totalEchoes+=1
               user.save (err)-> console.log err if err
-              user.emit('receivedEcho', rite)
-            if user and logic.legitDownrote and originalOwner.toString() isnt riter.toString()
-              user.emit('receivedOverRite', rite)
+              #
+              # Removed in favor of using the CUser obj
+              # user.emit('receivedEcho', rite)
+            # if user and logic.legitDownrote and originalOwner.toString() isnt riter.toString()
+              # user.emit('receivedOverRite', rite)
 
   # END processRite
 

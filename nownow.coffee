@@ -82,13 +82,13 @@ module.exports = (app, SessionModel) ->
               this.now.insertMessage "Sorry, 1 Link/Hour", "For now. Sorry." , 'alert-error'
               return false 
 
-    bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->
+    bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false, originalOwner=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
       getWhoCanSee cellPoint, currentWorldId, (toUpdate)->
         for i of toUpdate
           # if i !=cid # ie not you, removed for my hack 
             if rite # it was a legit rite
-              CUser.byCid(cid).addToRiteQueue {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite: rite, commandType: commandType}
+              CUser.byCid(cid).addToRiteQueue {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite: rite, commandType: commandType, originalOwner}
               nowjs.getClient i, ->
                 # console.log i
                 this.now.drawRite(commandType, rite, cellPoint, cellProps)
@@ -201,34 +201,35 @@ module.exports = (app, SessionModel) ->
     console.log latlng
     # this.now.mapGoTo(latlng)
 
+  # or with my CUser, and by edit, not rite
   # can I impliment this on CUser  instead....
-  models.User.prototype.on 'receivedEcho', (rite) ->
-      console.log 'rcvd echo called'
-      userId= this._id
-      rite.getOwner (err,u)->
-        console.log err if err
-        cid = CUser.byUid(userId)?.cid
-        if cid
-          nowjs.getClient cid, ->
-            if u
-              this.now.insertMessage 'Echoed!', "#{u.login} echoed what you said!"
-            else
-              this.now.insertMessage 'Echoed!', "Someone echoed what you said!"
-      return true
+  # models.User.prototype.on 'receivedEcho', (rite) ->
+  #     console.log 'rcvd echo called'
+  #     userId= this._id
+  #     rite.getOwner (err,u)->
+  #       console.log err if err
+  #       cid = CUser.byUid(userId)?.cid
+  #       if cid
+  #         nowjs.getClient cid, ->
+  #           if u
+  #             this.now.insertMessage 'Echoed!', "#{u.login} echoed what you said!"
+  #           else
+  #             this.now.insertMessage 'Echoed!', "Someone echoed what you said!"
+  #     return true
 
-  models.User.prototype.on 'receivedOverRite', (rite) ->
-      console.log 'rcd ovrt called'
-      userId= this._id
-      rite.getOwner (err,u)->
-        console.log err if err
-        cid=CUser.byUid(userId)?.cid
-        if cid
-          nowjs.getClient cid, ->
-            if u
-              this.now.insertMessage 'Over Written', "#{u.login} is writing over your cells"
-            else
-              this.now.insertMessage 'Over Written', "Someone is writing over your cells."
-      return true
+  # models.User.prototype.on 'receivedOverRite', (rite) ->
+  #     console.log 'rcd ovrt called'
+  #     userId= this._id
+  #     rite.getOwner (err,u)->
+  #       console.log err if err
+  #       cid=CUser.byUid(userId)?.cid
+  #       if cid
+  #         nowjs.getClient cid, ->
+  #           if u
+  #             this.now.insertMessage 'Over Written', "#{u.login} is writing over your cells"
+  #           else
+  #             this.now.insertMessage 'Over Written', "Someone is writing over your cells."
+  #     return true
 
 
   class CUser
@@ -277,14 +278,36 @@ module.exports = (app, SessionModel) ->
       @riteQueue.push edit
       clearTimeout(@timerId)
       @timerId= delay 1000*5, =>
-        console.log 'its been ten sec, process edits'
-        console.log @riteQueue.length
-        models.findEdits(@riteQueue)
+        results=models.findEdits(@riteQueue)
         @riteQueue=[]
+        @processEdit results
+    
+    processEdit:(results) ->
+      console.log 'processEdit'
+      toNotify=[]
+      echoes=0
+      overrites=0
+      downrotes=0
+      s = ''
 
-        # lastEditTime= @editQueue[nEdits-1].rite.date
-        # elapsed = edit.rite.date-lastEditTime
-      
+      for r in results
+        s+= r.rite.contents
+        if r.originalOwner and r.originalOwner not in toNotify
+          toNotify.push r.originalOwner
+        if r.commandType is 'overrite' then overrites+=1
+        if r.commandType is 'echo' then echoes+=1
+        if r.commandType is 'downrote' then downrotes+=1
+      if echoes > overrites+downrotes
+        console.log 'lets call it an echo'
+        console.log CUser.byUid(toNotify[0]).cid
+        nowjs.getClient CUser.byUid(toNotify[0]).cid, -> this.now.insertMessage 'Echoed!', "Someone echoed you!<br> #{s}"
+      else if overrites > downrotes
+        console.log 'call it an overrite'
+      console.log s
+      console.log toNotify
+      # console.log CUser.byUid toNotify[0]
+      return
+
     destroy: ->
       delete allByCid[@cid]
       delete allBySid[@sid]
@@ -293,7 +316,6 @@ module.exports = (app, SessionModel) ->
       # console.log this
       # delete this
 
-  # return true
   return [everyone, CUser]
 # 
 # defaultUserPowers= ->
