@@ -318,7 +318,7 @@
       };
 
       CUser.bySid = function(sid) {
-        return allBy[sid];
+        return allBySid[sid];
       };
 
       CUser.byUid = function(uid) {
@@ -339,18 +339,43 @@
             _this.nowUser.login = doc.login;
             return _this.nowUser.powers = doc.powers;
           });
+          allByUid[this.uid] = this;
         } else {
           SessionModel.findOne({
             'sid': this.sid
           }, function(err, doc) {
             _this.uid = doc._id;
-            return _this.nowUser.soid = doc._id;
+            _this.nowUser.soid = doc._id;
+            return allByUid[_this.uid] = _this;
           });
         }
         allByCid[this.cid] = this;
         allBySid[this.sid] = this;
-        allByUid[this.uid] = this;
       }
+
+      CUser.prototype.findEdits = function(riteQueue) {
+        var i, results, _i, _ref, _ref1, _ref2;
+        results = [];
+        riteQueue.sort(function(a, b) {
+          if (a.y === b.y) {
+            if (a.x === b.x) {
+              return a.rite.date - b.rite.date;
+            } else {
+              return a.x - b.x;
+            }
+          } else {
+            return a.y - b.y;
+          }
+        });
+        for (i = _i = 0, _ref = riteQueue.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; i = 0 <= _ref ? ++_i : --_i) {
+          if (riteQueue[i].y === ((_ref1 = riteQueue[i + 1]) != null ? _ref1.y : void 0)) {
+            results.push(riteQueue[i]);
+          } else if (riteQueue[i].y === ((_ref2 = riteQueue[i - 1]) != null ? _ref2.y : void 0)) {
+            results.push(riteQueue[i]);
+          }
+        }
+        return results;
+      };
 
       CUser.prototype.addToRiteQueue = function(edit) {
         var _this = this;
@@ -358,47 +383,84 @@
         clearTimeout(this.timerId);
         return this.timerId = delay(1000 * 5, function() {
           var results;
-          results = models.findEdits(_this.riteQueue);
+          results = _this.findEdits(_this.riteQueue);
           _this.riteQueue = [];
-          return _this.processEdit(results);
+          _this.processEdit(results);
+          return false;
         });
       };
 
       CUser.prototype.processEdit = function(results) {
-        var downrotes, echoes, overrites, r, s, toNotify, _i, _len, _ref;
+        var col, fix, fixed, note, r, row, s, toNotify, type, uid, x, y, _i, _j, _k, _len, _len1, _len2, _ref, _ref1;
         console.log('processEdit');
-        toNotify = [];
-        echoes = 0;
-        overrites = 0;
-        downrotes = 0;
         s = '';
+        toNotify = {
+          own: [results[0].rite.owner],
+          overrite: [],
+          echo: [],
+          downrote: []
+        };
+        fix = {};
+        fixed = [];
         for (_i = 0, _len = results.length; _i < _len; _i++) {
           r = results[_i];
+          if (!fix[r.y]) {
+            fix[r.y] = {};
+          }
+          fix[r.y][r.x] = r;
+          if (r.originalOwner) {
+            if (_ref = r.originalOwner.toString(), __indexOf.call(toNotify[r.commandType], _ref) < 0) {
+              toNotify[r.commandType].push(r.originalOwner.toString());
+            }
+          }
+        }
+        for (y in fix) {
+          if (!__hasProp.call(fix, y)) continue;
+          row = fix[y];
+          for (x in row) {
+            if (!__hasProp.call(row, x)) continue;
+            col = row[x];
+            fixed.push(col);
+          }
+        }
+        fixed.sort(function(a, b) {
+          if (a.y === b.y) {
+            return a.x - b.x;
+          } else {
+            return a.y - b.y;
+          }
+        });
+        for (_j = 0, _len1 = fixed.length; _j < _len1; _j++) {
+          r = fixed[_j];
           s += r.rite.contents;
-          if (r.originalOwner && (_ref = r.originalOwner, __indexOf.call(toNotify, _ref) < 0)) {
-            toNotify.push(r.originalOwner);
-          }
-          if (r.commandType === 'overrite') {
-            overrites += 1;
-          }
-          if (r.commandType === 'echo') {
-            echoes += 1;
-          }
-          if (r.commandType === 'downrote') {
-            downrotes += 1;
+        }
+        console.log('notes: ', toNotify);
+        for (type in toNotify) {
+          _ref1 = toNotify[type];
+          for (_k = 0, _len2 = _ref1.length; _k < _len2; _k++) {
+            uid = _ref1[_k];
+            console.log('uid', uid);
+            console.log('rowner', results[0].rite.owner);
+            note = new models.Note({
+              x: results[0].x,
+              y: results[0].y,
+              contents: s,
+              read: type === 'own' ? true : false,
+              from: results[0].rite.owner,
+              to: uid,
+              type: type
+            });
+            if (type !== 'own') {
+              if (CUser.byUid(uid)) {
+                nowjs.getClient(CUser.byUid(uid).cid, function() {
+                  this.now.insertMessage('!!!!', "Someone echoed you!<br><span class='edit'>" + s + "</span>");
+                  return note.read = true;
+                });
+              }
+            }
+            note.save();
           }
         }
-        if (echoes > overrites + downrotes) {
-          console.log('lets call it an echo');
-          console.log(CUser.byUid(toNotify[0]).cid);
-          nowjs.getClient(CUser.byUid(toNotify[0]).cid, function() {
-            return this.now.insertMessage('Echoed!', "Someone echoed you!<br> " + s);
-          });
-        } else if (overrites > downrotes) {
-          console.log('call it an overrite');
-        }
-        console.log(s);
-        console.log(toNotify);
       };
 
       CUser.prototype.destroy = function() {
@@ -416,6 +478,18 @@
 
   delay = function(ms, func) {
     return setTimeout(func, ms);
+  };
+
+  Array.prototype.filter = function(func) {
+    var x, _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = this.length; _i < _len; _i++) {
+      x = this[_i];
+      if (func(x)) {
+        _results.push(x);
+      }
+    }
+    return _results;
   };
 
 }).call(this);

@@ -124,32 +124,22 @@ CellSchema.index {world:1, x:1, y:1}, {unique:true}
 
 exports.Cell = mongoose.model('Cell', CellSchema)
 
-asyncReal=(data, callback) ->
-  process.nextTick ->
-    callback(data)
+# asyncReal=(data, callback) ->
+#   process.nextTick ->
+#     callback(data)
 
-findEdits = (riteQueue) ->
-  results=[]
-  riteQueue.sort (a,b)->
-    if a.y == b.y
-      return a.x - b.x
-    else
-      return a.y - b.y
 
-  for i in [0..riteQueue.length-1]
-    # console.log riteQueue[i].rite.contents
-    if riteQueue[i].y == riteQueue[i+1]?.y
-      results.push riteQueue[i]
-    else if riteQueue[i].y == riteQueue[i-1]?.y #for the last el
-      results.push riteQueue[i]
 
-  # rstring = ''
-  # for r in results
-  #   rstring+= r.rite.contents
-  return results
+NoteSchema = new Schema
+  x: {type: Number, required: true, min: 0}
+  y: {type: Number, required: true, min: 0}
+  contents: {type: String, default: ''}
+  read:{type:Boolean, default: false}
+  to: { type: Schema.ObjectId }
+  from: { type: Schema.ObjectId}
+  type: {type: String}
 
-exports.findEdits =findEdits
-
+exports.Note = mongoose.model('Note', NoteSchema)
 
 
 mongooseAuth=require('mongoose-auth')

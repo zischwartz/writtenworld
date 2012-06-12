@@ -8,6 +8,7 @@ echo "Hello, world $FIRST_ARGUMENT!"
 
 
 nodemon app.coffee &
+# was just nodemon app.coffee &
 
 # not using these, for shutting down individually. kill 0 works for group great!
 # NODEMON_PID="$!"

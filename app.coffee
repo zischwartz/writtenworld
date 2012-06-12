@@ -197,18 +197,6 @@ app.get '/uw/:slug', (req, res)->
 #               worldSpec: JSON.stringify(world.config)
 
 
-# processEdits = ->
-#  if riteQueue.length
-#    seed= riteQueue.pop()
-#    models.findEdits seed, [], (edit)->
-#     console.log 'edits: '
-#     for c in edit
-#       console.log c.current.contents
-#     # console.log edit
-#  process.nextTick(processEdits)
-
-# processEdits()
-
 models.mongooseAuth.helpExpress(app)
 
 port = app.settings.port

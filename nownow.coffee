@@ -88,7 +88,7 @@ module.exports = (app, SessionModel) ->
         for i of toUpdate
           # if i !=cid # ie not you, removed for my hack 
             if rite # it was a legit rite
-              CUser.byCid(cid).addToRiteQueue {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite: rite, commandType: commandType, originalOwner}
+              CUser.byCid(cid).addToRiteQueue {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite, commandType, originalOwner}
               nowjs.getClient i, ->
                 # console.log i
                 this.now.drawRite(commandType, rite, cellPoint, cellProps)
@@ -245,9 +245,10 @@ module.exports = (app, SessionModel) ->
       return allByCid[cid]
     
     @bySid: (sid) ->
-      return allBy[sid]
+      return allBySid[sid]
 
     @byUid: (uid) ->
+      # console.log 'allbyuid:', allByUid
       return allByUid[uid]
 
     constructor: (@nowUser) ->
@@ -259,53 +260,100 @@ module.exports = (app, SessionModel) ->
         models.User.findById @uid, (err, doc) =>
             @login = doc.login
             @nowUser.login = doc.login
-            # console.log doc
             @nowUser.powers = doc.powers
-            # @nowUser.powers = doc.powers
-            # @nowUser.session?.powers = doc.powers
+        allByUid[@uid] = this
       else
+        # this is neccesary because sids don't presist, but the doc._id should
         SessionModel.findOne {'sid': @sid } , (err, doc) =>
           @uid = doc._id
           @nowUser.soid=doc._id
-          # @nowUser.powers = defaultUserPowers()
-          # @nowUser.session?.powers = defaultUserPowers()
+          allByUid[@uid] = this
       
       allByCid[@cid] = this
       allBySid[@sid] = this
-      allByUid[@uid] = this
-    
+      
+
+    findEdits: (riteQueue) ->
+      results=[]
+      riteQueue.sort (a,b)->
+        if a.y == b.y
+          if a.x==b.x
+            return a.rite.date - b.rite.date
+          else
+            return a.x - b.x
+        else
+          return a.y - b.y
+
+      for i in [0..riteQueue.length-1]
+        if riteQueue[i].y == riteQueue[i+1]?.y
+          results.push riteQueue[i]
+        else if riteQueue[i].y == riteQueue[i-1]?.y #for the last el
+          results.push riteQueue[i]
+      return results
+
     addToRiteQueue: (edit) ->
       @riteQueue.push edit
       clearTimeout(@timerId)
       @timerId= delay 1000*5, =>
-        results=models.findEdits(@riteQueue)
+        results=@findEdits(@riteQueue)
         @riteQueue=[]
         @processEdit results
+        return false
     
+
     processEdit:(results) ->
       console.log 'processEdit'
-      toNotify=[]
-      echoes=0
-      overrites=0
-      downrotes=0
       s = ''
-
+      toNotify =
+        own: [results[0].rite.owner]
+        overrite: []
+        echo: []
+        downrote:[]
+      fix = {}
+      fixed=[]
+      #to get the final state of the edit/each contained cell, i.e. if user made a mistake
       for r in results
+        if not fix[r.y] then fix[r.y]={}
+        fix[r.y][r.x] =r
+        #and since we're already looping through it
+        if r.originalOwner
+          if r.originalOwner.toString() not in toNotify[r.commandType]
+            toNotify[r.commandType].push r.originalOwner.toString()
+
+      for own y, row of fix
+        for own x, col of row
+          fixed.push col
+
+      fixed.sort (a,b)->
+        if a.y == b.y
+          return a.x - b.x
+        else
+          return a.y - b.y
+      
+      for r in fixed
         s+= r.rite.contents
-        if r.originalOwner and r.originalOwner not in toNotify
-          toNotify.push r.originalOwner
-        if r.commandType is 'overrite' then overrites+=1
-        if r.commandType is 'echo' then echoes+=1
-        if r.commandType is 'downrote' then downrotes+=1
-      if echoes > overrites+downrotes
-        console.log 'lets call it an echo'
-        console.log CUser.byUid(toNotify[0]).cid
-        nowjs.getClient CUser.byUid(toNotify[0]).cid, -> this.now.insertMessage 'Echoed!', "Someone echoed you!<br> #{s}"
-      else if overrites > downrotes
-        console.log 'call it an overrite'
-      console.log s
-      console.log toNotify
-      # console.log CUser.byUid toNotify[0]
+      # console.log s
+      console.log 'notes: ', toNotify
+
+      for type of toNotify
+        for uid in toNotify[type]
+          console.log 'uid', uid
+          console.log 'rowner', results[0].rite.owner
+          note = new models.Note
+            x: results[0].x
+            y: results[0].y
+            contents: s
+            read: if type is 'own' then true else false
+            from: results[0].rite.owner
+            to: uid
+            type: type
+          if type isnt 'own'
+            if CUser.byUid(uid)
+              nowjs.getClient CUser.byUid(uid).cid, ->
+                this.now.insertMessage '!!!!', "Someone echoed you!<br><span class='edit'>#{s}</span>"
+                note.read = true
+          note.save()
+
       return
 
     destroy: ->
@@ -327,5 +375,7 @@ module.exports = (app, SessionModel) ->
 # defaultRegisteredPowers = ->
 #   powers=
 #     jumpDistance: 500
-#
+
 delay = (ms, func) -> setTimeout func, ms
+
+Array::filter = (func) -> x for x in @ when func(x)
