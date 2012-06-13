@@ -267,6 +267,10 @@
       if (action === 'setClientState') {
         state[type] = payload;
       }
+      if (action === 'goto') {
+        console.log('gotoooo', payload);
+        goToCell(payload, map.getZoom());
+      }
       if (type === 'color') {
         $("#color").addClass(payload);
       }
@@ -471,8 +475,11 @@
       c = Cell.get(cellPoint.x, cellPoint.y);
       return c[commandType](rite, cellProps);
     };
-    return now.insertMessage = function(heading, message, cssclass) {
-      return insertMessage(heading, message, cssclass);
+    return now.insertMessage = function(heading, message, cssclass, timing) {
+      if (timing == null) {
+        timing = 6;
+      }
+      return insertMessage(heading, message, cssclass, timing);
     };
   };
 
@@ -899,9 +906,17 @@
     return map;
   };
 
-  window.goToCell = function(key) {
-    var cHeight, cWidth, latlng, numRC, pixelX, pixelY, x, y, z, zoomDiff, _ref;
-    _ref = key.split('x'), z = _ref[0], x = _ref[1], y = _ref[2];
+  window.goToCell = function(key, zoom) {
+    var cHeight, cWidth, latlng, numRC, pixelX, pixelY, x, y, z, zoomDiff, _ref, _ref1;
+    if (zoom == null) {
+      zoom = false;
+    }
+    if (!zoom) {
+      _ref = key.split('x'), z = _ref[0], x = _ref[1], y = _ref[2];
+    } else {
+      _ref1 = key.split('x'), x = _ref1[0], y = _ref1[1];
+      z = zoom;
+    }
     zoomDiff = config.maxZoom() - z;
     numRC = Math.pow(2, zoomDiff);
     cWidth = config.tileSize().x / numRC;
@@ -915,7 +930,6 @@
     map.setView(latlng, z);
     $.doTimeout(200, function() {
       var cell;
-      console.log('ttt');
       cell = Cell.get(x, y);
       if (!cell) {
         return true;

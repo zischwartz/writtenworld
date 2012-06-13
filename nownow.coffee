@@ -349,7 +349,7 @@ module.exports = (app, SessionModel) ->
           if type isnt 'own'
             if CUser.byUid(uid)
               nowjs.getClient CUser.byUid(uid).cid, ->
-                this.now.insertMessage '!!!!', "Someone ____ you!<br><span class='edit'>#{s}</span>"
+                this.now.insertMessage '!!!!', "Someone did something to you!<br><span class='edit'>#{s}</span>.<br> <a class='btn trigger' data-action='goto' data-payload='#{note.x}x#{note.y}'> Go</a>" , 'alert-info', 10
                 note.read = true
           note.save()
 

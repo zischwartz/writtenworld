@@ -218,10 +218,6 @@ initializeInterface = ->
     # console.log 'trigger triggered'
 
     if type == 'geoLink'
-      # offset=$(state.selectedEl).offset()
-      # containerP = new L.Point(offset.left, offset.top)
-      # latlng=map.containerPointToLatLng(containerP)
-      # console.log map.project(latlng)
       now.createGeoLink(state.selectedCell.key.slice(1), map.getZoom())
       #dang this won't work zoomed out, i don't have a selected cell...
 
@@ -230,6 +226,11 @@ initializeInterface = ->
       now.setServerState(type, payload)
     if action == 'setClientState' # unrelated to setClientStateFromServer, used for stuff like writedirection
       state[type] = payload
+
+    if action == 'goto'
+      console.log 'gotoooo', payload
+      goToCell(payload, map.getZoom())
+
     
     # if type=='layer'
       # do something
@@ -417,8 +418,8 @@ doNowInit= (now)->
       c=Cell.get(cellPoint.x, cellPoint.y)
       c[commandType](rite, cellProps)
 
-    now.insertMessage = (heading, message, cssclass) ->
-      insertMessage(heading, message, cssclass)
+    now.insertMessage = (heading, message, cssclass, timing=6) ->
+      insertMessage(heading, message, cssclass, timing)
 ## END doNowInit()
 
 
@@ -708,8 +709,12 @@ pan = (x, y)->
   map.panBy(p)
   map
 
-window.goToCell= (key) ->
-  [z, x, y] = key.split('x')
+window.goToCell= (key, zoom=false) ->
+  if not zoom
+    [z, x, y] = key.split('x')
+  else
+    [x, y] = key.split('x')
+    z =zoom
   zoomDiff=config.maxZoom()-z
   numRC =Math.pow(2, zoomDiff)
   cWidth = config.tileSize().x/numRC
@@ -721,7 +726,6 @@ window.goToCell= (key) ->
   # console.log latlng
   map.setView(latlng, z)
   $.doTimeout 200, ->
-    console.log 'ttt'
     cell = Cell.get(x,y)
     if not cell then return true
     else

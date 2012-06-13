@@ -57,13 +57,11 @@
   geoHasPosition = function(position) {
     var closest, distance, distanceToClosest, inOfficialCity, key, linkPos, msgbody, p, val;
     linkPos = config.initialPos();
-    console.log(linkPos);
-    console.log(position);
     if (linkPos) {
-      console.log('LINKed to position!');
       state.isLocal = false;
       p = goToCell(linkPos);
       state.geoPos = p;
+      state.initialGeoPos = new L.LatLng(p.lat, p.lng);
       return true;
     }
     inOfficialCity = false;
