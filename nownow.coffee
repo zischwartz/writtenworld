@@ -333,12 +333,10 @@ module.exports = (app, SessionModel) ->
       for r in fixed
         s+= r.rite.contents
       # console.log s
-      console.log 'notes: ', toNotify
+      # console.log 'notes: ', toNotify
 
       for type of toNotify
         for uid in toNotify[type]
-          console.log 'uid', uid
-          console.log 'rowner', results[0].rite.owner
           note = new models.Note
             x: results[0].x
             y: results[0].y
@@ -350,7 +348,7 @@ module.exports = (app, SessionModel) ->
           if type isnt 'own'
             if CUser.byUid(uid)
               nowjs.getClient CUser.byUid(uid).cid, ->
-                this.now.insertMessage '!!!!', "Someone echoed you!<br><span class='edit'>#{s}</span>"
+                this.now.insertMessage '!!!!', "Someone ____ you!<br><span class='edit'>#{s}</span>"
                 note.read = true
           note.save()
 

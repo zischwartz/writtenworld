@@ -128,8 +128,6 @@ exports.Cell = mongoose.model('Cell', CellSchema)
 #   process.nextTick ->
 #     callback(data)
 
-
-
 NoteSchema = new Schema
   x: {type: Number, required: true, min: 0}
   y: {type: Number, required: true, min: 0}
@@ -138,6 +136,7 @@ NoteSchema = new Schema
   to: { type: Schema.ObjectId }
   from: { type: Schema.ObjectId}
   type: {type: String}
+  date: { type: Date, default: Date.now }
 
 exports.Note = mongoose.model('Note', NoteSchema)
 

@@ -67,6 +67,14 @@ body.home
               p= JSON.stringify(everyauth.instagram.user)
             h3
               a(href='/logout') Logout
+            h2 You Wrote 
+            for note in notesFromYou
+              li.edit #{note.contents}
+
+            h2 Edits by Other People 
+          
+            for note in notesToYou
+              li.edit #{note.contents}
 
             h2 User: 
             p #{user}

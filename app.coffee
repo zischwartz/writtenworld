@@ -59,7 +59,7 @@ app = express.createServer()
 app.configure ->
   app.use express.bodyParser()
   app.use express.cookieParser()
-  app.use express.session {secret: 'tshh secret', store : new sessionStore()}
+  app.use express.session {secret: 'tshh secret', store : new sessionStore(), maxAge:new Date(Date.now()+3600000*24*30)}
   app.use express.favicon(__dirname + '/public/img/favicon.ico')
   app.use assetsManagerMiddleware
   app.use models.mongooseAuth.middleware()
@@ -88,10 +88,17 @@ app.configure 'production', ->
 
   
 render_world = (req, res, options={}) ->
-  initialWorldId = models.mainWorldId
+  #for specific and personal worlds
+  if not options.world
+    initialWorldId = models.mainWorldId
+    worldSpec=models.mainWorld.config
+  else
+    initialWorldId = options.world._id
+    worldSpec = options.world.config
+
   if req.loggedIn
     personalWorldId = req.user.personalWorld
-    console.log req.user
+    # console.log req.user
     availableColors = powers.getAvailableColors req.user.totalEchoes
     canLink = powers.canLink req.user
   else
@@ -101,11 +108,11 @@ render_world = (req, res, options={}) ->
   res.render 'map_base.jade',
     title: 'Written World'
     mainWorldId: models.mainWorldId
-    initialWorldId:models.mainWorldId
+    initialWorldId: initialWorldId
     personalWorldId:personalWorldId
-    worldSpec: JSON.stringify(models.mainWorld.config)
+    worldSpec: JSON.stringify(worldSpec)
     availableColors: availableColors
-    isPersonal: false
+    isPersonal: options.world?.personal ? false
     isAuth: req.loggedIn
     initialPos: JSON.stringify options.initialPos ? false
 
@@ -120,13 +127,47 @@ app.get '/l/:l', (req, res) ->
   console.log g
   render_world(req, res, {initialPos:{x:g[0], y:g[1]}})
 
+app.get '/wid/:id' , (req, res) ->
+    models.World.findById req.params.id,(err,world) ->
+      if world
+        if world.personal
+          res.redirect("/uw/#{world.slug}")
+        else
+          res.redirect("/")
+      else
+        res.redirect("/")
+
+app.get '/uw/:slug', (req, res)->
+  if req.loggedIn
+    models.World.findOne {slug: req.params.slug},(err,world) ->
+      if world.personal
+        if world.owner.toString() is req.user._id.toString()
+          render_world(req, res, {world: world})
+      else #it's not personal/private
+        render_world(req, res, {world: world._id,})
+        # res.render 'map_base.jade', {title: world.name}
+  else
+    #first add a message saying you gota login
+    res.redirect('/login')
+
+# PAGES
 app.get '/home', (req, res) ->
   if req.loggedIn
     personalWorldId= req.user.personalWorld
     worlds = []
     models.World.findById  personalWorldId ,(err,world) ->
       worlds.push world
-      res.render 'home.jade', { title: 'Home', worlds: worlds}
+      models.Note.find().or([ {from:req.user._id}, {to: req.user._id}]).sort('date', -1).run (err,notes) ->
+        notesFromYou = []
+        notesToYou = []
+        for n in notes
+          if n.from.toString() ==req.user._id.toString()
+            notesFromYou.push n
+          if n.to.toString() == req.user._id.toString()
+            notesToYou.push n
+        console.log notesToYou
+        console.log notesFromYou
+        res.render 'home.jade', { title: 'Home', worlds: worlds, notesFromYou, notesToYou}
   else
       res.render 'home.jade', { title: 'Home', worlds: worlds}
 
@@ -150,38 +191,6 @@ app.get '/secretreset11' , (req, res) ->
     res.render 'about.jade', { title: 'About'}
   else
     res.render 'about.jade', { title: 'About'}
-
-app.get '/wid/:id' , (req, res) ->
-    models.World.findById req.params.id,(err,world) ->
-      if world
-        if world.personal
-          res.redirect("/uw/#{world.slug}")
-        else
-          res.redirect("/")
-      else
-        res.redirect("/")
-
-app.get '/uw/:slug', (req, res)->
-  if req.loggedIn
-    models.World.findOne {slug: req.params.slug},(err,world) ->
-      if world.personal
-        if world.owner.toString() is req.user._id.toString()
-          res.render 'map_base.jade',
-            title: world.name
-            initialWorldId: world._id
-            mainWorldId: models.mainWorldId
-            personalWorldId: world._id
-            worldSpec: JSON.stringify(world.config)
-            availableColors : powers.getAvailableColors req.user.totalEchoes
-            isAuth: req.loggedIn
-            isPersonal: true
-          # res.write 'error'
-          # res.end()
-      else #it's not personal/private
-        res.render 'map_base.jade', {title: world.name}
-  else
-    #first add a message saying you gota login
-    res.redirect('/login')
 
 
 # a whole new world

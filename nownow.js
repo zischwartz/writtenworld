@@ -434,13 +434,10 @@
           r = fixed[_j];
           s += r.rite.contents;
         }
-        console.log('notes: ', toNotify);
         for (type in toNotify) {
           _ref1 = toNotify[type];
           for (_k = 0, _len2 = _ref1.length; _k < _len2; _k++) {
             uid = _ref1[_k];
-            console.log('uid', uid);
-            console.log('rowner', results[0].rite.owner);
             note = new models.Note({
               x: results[0].x,
               y: results[0].y,
@@ -453,7 +450,7 @@
             if (type !== 'own') {
               if (CUser.byUid(uid)) {
                 nowjs.getClient(CUser.byUid(uid).cid, function() {
-                  this.now.insertMessage('!!!!', "Someone echoed you!<br><span class='edit'>" + s + "</span>");
+                  this.now.insertMessage('!!!!', "Someone ____ you!<br><span class='edit'>" + s + "</span>");
                   return note.read = true;
                 });
               }
