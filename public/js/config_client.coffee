@@ -30,11 +30,11 @@ Configuration = class Configuration
   
     initialPosReal=initialPos
     @initialPos= ->
-      if not initialPosReal
+      if initialPosReal == 'false' #sigh
         return false
       else
-        l = {x:parseFloat(initialPosReal.x), y: parseFloat(initialPosReal.y)}
-        return l
+        # l = {x:parseFloat(initialPosReal.x), y: parseFloat(initialPosReal.y)}
+        return initialPosReal
 
     isReallyAuth= isAuth
     @isAuth = -> isReallyAuth ? false

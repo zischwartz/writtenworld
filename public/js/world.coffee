@@ -218,10 +218,12 @@ initializeInterface = ->
     # console.log 'trigger triggered'
 
     if type == 'geoLink'
-      offset=$(state.selectedEl).offset()
-      containerP = new L.Point(offset.left, offset.top)
-      latlng=map.containerPointToLatLng(containerP)
-      now.createGeoLink(latlng)
+      # offset=$(state.selectedEl).offset()
+      # containerP = new L.Point(offset.left, offset.top)
+      # latlng=map.containerPointToLatLng(containerP)
+      # console.log map.project(latlng)
+      now.createGeoLink(state.selectedCell.key.slice(1), map.getZoom())
+      #dang this won't work zoomed out, i don't have a selected cell...
 
     if action == 'set' #setServerState, more properly, like color
       state[type]=payload
@@ -324,7 +326,7 @@ doNowInit= (now)->
     #   l = new L.LatLng(latlng.x, latlng.y)
     #   map.setView(l)
 
-    now.goToGeoLink(state.geoLinked) if state.geoLinked
+    # now.goToGeoLink(state.geoLinked) if state.geoLinked
 
     domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
     
@@ -699,11 +701,34 @@ window.shakeWindow =(s=1) ->
     b.trigger('stopRumble')
     false
   true
+
 #Having to create a point is dumb
 pan = (x, y)->
   p= new L.Point( x, y )
   map.panBy(p)
   map
+
+window.goToCell= (key) ->
+  [z, x, y] = key.split('x')
+  zoomDiff=config.maxZoom()-z
+  numRC =Math.pow(2, zoomDiff)
+  cWidth = config.tileSize().x/numRC
+  cHeight = config.tileSize().y/numRC
+  pixelX = x*cWidth
+  pixelY = y*cHeight
+  # console.log pixelX, pixelY
+  latlng=map.unproject({x:pixelX, y:pixelY}, z)
+  # console.log latlng
+  map.setView(latlng, z)
+  $.doTimeout 200, ->
+    console.log 'ttt'
+    cell = Cell.get(x,y)
+    if not cell then return true
+    else
+      setCursor(cell)
+      return false
+  return latlng
+
 
 cellKeyToXY = (key) ->
   target= {}

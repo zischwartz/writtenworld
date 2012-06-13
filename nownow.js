@@ -280,23 +280,11 @@
         }
       }
     };
-    everyone.now.createGeoLink = function(geoLink) {
+    everyone.now.createGeoLink = function(cellKey, zoom) {
       var b, geoLink64;
-      b = "" + geoLink.lat + ":" + geoLink.lng;
+      b = "" + zoom + "x" + cellKey;
       geoLink64 = new Buffer(b).toString('base64');
-      return this.now.insertMessage('Have a link:', geoLink64);
-    };
-    everyone.now.goToGeoLink = function(geoLink64) {
-      var b, g, latlng;
-      console.log('goto GEO');
-      b = new Buffer(geoLink64, 'base64').toString('ascii');
-      g = b.split(':');
-      console.log(g);
-      latlng = {
-        x: g[0],
-        y: g[1]
-      };
-      return console.log(latlng);
+      return this.now.insertMessage('Have a link:', "<a href='/l/" + geoLink64 + "'>/l/" + geoLink64 + "</a>");
     };
     CUser = (function() {
       var allByCid, allBySid, allByUid;

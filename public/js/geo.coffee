@@ -45,13 +45,16 @@ geoSucceeded = (position) ->
 geoHasPosition = (position) ->
   
   linkPos=config.initialPos()
-  # console.log linkPos
+  console.log linkPos
+  console.log position
   if linkPos
+    console.log 'LINKed to position!'
     state.isLocal=false
-    p = new L.LatLng(linkPos.x, linkPos.y)
+    # p = new L.LatLng(linkPos.x, linkPos.y)
+    p=goToCell(linkPos)
     state.geoPos = p
-    state.initialGeoPos = new L.LatLng(linkPos.x, linkPos.y)
-    map.setView(p, config.defZoom() )
+    # state.initialGeoPos = new L.LatLng(linkPos.x, linkPos.y)
+    # map.setView(p, config.defZoom() )
     return true
 
   #normal (not from a geolink)

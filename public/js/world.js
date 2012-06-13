@@ -250,7 +250,7 @@
       return inputEl.focus();
     });
     return $(".trigger").live('click', function() {
-      var action, c, containerP, f, latlng, offset, payload, t, text, type;
+      var action, c, f, payload, t, text, type;
       action = $(this).data('action');
       type = $(this).data('type');
       payload = $(this).data('payload');
@@ -258,10 +258,7 @@
       $(this).parent().parent().find('.active').removeClass('active');
       $(this).parent().addClass('active');
       if (type === 'geoLink') {
-        offset = $(state.selectedEl).offset();
-        containerP = new L.Point(offset.left, offset.top);
-        latlng = map.containerPointToLatLng(containerP);
-        now.createGeoLink(latlng);
+        now.createGeoLink(state.selectedCell.key.slice(1), map.getZoom());
       }
       if (action === 'set') {
         state[type] = payload;
@@ -374,9 +371,6 @@
 
   doNowInit = function(now) {
     var domTiles;
-    if (state.geoLinked) {
-      now.goToGeoLink(state.geoLinked);
-    }
     domTiles = new L.DomTileLayer({
       tileSize: config.tileSize()
     });
@@ -903,6 +897,34 @@
     p = new L.Point(x, y);
     map.panBy(p);
     return map;
+  };
+
+  window.goToCell = function(key) {
+    var cHeight, cWidth, latlng, numRC, pixelX, pixelY, x, y, z, zoomDiff, _ref;
+    _ref = key.split('x'), z = _ref[0], x = _ref[1], y = _ref[2];
+    zoomDiff = config.maxZoom() - z;
+    numRC = Math.pow(2, zoomDiff);
+    cWidth = config.tileSize().x / numRC;
+    cHeight = config.tileSize().y / numRC;
+    pixelX = x * cWidth;
+    pixelY = y * cHeight;
+    latlng = map.unproject({
+      x: pixelX,
+      y: pixelY
+    }, z);
+    map.setView(latlng, z);
+    $.doTimeout(200, function() {
+      var cell;
+      console.log('ttt');
+      cell = Cell.get(x, y);
+      if (!cell) {
+        return true;
+      } else {
+        setCursor(cell);
+        return false;
+      }
+    });
+    return latlng;
   };
 
   cellKeyToXY = function(key) {

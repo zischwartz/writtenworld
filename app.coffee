@@ -114,7 +114,8 @@ render_world = (req, res, options={}) ->
     availableColors: availableColors
     isPersonal: options.world?.personal ? false
     isAuth: req.loggedIn
-    initialPos: JSON.stringify options.initialPos ? false
+    # initialPos: JSON.stringify options.initialPos ? false
+    initialPos: options.initialPos ? false
 
 
 app.get '/', (req, res) ->
@@ -123,9 +124,9 @@ app.get '/', (req, res) ->
 app.get '/l/:l', (req, res) ->
   # console.log 'loc based!!'
   b=new Buffer(req.params.l, 'base64').toString('ascii')
-  g= b.split ':'
-  console.log g
-  render_world(req, res, {initialPos:{x:g[0], y:g[1]}})
+  # g= b.split ':'
+  # console.log g
+  render_world(req, res, {initialPos:b})
 
 app.get '/wid/:id' , (req, res) ->
     models.World.findById req.params.id,(err,world) ->

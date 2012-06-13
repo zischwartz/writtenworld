@@ -57,12 +57,13 @@
   geoHasPosition = function(position) {
     var closest, distance, distanceToClosest, inOfficialCity, key, linkPos, msgbody, p, val;
     linkPos = config.initialPos();
+    console.log(linkPos);
+    console.log(position);
     if (linkPos) {
+      console.log('LINKed to position!');
       state.isLocal = false;
-      p = new L.LatLng(linkPos.x, linkPos.y);
+      p = goToCell(linkPos);
       state.geoPos = p;
-      state.initialGeoPos = new L.LatLng(linkPos.x, linkPos.y);
-      map.setView(p, config.defZoom());
       return true;
     }
     inOfficialCity = false;

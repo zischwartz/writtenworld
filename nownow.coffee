@@ -185,20 +185,21 @@ module.exports = (app, SessionModel) ->
           # console.log 'USER COLORCHANGE', doc
           this.now.insertMessage('hi', 'nice color')
 
-  everyone.now.createGeoLink = (geoLink) ->
+  everyone.now.createGeoLink = (cellKey, zoom) ->
     # console.log geoLink
-    b="#{geoLink.lat}:#{geoLink.lng}"
+    # b="#{geoLink.lat}:#{geoLink.lng}"
+    b= "#{zoom}x#{cellKey}"
     geoLink64 = new Buffer(b).toString('base64')
-    this.now.insertMessage('Have a link:', geoLink64)
+    this.now.insertMessage('Have a link:', "<a href='/l/#{geoLink64}'>/l/#{geoLink64}</a>")
 
   # not for initial load, for notifications and such
-  everyone.now.goToGeoLink = (geoLink64) ->
-    console.log 'goto GEO'
-    b=new Buffer(geoLink64, 'base64').toString('ascii')
-    g= b.split(':')
-    console.log g
-    latlng = {x: g[0], y: g[1]}
-    console.log latlng
+  # everyone.now.goToGeoLink = (geoLink64) ->
+  #   # console.log 'goto GEO'
+  #   b=new Buffer(geoLink64, 'base64').toString('ascii')
+  #   g= b.split(':')
+  #   console.log g
+  #   latlng = {x: g[0], y: g[1]}
+  #   console.log latlng
     # this.now.mapGoTo(latlng)
 
   # or with my CUser, and by edit, not rite

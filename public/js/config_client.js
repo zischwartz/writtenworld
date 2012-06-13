@@ -74,15 +74,10 @@
       };
       initialPosReal = initialPos;
       this.initialPos = function() {
-        var l;
-        if (!initialPosReal) {
+        if (initialPosReal === 'false') {
           return false;
         } else {
-          l = {
-            x: parseFloat(initialPosReal.x),
-            y: parseFloat(initialPosReal.y)
-          };
-          return l;
+          return initialPosReal;
         }
       };
       isReallyAuth = isAuth;
