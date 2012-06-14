@@ -70,11 +70,11 @@
       this.scrollWheelZoom = function() {
         return true;
       };
-      this.autoPan = function() {
-        return false;
-      };
       this.updateWhenIdle = function() {
         return false;
+      };
+      this.autoPan = function() {
+        return true;
       };
       initialPosReal = initialPos;
       this.initialPos = function() {

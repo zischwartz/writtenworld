@@ -116,6 +116,13 @@ initializeInterface = ->
   
   $userTotalRites = $("#userTotalRites")
 
+  $("#colorPicker").colorpicker
+    onSelect: (color, inst)->
+      console.log 'onselect'
+      console.log color, inst
+       #TODO
+
+
   inputEl.keypress (e) ->
     # console.log e.which
     if not state.isTopLayerInteractive
@@ -255,11 +262,13 @@ initializeInterface = ->
 
 panIfAppropriate = (direction)->
   selectedPP= $(state.selectedEl).offset()
-  panOnDist = 200
+  panOnDist = 120
   if direction is 'left' or direction is 'right'
-    panByDist = state.cellWidth()
+    panByDist = config.tileSize().x 
+    # panByDist = state.cellWidth()
   else
-    panByDist = state.cellHeight()
+    panByDist = config.tileSize().y/2
+    # panByDist = state.cellHeight()
   if direction == 'up'
     if selectedPP.top < panOnDist
       pan(0, 0-panByDist)

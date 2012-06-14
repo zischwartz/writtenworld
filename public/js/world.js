@@ -148,6 +148,12 @@
       return $("#loadingIndicator").fadeOut('fast');
     });
     $userTotalRites = $("#userTotalRites");
+    $("#colorPicker").colorpicker({
+      onSelect: function(color, inst) {
+        console.log('onselect');
+        return console.log(color, inst);
+      }
+    });
     inputEl.keypress(function(e) {
       var c, userTotalRites, _ref;
       if (!state.isTopLayerInteractive) {
@@ -294,11 +300,11 @@
   panIfAppropriate = function(direction) {
     var panByDist, panOnDist, selectedPP;
     selectedPP = $(state.selectedEl).offset();
-    panOnDist = 200;
+    panOnDist = 120;
     if (direction === 'left' || direction === 'right') {
-      panByDist = state.cellWidth();
+      panByDist = config.tileSize().x;
     } else {
-      panByDist = state.cellHeight();
+      panByDist = config.tileSize().y / 2;
     }
     if (direction === 'up') {
       if (selectedPP.top < panOnDist) {

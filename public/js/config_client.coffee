@@ -26,9 +26,10 @@ Configuration = class Configuration
 
     # leaflet
     @scrollWheelZoom= -> true#false
-    @autoPan = -> false
     @updateWhenIdle = -> false
   
+    @autoPan = -> true
+
     initialPosReal=initialPos
     @initialPos= ->
       if initialPosReal == 'false' #sigh

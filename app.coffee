@@ -34,6 +34,7 @@ assetManagerGroups =
     files: [
       'libs/jquery.min.js'
       'libs/watch_shim.js'
+      'libs/colorpicker.js'
       'libs/bootstrap-collapse.js'
       'libs/bootstrap-dropdown.js'
       'libs/bootstrap-modal.js'
