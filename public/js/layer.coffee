@@ -32,23 +32,49 @@ L.WCanvas = L.TileLayer.extend(
     tile._tilePoint = tilePoint
     tile._zoom = zoom
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
-    now.getZoomedOutTile absTilePoint, state.numRows(), state.numCols(), (tileData, atp) =>
-      @drawTile tile, tilePoint, zoom, tileData.density
-      @tileDrawn tile  unless @options.async
-      
-  drawTile: (tile, tilePoint, zoom, density) ->
-    if not density
-      return
-    offset= config.minLayerZoom()-zoom
-    radius = density*offset*128
-    if radius>96 then radius=96
-    if radius<10 then radius=10
+    now.getTile absTilePoint, state.numRows(), (tileData, atp)=>
+      delay 0, =>
+        # console.log tileData
+        @drawTile tile, atp, zoom, tileData
+        @tileDrawn tile  unless @options.async
+
+  drawTile: (tile, absTilePoint, zoom, tileData) ->
     ctx = tile.getContext('2d')
-    ctx.fillStyle = "rgba(195, 255, 195, 0.4 )"
-    ctx.beginPath()
-    ctx.arc(96, 128, radius, 0, Math.PI*2, true)
-    ctx.closePath()
-    ctx.fill()
+    fontSize= state.cellHeight()
+    ctx.textBaseline= "top"
+    ctx.textAlign= "center"
+    ctx.font= "#{fontSize}px monospace !important"
+    ctx.fillStyle ="white"
+    for r in [0..state.numRows()-1]
+      for c in [0..state.numCols()-1]
+        cellData=tileData["#{absTilePoint.x+c}x#{absTilePoint.y+r}"]
+        if cellData
+          ctx.fillText(cellData.contents, c*state.cellWidth(), r*state.cellHeight())
+        # else
+          # ctx.fillText(' ', c*state.cellWidth(), r*state.cellHeight())
+          # ctx.fillText(' ', r*state.cellHeight(), c*state.cellWidth())
+
+    # density= 96
+    # offset= config.minLayerZoom()-zoom
+    # radius = density*offset*128
+    # if radius>96 then radius=96
+    # if radius<10 then radius=10
+    # ctx.fillStyle = "rgba(195, 255, 195, 0.4 )"
+    # ctx.beginPath()
+    # ctx.arc(96, 128, radius, 0, Math.PI*2, true)
+    # ctx.closePath()
+    # ctx.fill()
+    
+    # offset= config.minLayerZoom()-zoom
+    # radius = density*offset*128
+    # if radius>96 then radius=96
+    # if radius<10 then radius=10
+    # ctx = tile.getContext('2d')
+    # ctx.fillStyle = "rgba(195, 255, 195, 0.4 )"
+    # ctx.beginPath()
+    # ctx.arc(96, 128, radius, 0, Math.PI*2, true)
+    # ctx.closePath()
+    # ctx.fill()
     return
     
   tileDrawn: (tile) ->
