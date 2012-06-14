@@ -4,7 +4,7 @@
 
   window.DEBUG = false;
 
-  window.NOMAP = false;
+  window.NOMAP = true;
 
   window.VARYLATLNG = false;
 
@@ -50,6 +50,10 @@
       this.minLayerZoom = function() {
         var _ref;
         return (_ref = spec.minLayerZoom) != null ? _ref : 16;
+      };
+      this.minCircleZoom = function() {
+        var _ref;
+        return (_ref = spec.minCircleZoom) != null ? _ref : 13;
       };
       this.defaultChar = function() {
         var _ref;

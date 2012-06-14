@@ -350,8 +350,11 @@
       if (zoomDelta > 0) {
         if (current <= config.minLayerZoom() && state.isTopLayerInteractive) {
           layerUtils.remove(state.topLayerStamp);
-          layerUtils.addCanvas();
-          insertMessage('No Writing', " You've zoomed out too far to write. The text density is now represented by circles. Zoom back in to read and write again.");
+          $.doTimeout(200, function() {
+            layerUtils.addCanvas();
+            return false;
+          });
+          insertMessage('No Writing', " You've zoomed out too far to write. Zoom back in to write again.");
         }
       } else if (zoomDelta < 0) {
         if (current >= config.minLayerZoom() - 1 && !state.isTopLayerInteractive) {
@@ -359,7 +362,7 @@
           layerUtils.addDom();
         }
       }
-      if (current === config.minZoom()) {
+      if (current === config.minZoom() + 1 && zoomDelta > 0) {
         insertMessage('Zoomed Out', "That's as far as you can zoom out right now.");
         return false;
       }

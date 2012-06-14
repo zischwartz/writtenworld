@@ -28,14 +28,19 @@ L.WCanvas = L.TileLayer.extend(
     tile
       
   _loadTile: (tile, tilePoint, zoom) ->
+    # console.log "_loadtile #{zoom}"
     tile._layer = this
     tile._tilePoint = tilePoint
     tile._zoom = zoom
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
-    now.getTile absTilePoint, state.numRows(), (tileData, atp)=>
-      delay 0, =>
-        # console.log tileData
-        @drawTile tile, atp, zoom, tileData
+    if zoom > config.minCircleZoom()
+      now.getTile absTilePoint, state.numRows(), (tileData, atp)=>
+        delay 0, =>
+          @drawTile tile, atp, zoom, tileData
+          @tileDrawn tile  unless @options.async
+    else
+      now.getZoomedOutTile absTilePoint, state.numRows(), state.numCols(), (tileData, atp) =>
+        @drawTileCircles tile, tilePoint, zoom, tileData.density
         @tileDrawn tile  unless @options.async
 
   drawTile: (tile, absTilePoint, zoom, tileData) ->
@@ -50,38 +55,26 @@ L.WCanvas = L.TileLayer.extend(
         cellData=tileData["#{absTilePoint.x+c}x#{absTilePoint.y+r}"]
         if cellData
           ctx.fillText(cellData.contents, c*state.cellWidth(), r*state.cellHeight())
-        # else
-          # ctx.fillText(' ', c*state.cellWidth(), r*state.cellHeight())
-          # ctx.fillText(' ', r*state.cellHeight(), c*state.cellWidth())
 
-    # density= 96
-    # offset= config.minLayerZoom()-zoom
-    # radius = density*offset*128
-    # if radius>96 then radius=96
-    # if radius<10 then radius=10
-    # ctx.fillStyle = "rgba(195, 255, 195, 0.4 )"
-    # ctx.beginPath()
-    # ctx.arc(96, 128, radius, 0, Math.PI*2, true)
-    # ctx.closePath()
-    # ctx.fill()
-    
-    # offset= config.minLayerZoom()-zoom
-    # radius = density*offset*128
-    # if radius>96 then radius=96
-    # if radius<10 then radius=10
-    # ctx = tile.getContext('2d')
-    # ctx.fillStyle = "rgba(195, 255, 195, 0.4 )"
-    # ctx.beginPath()
-    # ctx.arc(96, 128, radius, 0, Math.PI*2, true)
-    # ctx.closePath()
-    # ctx.fill()
+  drawTileCircles: (tile, absTilePoint, zoom, density) ->
+    if not density then return false
+
+    ctx = tile.getContext('2d')
+    offset= config.minLayerZoom()-zoom
+    radius = density*offset*128
+    if radius>96 then radius=96
+    if radius<10 then radius=10
+    ctx.fillStyle = "rgba(255, 255, 255, 0.8 )"
+    ctx.beginPath()
+    ctx.arc(96, 128, radius, 0, Math.PI*2, true)
+    ctx.closePath()
+    ctx.fill()
     return
     
   tileDrawn: (tile) ->
     @_tileOnLoad.call tile
     
   getTilePointAbsoluteBounds: ->
-    getTilePointAbsoluteBounds: ->
     if this._map
       bounds = this._map.getPixelBounds()
       tileSize= this.options.tileSize

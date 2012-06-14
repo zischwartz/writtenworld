@@ -295,8 +295,11 @@ jQuery ->
     if zoomDelta > 0 #zooming out
       if current <= config.minLayerZoom() and state.isTopLayerInteractive
         layerUtils.remove(state.topLayerStamp)
-        layerUtils.addCanvas()
-        insertMessage('No Writing', " You've zoomed out too far to write. The text density is now represented by circles. Zoom back in to read and write again.")
+        $.doTimeout 200, ->
+          layerUtils.addCanvas()
+          return false
+        insertMessage('No Writing', " You've zoomed out too far to write. Zoom back in to write again.")
+
     else if zoomDelta < 0  #zooming in
       if current >= config.minLayerZoom()-1 and not state.isTopLayerInteractive
         layerUtils.remove(state.topLayerStamp)
@@ -304,7 +307,7 @@ jQuery ->
         #
         # now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds()
     
-    if current==config.minZoom()
+    if current==config.minZoom()+1 and  zoomDelta > 0
       insertMessage('Zoomed Out', "That's as far as you can zoom out right now.")
       return false
 
@@ -572,12 +575,9 @@ window.Cell = class Cell
     $(clone).removeClass('selected')
     $(clone).addClass('aa').css({'position':'absolute', left: offset.left, top: offset.top}).hide() #?
     $(clone).queue ->
-      # $(this).show().css({'fontSize':'+=90', 'marginTop': -state.cellHeight()/2, 'marginLeft': -state.cellWidth()/2})
       $(this).show().css({'fontSize':'+=90' , 'marginTop': "-=45", 'marginLeft': "-=45"})
-      # $(this).addClass('aa'+animateWith)
       $(this).dequeue()
     $(clone).doTimeout 400, ->
-      # $(clone).removeClass('aa'+animateWith)
       $(this).css({'fontSize':'-=90', 'marginTop': 0, 'marginLeft': 0})
       this.doTimeout 400, ->
         $(span).show()

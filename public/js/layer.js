@@ -52,40 +52,75 @@
         x: tilePoint.x * Math.pow(2, state.zoomDiff()),
         y: tilePoint.y * Math.pow(2, state.zoomDiff())
       };
-      return now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
-        return delay(0, function() {
-          _this.drawTile(tile, atp, zoom, tileData);
+      if (zoom > config.minCircleZoom()) {
+        return now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
+          return delay(0, function() {
+            _this.drawTile(tile, atp, zoom, tileData);
+            if (!_this.options.async) {
+              return _this.tileDrawn(tile);
+            }
+          });
+        });
+      } else {
+        return now.getZoomedOutTile(absTilePoint, state.numRows(), state.numCols(), function(tileData, atp) {
+          _this.drawTileCircles(tile, tilePoint, zoom, tileData.density);
           if (!_this.options.async) {
             return _this.tileDrawn(tile);
           }
         });
-      });
+      }
     },
     drawTile: function(tile, absTilePoint, zoom, tileData) {
-      var c, cellData, ctx, fontSize, r, _i, _j, _ref, _ref1;
+      var c, cellData, ctx, fontSize, r, _i, _ref, _results;
       ctx = tile.getContext('2d');
       fontSize = state.cellHeight();
       ctx.textBaseline = "top";
       ctx.textAlign = "center";
       ctx.font = "" + fontSize + "px monospace !important";
       ctx.fillStyle = "white";
+      _results = [];
       for (r = _i = 0, _ref = state.numRows() - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; r = 0 <= _ref ? ++_i : --_i) {
-        for (c = _j = 0, _ref1 = state.numCols() - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; c = 0 <= _ref1 ? ++_j : --_j) {
-          cellData = tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)];
-          if (cellData) {
-            ctx.fillText(cellData.contents, c * state.cellWidth(), r * state.cellHeight());
+        _results.push((function() {
+          var _j, _ref1, _results1;
+          _results1 = [];
+          for (c = _j = 0, _ref1 = state.numCols() - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; c = 0 <= _ref1 ? ++_j : --_j) {
+            cellData = tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)];
+            if (cellData) {
+              _results1.push(ctx.fillText(cellData.contents, c * state.cellWidth(), r * state.cellHeight()));
+            } else {
+              _results1.push(void 0);
+            }
           }
-        }
+          return _results1;
+        })());
       }
+      return _results;
+    },
+    drawTileCircles: function(tile, absTilePoint, zoom, density) {
+      var ctx, offset, radius;
+      if (!density) {
+        return false;
+      }
+      ctx = tile.getContext('2d');
+      offset = config.minLayerZoom() - zoom;
+      radius = density * offset * 128;
+      if (radius > 96) {
+        radius = 96;
+      }
+      if (radius < 10) {
+        radius = 10;
+      }
+      ctx.fillStyle = "rgba(255, 255, 255, 0.8 )";
+      ctx.beginPath();
+      ctx.arc(96, 128, radius, 0, Math.PI * 2, true);
+      ctx.closePath();
+      ctx.fill();
     },
     tileDrawn: function(tile) {
       return this._tileOnLoad.call(tile);
     },
     getTilePointAbsoluteBounds: function() {
       var bounds, nwTilePoint, offset, seTilePoint, tileBounds, tileSize;
-      ({
-        getTilePointAbsoluteBounds: function() {}
-      });
       if (this._map) {
         bounds = this._map.getPixelBounds();
         tileSize = this.options.tileSize;
