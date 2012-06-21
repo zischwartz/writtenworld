@@ -160,16 +160,7 @@ app.get '/home', (req, res) ->
     models.World.findById  personalWorldId ,(err,world) ->
       worlds.push world
       models.Note.find().or([ {from:req.user._id}, {to: req.user._id}]).sort('date', -1).run (err,notes) ->
-        notesFromYou = []
-        notesToYou = []
-        for n in notes
-          if n.from.toString() ==req.user._id.toString()
-            notesFromYou.push n
-          if n.to.toString() == req.user._id.toString()
-            notesToYou.push n
-        console.log notesToYou
-        console.log notesFromYou
-        res.render 'home.jade', { title: 'Home', worlds: worlds, notesFromYou, notesToYou}
+        res.render 'home.jade', { title: 'Home', worlds: worlds, notes}
   else
       res.render 'home.jade', { title: 'Home', worlds: worlds}
 

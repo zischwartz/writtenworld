@@ -70,29 +70,29 @@ exports.World.findOne {name: 'main'}, (err, world)->
       exports.mainWorld
 
 
-exports.World.findOne {name: 'words'}, (err, world)->
-  if world
-    console.log ' Found word world'
-  else
-    console.log ' Could not find WORD  world...'
-    world = new exports.World
-      name: 'words'
-      personal: false
-      public: true
-      config:
-        maxZoom:20
-        minZoom:10
-        tileSize:
-          x: 192
-          y: 256
-        tileServeUrl: "http://23.23.200.225/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png"  #"http://s3.amazonaws.com/ww-tiles/wwtiles/{z}/{x}/{y}.png"
-        ruleSet: true
-        props:
-          echoes: false
-
-    world.save (err, world) ->
-      console log err if err
-      console.log 'So we created the word world'
+# exports.World.findOne {name: 'words'}, (err, world)->
+#   if world
+#     console.log ' Found word world'
+#   else
+#     console.log ' Could not find WORD  world...'
+#     world = new exports.World
+#       name: 'words'
+#       personal: false
+#       public: true
+#       config:
+#         maxZoom:20
+#         minZoom:10
+#         tileSize:
+#           x: 192
+#           y: 256
+#         tileServeUrl: "http://23.23.200.225/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png"  #"http://s3.amazonaws.com/ww-tiles/wwtiles/{z}/{x}/{y}.png"
+#         ruleSet: true
+#         props:
+#           echoes: false
+# 
+#     world.save (err, world) ->
+#       console log err if err
+#       console.log 'So we created the word world'
 
 RiteSchema = new Schema
   contents: {type: String, default: ' '} #conig TODO
@@ -135,6 +135,7 @@ NoteSchema = new Schema
   read:{type:Boolean, default: false}
   to: { type: Schema.ObjectId }
   from: { type: Schema.ObjectId}
+  fromLogin: {type: String}
   type: {type: String}
   date: { type: Date, default: Date.now }
 

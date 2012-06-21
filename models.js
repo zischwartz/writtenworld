@@ -132,40 +132,6 @@
     }
   });
 
-  exports.World.findOne({
-    name: 'words'
-  }, function(err, world) {
-    if (world) {
-      return console.log(' Found word world');
-    } else {
-      console.log(' Could not find WORD  world...');
-      world = new exports.World({
-        name: 'words',
-        personal: false,
-        "public": true,
-        config: {
-          maxZoom: 20,
-          minZoom: 10,
-          tileSize: {
-            x: 192,
-            y: 256
-          },
-          tileServeUrl: "http://23.23.200.225/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png",
-          ruleSet: true,
-          props: {
-            echoes: false
-          }
-        }
-      });
-      return world.save(function(err, world) {
-        if (err) {
-          console(log(err));
-        }
-        return console.log('So we created the word world');
-      });
-    }
-  });
-
   RiteSchema = new Schema({
     contents: {
       type: String,
@@ -248,6 +214,9 @@
     },
     from: {
       type: Schema.ObjectId
+    },
+    fromLogin: {
+      type: String
     },
     type: {
       type: String

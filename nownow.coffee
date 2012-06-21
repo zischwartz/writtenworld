@@ -275,6 +275,8 @@ module.exports = (app, SessionModel) ->
       
 
     findEdits: (riteQueue) ->
+      if riteQueue.length is 1
+        return riteQueue
       results=[]
       riteQueue.sort (a,b)->
         if a.y == b.y
@@ -316,9 +318,9 @@ module.exports = (app, SessionModel) ->
       for r in results
         if not fix[r.y] then fix[r.y]={}
         fix[r.y][r.x] =r
-        #and since we're already looping through it
-        if r.originalOwner
-          if r.originalOwner.toString() not in toNotify[r.commandType]
+
+        if r.originalOwner #and since we're already looping through it
+          if (r.originalOwner.toString() not in toNotify[r.commandType]) and r.originalOwner.toString() isnt toNotify.own[0].toString()
             toNotify[r.commandType].push r.originalOwner.toString()
 
       for own y, row of fix
@@ -331,10 +333,12 @@ module.exports = (app, SessionModel) ->
         else
           return a.y - b.y
       
-      for r in fixed
-        s+= r.rite.contents
-      # console.log s
-      # console.log 'notes: ', toNotify
+      for i in [0..fixed.length-1]
+        s+= fixed[i].rite.contents
+        if fixed[i+1] and fixed[i+1]?.y isnt fixed[i].y
+          s+='<br>'
+
+      if @login then login=@login else login='Someone'
 
       for type of toNotify
         for uid in toNotify[type]
@@ -344,15 +348,20 @@ module.exports = (app, SessionModel) ->
             contents: s
             read: if type is 'own' then true else false
             from: results[0].rite.owner
+            fromLogin: login
             to: uid
             type: type
+
           if type isnt 'own'
             if CUser.byUid(uid)
               nowjs.getClient CUser.byUid(uid).cid, ->
-                this.now.insertMessage '!!!!', "Someone did something to you!<br><span class='edit'>#{s}</span>.<br> <a class='btn trigger' data-action='goto' data-payload='#{note.x}x#{note.y}'> Go</a>" , 'alert-info', 10
+                # console.log s
+                this.now.insertMessage noteHeads[type], "<span class='user'>#{login}</span> #{noteBodies[type]}<br>They wrote: <blockquote>#{s}</blockquote><br><a class='btn trigger' data-action='goto' data-payload='#{note.x}x#{note.y}'>Go See</a>" , 'alert-info', 10
                 note.read = true
+            else
+              console.log 'theyre notonline'
+              #do something here, add to unread count or somesuch`
           note.save()
-
       return
 
     destroy: ->
@@ -364,6 +373,16 @@ module.exports = (app, SessionModel) ->
       # delete this
 
   return [everyone, CUser]
+
+noteBodies=
+    overrite: 'wrote over what you wrote. '
+    echo:  'echoed something you wrote. '
+    downrote: 'tried to over write what you wrote. '
+
+noteHeads=
+    overrite: 'Over Written!'
+    echo:  'Echoed'
+    downrote:'Attempted Over Write'
 # 
 # defaultUserPowers= ->
 #   powers =

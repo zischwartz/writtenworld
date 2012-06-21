@@ -67,15 +67,17 @@ body.home
               p= JSON.stringify(everyauth.instagram.user)
             h3
               a(href='/logout') Logout
-            h2 You Wrote 
-            for note in notesFromYou
-              li.edit #{note.contents}
 
-            h2 Edits by Other People 
-          
-            for note in notesToYou
-              li.edit #{note.contents}
-
+            h2 Recently Written
+            for note in notes
+              li.note(class=note.type) 
+                if note.type != 'own'
+                  b #{note.type} by #{note.fromLogin}:
+                else
+                  b You Wrote:
+                blockquote !{note.contents}
+                i #{note.date}
+                a.btn.pull-right.trigger(data-action='goto', data-payload='#{note.x}x#{note.y}') Go See 
             h2 User: 
             p #{user}
             h2 Your Worlds
