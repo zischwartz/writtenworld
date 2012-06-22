@@ -170,7 +170,7 @@ module.exports = (app, SessionModel) ->
     feedback.save (err) -> console.log err if err
 
   everyone.now.setServerState = (type, payload) ->
-    # console.log 'setUserOption', type, payload
+    console.log 'setUserOption', type, payload
     if type == 'color'
       cid=this.user.clientId
       CUser.byCid(cid).color= payload

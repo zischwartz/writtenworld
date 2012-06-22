@@ -86,6 +86,8 @@
           for (c = _j = 0, _ref1 = state.numCols() - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; c = 0 <= _ref1 ? ++_j : --_j) {
             cellData = tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)];
             if (cellData) {
+              console.log(cellData.props.color);
+              ctx.fillStyle = "#" + cellData.props.color;
               _results1.push(ctx.fillText(cellData.contents, c * state.cellWidth(), r * state.cellHeight()));
             } else {
               _results1.push(void 0);

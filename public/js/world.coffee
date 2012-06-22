@@ -118,9 +118,9 @@ initializeInterface = ->
 
   $("#colorPicker").colorpicker
     onSelect: (color, inst)->
-      console.log 'onselect'
-      console.log color, inst
-       #TODO
+      state.color= color.hex
+      now.setServerState('color', state.color)
+      # $.colorpicker._hideColorpicker()
 
 
   inputEl.keypress (e) ->
@@ -242,9 +242,9 @@ initializeInterface = ->
     # if type=='layer'
       # do something
   
-    if type == 'color'
+    # if type == 'color'
       # console.log 'ch color'
-      $("#color").addClass(payload)
+      # $("#color").addClass(payload)
     if type == 'writeDirection'
       c= this.innerHTML
       $('.direction-dropdown')[0].innerHTML=c
@@ -487,9 +487,11 @@ window.Cell = class Cell
 
     @span.id= @key
     $(@span).addClass('cell')
+
     if not @props.color
       @props.color = 'c0'
-    $(@span).addClass(@props.color)
+    # $(@span).addClass(@props.color)
+    @span.style.color="##{@props.color}"
     if @props.echoes
       $(@span).addClass("e#{@props.echoes}")
     
@@ -498,18 +500,14 @@ window.Cell = class Cell
       return newval
 
     $span = $(@span)
+    span=@span
     @props.watch "echoes", (id, oldval, newval) ->
-      # console.log "echoes changed, #{oldval} to #{newval}"
-      # console.log $span 
       $span.removeClass('e'+oldval)
       $span.addClass('e'+newval)
       return newval
 
     @props.watch "color", (id, oldval, newval) ->
-      # console.log "color changed, #{oldval} to #{newval}"
-      # console.log $span 
-      $span.removeClass(oldval)
-      $span.addClass(newval)
+      span.style.color="##{newval}"
       return newval
 
 

@@ -262,6 +262,7 @@
     everyone.now.setServerState = function(type, payload) {
       var cid, userId,
         _this = this;
+      console.log('setUserOption', type, payload);
       if (type === 'color') {
         cid = this.user.clientId;
         CUser.byCid(cid).color = payload;

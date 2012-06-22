@@ -150,8 +150,8 @@
     $userTotalRites = $("#userTotalRites");
     $("#colorPicker").colorpicker({
       onSelect: function(color, inst) {
-        console.log('onselect');
-        return console.log(color, inst);
+        state.color = color.hex;
+        return now.setServerState('color', state.color);
       }
     });
     inputEl.keypress(function(e) {
@@ -276,9 +276,6 @@
       if (action === 'goto') {
         console.log('gotoooo', payload);
         goToCell(payload, map.getZoom());
-      }
-      if (type === 'color') {
-        $("#color").addClass(payload);
       }
       if (type === 'writeDirection') {
         c = this.innerHTML;
@@ -556,7 +553,7 @@
     };
 
     function Cell(row, col, tile, contents, props, events) {
-      var $span;
+      var $span, span;
       this.row = row;
       this.col = col;
       this.tile = tile;
@@ -576,7 +573,7 @@
       if (!this.props.color) {
         this.props.color = 'c0';
       }
-      $(this.span).addClass(this.props.color);
+      this.span.style.color = "#" + this.props.color;
       if (this.props.echoes) {
         $(this.span).addClass("e" + this.props.echoes);
       }
@@ -585,14 +582,14 @@
         return newval;
       });
       $span = $(this.span);
+      span = this.span;
       this.props.watch("echoes", function(id, oldval, newval) {
         $span.removeClass('e' + oldval);
         $span.addClass('e' + newval);
         return newval;
       });
       this.props.watch("color", function(id, oldval, newval) {
-        $span.removeClass(oldval);
-        $span.addClass(newval);
+        span.style.color = "#" + newval;
         return newval;
       });
     }

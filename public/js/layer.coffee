@@ -54,6 +54,8 @@ L.WCanvas = L.TileLayer.extend(
       for c in [0..state.numCols()-1]
         cellData=tileData["#{absTilePoint.x+c}x#{absTilePoint.y+r}"]
         if cellData
+          console.log cellData.props.color
+          ctx.fillStyle = "#"+cellData.props.color
           ctx.fillText(cellData.contents, c*state.cellWidth(), r*state.cellHeight())
 
   drawTileCircles: (tile, absTilePoint, zoom, density) ->
