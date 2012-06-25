@@ -77,7 +77,6 @@
       ctx.textBaseline = "top";
       ctx.textAlign = "center";
       ctx.font = "" + fontSize + "px monospace !important";
-      ctx.fillStyle = "white";
       _results = [];
       for (r = _i = 0, _ref = state.numRows() - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; r = 0 <= _ref ? ++_i : --_i) {
         _results.push((function() {
@@ -86,9 +85,9 @@
           for (c = _j = 0, _ref1 = state.numCols() - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; c = 0 <= _ref1 ? ++_j : --_j) {
             cellData = tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)];
             if (cellData) {
-              console.log(cellData.props.color);
               ctx.fillStyle = "#" + cellData.props.color;
-              _results1.push(ctx.fillText(cellData.contents, c * state.cellWidth(), r * state.cellHeight()));
+              ctx.fillText(cellData.contents, c * state.cellWidth(), r * state.cellHeight());
+              _results1.push(ctx.fillStyle = "white");
             } else {
               _results1.push(void 0);
             }

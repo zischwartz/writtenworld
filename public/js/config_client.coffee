@@ -21,7 +21,7 @@ Configuration = class Configuration
     @minCircleZoom = -> spec.minCircleZoom ? 13
 
     @defaultChar = -> spec.defaultChar ? " "
-    @inputRateLimit = -> spec.inputRateLimit ? 20
+    # @inputRateLimit = -> spec.inputRateLimit ? 2 # was 20
     @maxDistanceFromOfficial = -> spec.maxDistanceFromOfficial ? 15000 # from official City, for rollout, see below
 
     # leaflet

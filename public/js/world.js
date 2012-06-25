@@ -32,7 +32,6 @@
     isTopLayerInteractive: true,
     cursors: {},
     isLocal: true,
-    belowInputRateLimit: true,
     linkurl: false
   };
 
@@ -174,14 +173,6 @@
       if (!state.isTopLayerInteractive) {
         return false;
       }
-      if (!state.belowInputRateLimit) {
-        return false;
-      }
-      state.belowInputRateLimit = false;
-      $.doTimeout('keydownlimit', config.inputRateLimit(), function() {
-        state.belowInputRateLimit = true;
-        return false;
-      });
       switch (e.which) {
         case 9:
           e.preventDefault();

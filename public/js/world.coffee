@@ -22,7 +22,7 @@ window.state =
   
   cursors: {}
   isLocal: true
-  belowInputRateLimit: true
+  # belowInputRateLimit: true
   linkurl:false
 
 setTileStyle = ->
@@ -142,12 +142,12 @@ initializeInterface = ->
     if not state.isTopLayerInteractive
       return false
 
-    if not (state.belowInputRateLimit)
-      return false
-    state.belowInputRateLimit = false
-    $.doTimeout 'keydownlimit', config.inputRateLimit(), ->
-      state.belowInputRateLimit =true
-      return false
+    # if not (state.belowInputRateLimit)
+    #   return false
+    # state.belowInputRateLimit = false
+    # $.doTimeout 'keydownlimit', config.inputRateLimit(), ->
+    #   state.belowInputRateLimit =true
+    #   return false
 
     switch e.which
       when 9 #tab

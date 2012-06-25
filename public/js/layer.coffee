@@ -49,14 +49,15 @@ L.WCanvas = L.TileLayer.extend(
     ctx.textBaseline= "top"
     ctx.textAlign= "center"
     ctx.font= "#{fontSize}px monospace !important"
-    ctx.fillStyle ="white"
+    # ctx.fillStyle ="white"
     for r in [0..state.numRows()-1]
       for c in [0..state.numCols()-1]
         cellData=tileData["#{absTilePoint.x+c}x#{absTilePoint.y+r}"]
         if cellData
-          console.log cellData.props.color
+          # console.log cellData.props.color
           ctx.fillStyle = "#"+cellData.props.color
           ctx.fillText(cellData.contents, c*state.cellWidth(), r*state.cellHeight())
+          ctx.fillStyle ="white"
 
   drawTileCircles: (tile, absTilePoint, zoom, density) ->
     if not density then return false
