@@ -5,7 +5,12 @@
             span.icon-bar
             span.icon-bar
             span.icon-bar
-              a.brand(href='#') #{title} 
+              div.brand
+                a.title(href='/') #{title} 
+                   span.super Beta
+                span.subbrand 
+                  a(href="/about") What is this? 
+                  a(data-toggle="modal", href="#feedbackModal") Feedback 
           .nav-collapse
             ul.nav
              // 
@@ -63,9 +68,11 @@
                   li
                     a#makeLink(data-toggle="modal", href="#linkModal" )
                       i.icon-external-link
+                      | Link to a website
                   li
-                    a#makeGeoLink.trigger(data-type='geoLink') 
+                    a#makeGeoLink.trigger(data-type='geoLink', href="#") 
                       i.icon-globe
+                      | Get a link to this location
 
             - if (!everyauth.loggedIn)
               p.navbar-text.pull-right#navToAuth
@@ -79,6 +86,13 @@
                 |  rites  
             - else
               ul.nav.pull-right
+                li
+                  -if (unreadNotes)
+                    a.trigger(data-action='getNotes', href="#notes", rel="tooltip", title="#{unreadNotes} Unread Notes")
+                      i.icon-envelope.hasUnread
+                  -else
+                    a.trigger
+                      i.icon-envelope
                 li.dropdown
                   a.dropdown-toggle(href='#', data-toggle='dropdown')
                     span#username(href='#') #{user.login} 

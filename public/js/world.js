@@ -265,8 +265,10 @@
         state[type] = payload;
       }
       if (action === 'goto') {
-        console.log('gotoooo', payload);
         goToCell(payload, map.getZoom());
+      }
+      if (action === 'getNotes') {
+        $('#notes').slideToggle().load('/notes/');
       }
       if (type === 'writeDirection') {
         c = this.innerHTML;
@@ -439,16 +441,17 @@
       }
     };
     $("#getNearby").click(function() {
-      return now.getCloseUsers(function(closeUsers) {
-        var cellPoint, user, _i, _len;
+      now.getCloseUsers(function(closeUsers) {
+        var cellPoint, user, _i, _len, _results;
         $("#nearby").empty();
         if (closeUsers.length === 0) {
           $("ul#nearby").append(function() {
-            return $('<li> <a>Sorry, no one is nearby. </a></li>');
+            return $("<li> <a>Sorry, no one is nearby. </a> <small> Or they're too zoomed out to count.</small></li>");
           });
           return false;
         }
         cellPoint = cellKeyToXY(state.selectedCell.key);
+        _results = [];
         for (_i = 0, _len = closeUsers.length; _i < _len; _i++) {
           user = closeUsers[_i];
           user.radians = Math.atan2(cellPoint.y - user.cursor.y, cellPoint.x - user.cursor.x);
@@ -459,12 +462,12 @@
           if (!user.login) {
             user.login = 'Someone';
           }
-          $("ul#nearby").append(function() {
+          _results.push($("ul#nearby").append(function() {
             var arrow;
-            return arrow = $("<li><a><i class='icon-arrow-left' style='-moz-transform: rotate(" + user.degrees + "deg);-webkit-transform: rotate(" + user.degrees + "deg);'></i> " + user.login + "</a></li>");
-          });
+            return arrow = $("<li><a class='trigger' data-action='goto' data-payload='" + (user.cursor.x - 1) + "x" + (user.cursor.y - 1) + "'><i class='icon-arrow-left' style='-moz-transform: rotate(" + user.degrees + "deg);-webkit-transform: rotate(" + user.degrees + "deg);'></i> " + user.login + "</a></li>");
+          }));
         }
-        return true;
+        return _results;
       });
     });
     now.drawRite = function(commandType, rite, cellPoint, cellProps) {

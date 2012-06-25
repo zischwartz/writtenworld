@@ -61,7 +61,7 @@ app.configure ->
   app.use express.bodyParser()
   app.use express.cookieParser()
   app.use express.session {secret: 'tshh secret', store : new sessionStore(), maxAge:new Date(Date.now()+3600000*24*30)}
-  app.use express.favicon(__dirname + '/public/img/favicon.ico')
+  app.use express.favicon(__dirname + '/public/favicon.ico')
   app.use assetsManagerMiddleware
   app.use models.mongooseAuth.middleware()
   # app.use app.router #mongooseAuth says not to use this.
@@ -99,13 +99,13 @@ render_world = (req, res, options={}) ->
 
   if req.loggedIn
     personalWorldId = req.user.personalWorld
-    # console.log req.user
     availableColors = powers.getAvailableColors req.user.totalEchoes
     canLink = powers.canLink req.user
   else
     personalWorldId = null
     availableColors = powers.unregisteredColors()
     canLink=false
+
   res.render 'map_base.jade',
     title: 'Written World'
     mainWorldId: models.mainWorldId
@@ -115,18 +115,19 @@ render_world = (req, res, options={}) ->
     availableColors: availableColors
     isPersonal: options.world?.personal ? false
     isAuth: req.loggedIn
-    # initialPos: JSON.stringify options.initialPos ? false
     initialPos: options.initialPos ? false
-
+    unreadNotes: options.unreadNotes ? 0
 
 app.get '/', (req, res) ->
-  render_world(req,res)
+  if req.loggedIn
+    models.Note.count {to: req.user._id, read:false}, (err, noteNum) ->
+      console.log noteNum
+      render_world(req,res, {unreadNotes:noteNum})
+  else
+    render_world(req,res)
 
 app.get '/l/:l', (req, res) ->
-  # console.log 'loc based!!'
   b=new Buffer(req.params.l, 'base64').toString('ascii')
-  # g= b.split ':'
-  # console.log g
   render_world(req, res, {initialPos:b})
 
 app.get '/wid/:id' , (req, res) ->
@@ -151,6 +152,16 @@ app.get '/uw/:slug', (req, res)->
   else
     #first add a message saying you gota login
     res.redirect('/login')
+
+app.get '/notes/:type?', (req, res) ->
+  if req.loggedIn
+      type = req.params.type
+      if not type
+        models.Note.where('type').or([ {from:req.user._id}, {to: req.user._id}]).sort('date', -1).run (err,notes) ->
+          res.render 'include/notes.jade', { title: 'Notes', notes}
+      else
+        models.Note.where('type', type).or([ {from:req.user._id}, {to: req.user._id}]).sort('date', -1).run (err,notes) ->
+          res.render 'include/notes.jade', { title: 'Notes', notes}
 
 # PAGES
 app.get '/home', (req, res) ->

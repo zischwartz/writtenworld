@@ -40,6 +40,8 @@ html(lang="en")
 
 body
   include include/nav.jade
+  div#notes.span4
+    div.loading
   div(id="messages") 
   div#loadingIndicator
     div.progress.progress-success
@@ -48,17 +50,10 @@ body
     div.progress.progress-danger
       div.bar NOT CONNECTED!
         h5  Maybe reload the page if this doesn't go away in a few seconds.
-  //  
-    div.leaflet-control-container 
-      div.leaflet-top.leaflet-left
-        div.leaflet-control-zoom.leaflet-control
-          a.leaflet-control-zoom-in
-          a.leaflet-control-zoom-out 
+
   div(id="map")
+
   div(id="inputWrap")
     input(id="input", type="text", autocorrect="off", autocapitalize="off")
-  div#feedbackAndAbout
-    a(data-toggle="modal", href="#feedbackModal") Feedback
-    a(href="/about") News/FAQ
   include include/modals.jade
 

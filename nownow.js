@@ -453,8 +453,6 @@
                   this.now.insertMessage(noteHeads[type], "<span class='user'>" + login + "</span> " + noteBodies[type] + "<br>They wrote: <blockquote>" + s + "</blockquote><br><a class='btn trigger' data-action='goto' data-payload='" + note.x + "x" + note.y + "'>Go See</a>", 'alert-info', 10);
                   return note.read = true;
                 });
-              } else {
-                console.log('theyre notonline');
               }
             }
             note.save();

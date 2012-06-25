@@ -92,6 +92,7 @@ window.centerCursor = ->
 
 #INTERFACE INITIALIZER 
 initializeInterface = ->
+
   $("#map").click (e) ->
     # console.log e.target
     if $(e.target).hasClass 'cell'
@@ -235,8 +236,11 @@ initializeInterface = ->
       state[type] = payload
 
     if action == 'goto'
-      console.log 'gotoooo', payload
+      # console.log 'gotoooo', payload
       goToCell(payload, map.getZoom())
+
+    if action == 'getNotes'
+      $('#notes').slideToggle().load('/notes/')
 
     
     # if type=='layer'
@@ -411,7 +415,7 @@ doNowInit= (now)->
         # console.log closeUsers
         $("#nearby").empty()
         if closeUsers.length is 0
-          $("ul#nearby").append -> $ '<li> <a>Sorry, no one is nearby. </a></li>'
+          $("ul#nearby").append -> $ "<li> <a>Sorry, no one is nearby. </a> <small> Or they're too zoomed out to count.</small></li>"
           return false
         cellPoint=cellKeyToXY state.selectedCell.key
         for user in closeUsers
@@ -422,9 +426,9 @@ doNowInit= (now)->
           if not user.login
             user.login= 'Someone'
           $("ul#nearby").append ->
-            arrow= $("<li><a><i class='icon-arrow-left' style='-moz-transform: rotate(#{user.degrees}deg);-webkit-transform: rotate(#{user.degrees}deg);'></i> #{user.login}</a></li>")
-        true
-
+            arrow= $("<li><a class='trigger' data-action='goto' data-payload='#{user.cursor.x-1}x#{user.cursor.y-1}'><i class='icon-arrow-left' style='-moz-transform: rotate(#{user.degrees}deg);-webkit-transform: rotate(#{user.degrees}deg);'></i> #{user.login}</a></li>")
+      return
+    
     now.drawRite = (commandType, rite, cellPoint, cellProps) ->
       # console.log(commandType, rite, cellPoint)
       c=Cell.get(cellPoint.x, cellPoint.y)

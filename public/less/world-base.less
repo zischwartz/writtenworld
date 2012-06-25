@@ -6,30 +6,63 @@ body
 {
   margin-bottom: 0px;
 }
-.navbar a.brand
+.navbar .brand
 {
-  font-size: 15px;
-  padding: 10px 20px 12px;
+  font-size: 18px;
+  padding: 3px 10px 5px 10px;
+  a.title
+  {
+    /*font-weight: 600;*/
+    color: @grayLight; 
+  }
+  .super 
+  { 
+     vertical-align: super;
+     font-size: 11px; 
+  }
+  .subbrand
+  {
+    display: block !important;
+  }
+  .subbrand a
+  {
+    color: @blue;
+    font-size: 12px;
+    margin-right: 5px;
+  }
 }
 
 //for the zoom controls
  //.leaflet-left*/ //except now i'm using my own so
 //.leaflet-control-zoom
-.leaflet-top
+
+
+/* NAV STUFF */
+
+.navbar a i, .navbar i
 {
-  margin-top: @navbarHeight;
+  font-size: 16px;
 }
 
-.navbar a i
+.navbar li small
 {
-  font-size: 17px;
+  font-size:80%;
+  padding-left: 4px;
+  color: black;
+}
+
+
+.navbar .hasUnread 
+{
+  color: lighten(@orange, 5%);
+  &:hover
+  { color: @yellow;}
 }
 
 .tooltip.bottom
 {
   z-index: 3000;
   margin-top: -12px;
-
 }
 
 
@@ -50,6 +83,15 @@ body
   margin-right: -20px;
 }
 
+
+
+
+/* BODY, ETC */
+
+.leaflet-top
+{
+  margin-top: @navbarHeight;
+}
 #messages
 {
   position: absolute;
@@ -58,6 +100,21 @@ body
   z-index: 10;
   width: 100%;  
 }
+
+#notes
+{
+  padding-top: @navbarHeight;
+  background-color: @gray;
+  height: 98%;
+  position: absolute;
+  right: 0px;
+  z-index: 9;
+  display: none;
+  border-left: 2px solid @grayDarker;
+  overflow-y: scroll; 
+  overflow-x: hidden;
+}
+
 
 #loadingIndicator
 {
