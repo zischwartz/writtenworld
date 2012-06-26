@@ -84,7 +84,7 @@
       return false;
     } else {
       if (config.autoPan() || force) {
-        panIfAppropriate(direction);
+        panIfAppropriate(direction, force);
       }
       setCursor(targetCell);
       return targetCell;
@@ -267,8 +267,18 @@
       if (action === 'goto') {
         goToCell(payload, map.getZoom());
       }
-      if (action === 'getNotes') {
-        $('#notes').slideToggle().load('/notes/');
+      if (action === 'show' && type === 'notes') {
+        $('#notes').slideToggle().find('.loading').load("/notes/" + payload);
+        $("#notes li." + payload).addClass('active');
+        if (payload === 'unread') {
+          $(this).find('i').removeClass('hasUnread');
+        }
+        return false;
+      }
+      if (action === 'get' && type === 'notes') {
+        $('#notes .loading').load("/notes/" + payload);
+        $("#notes li." + payload).addClass('active');
+        return false;
       }
       if (type === 'writeDirection') {
         c = this.innerHTML;
@@ -287,14 +297,20 @@
     });
   };
 
-  panIfAppropriate = function(direction) {
+  panIfAppropriate = function(direction, force) {
     var panByDist, panOnDist, selectedPP;
     selectedPP = $(state.selectedEl).offset();
     panOnDist = 120;
     if (direction === 'left' || direction === 'right') {
       panByDist = config.tileSize().x;
+      if (force) {
+        panByDist = state.cellWidth();
+      }
     } else {
       panByDist = config.tileSize().y / 2;
+      if (force) {
+        panByDist = state.cellHeight();
+      }
     }
     if (direction === 'up') {
       if (selectedPP.top < panOnDist) {

@@ -103,8 +103,8 @@ body
 
 #notes
 {
-  padding-top: @navbarHeight;
-  background-color: @gray;
+  padding-top: @navbarHeight+10;
+  background-color: @grayDark;
   height: 98%;
   position: absolute;
   right: 0px;
@@ -113,6 +113,57 @@ body
   border-left: 2px solid @grayDarker;
   overflow-y: scroll; 
   overflow-x: hidden;
+
+  li.note
+  {
+    list-style: none;
+    /*.well;*/
+    padding: 5px;
+    margin: 5px 5px 10px 5px; 
+    .border-radius(3px);
+    background-color: #3F3F3F;
+    color: @grayLight;
+    
+    .btn
+    { margin-top: -10px;}
+
+    b { .label; text-transform: capitalize;}
+  }
+
+  li.note.echo b
+  {
+    .label-info;
+  }
+
+  li.note.overrite b
+  {
+    .label-important;
+  }
+
+  li.note.downrote b
+  {
+    .label-warning;
+  }
+
+  li.note.own b
+  {
+    .label-success;
+  }
+
+  blockquote
+  {
+    padding: 5px 5px 5px 15px;
+    margin:10px 0 18px 0;
+    background-color: white;
+    font-family: monospace;
+    font-size: 1.5em;
+    color: @grayDarker;
+  }
+  .loading
+  {
+    overflow: hidden;
+  }
+
 }
 
 

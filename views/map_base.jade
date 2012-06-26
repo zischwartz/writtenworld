@@ -40,7 +40,16 @@ html(lang="en")
 
 body
   include include/nav.jade
-  div#notes.span4
+  div#notes.span5
+    ul.nav.nav-tabs
+      li.all
+        a.trigger(data-action='get', data-type='notes', data-payload='all', href="/notes/all/") All Notes 
+      li.unread
+        a.trigger(data-action='get', data-type='notes', data-payload='unread', href="/notes/unread/") Unread
+      li.others
+        a.trigger(data-action='get', data-type='notes', data-payload='others', href="/notes/others/") By Others
+      li.own
+        a.trigger(data-action='get', data-type='notes', data-payload='own', href="/notes/own/") By You
     div.loading
   div(id="messages") 
   div#loadingIndicator

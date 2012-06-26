@@ -5,12 +5,12 @@
             span.icon-bar
             span.icon-bar
             span.icon-bar
-              div.brand
-                a.title(href='/') #{title} 
-                   span.super Beta
-                span.subbrand 
-                  a(href="/about") What is this? 
-                  a(data-toggle="modal", href="#feedbackModal") Feedback 
+          div.brand
+            a.title(href='/') #{title} 
+               span.super Beta
+            span.subbrand 
+              a(href="/about") What is this? 
+              a(data-toggle="modal", href="#feedbackModal") Feedback 
           .nav-collapse
             ul.nav
              // 
@@ -88,10 +88,10 @@
               ul.nav.pull-right
                 li
                   -if (unreadNotes)
-                    a.trigger(data-action='getNotes', href="#notes", rel="tooltip", title="#{unreadNotes} Unread Notes")
+                    a.trigger(data-action='show', data-type='notes', data-payload='unread', href="#notes", rel="tooltip", title="#{unreadNotes} Unread Notes")
                       i.icon-envelope.hasUnread
                   -else
-                    a.trigger
+                    a.trigger(data-action='show', data-type='notes', data-payload='all', href="#notes", rel="tooltip", title="No Unread Notes")
                       i.icon-envelope
                 li.dropdown
                   a.dropdown-toggle(href='#', data-toggle='dropdown')

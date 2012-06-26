@@ -65,7 +65,7 @@ moveCursor = (direction, from = state.selectedCell, force=false) ->
      # throw 'cell does not exist'
   else
     if config.autoPan() or force
-      panIfAppropriate(direction)
+      panIfAppropriate(direction, force)
     setCursor(targetCell)
     return targetCell
 
@@ -236,13 +236,21 @@ initializeInterface = ->
       state[type] = payload
 
     if action == 'goto'
-      # console.log 'gotoooo', payload
       goToCell(payload, map.getZoom())
 
-    if action == 'getNotes'
-      $('#notes').slideToggle().load('/notes/')
+    if action is 'show' and type is 'notes'
+      $('#notes').slideToggle().find('.loading').load("/notes/#{payload}")
+      $("#notes li.#{payload}").addClass('active')
+      if payload is 'unread'
+        $(this).find('i').removeClass('hasUnread')
+      return false
 
-    
+    if action is 'get' and type is 'notes'
+      $('#notes .loading').load("/notes/#{payload}")
+      $("#notes li.#{payload}").addClass('active')
+      return false
+      
+
     # if type=='layer'
       # do something
   
@@ -264,15 +272,15 @@ initializeInterface = ->
     return
 
 
-panIfAppropriate = (direction)->
+panIfAppropriate = (direction, force)->
   selectedPP= $(state.selectedEl).offset()
   panOnDist = 120
   if direction is 'left' or direction is 'right'
     panByDist = config.tileSize().x 
-    # panByDist = state.cellWidth()
+    panByDist = state.cellWidth() if force
   else
     panByDist = config.tileSize().y/2
-    # panByDist = state.cellHeight()
+    panByDist = state.cellHeight() if force
   if direction == 'up'
     if selectedPP.top < panOnDist
       pan(0, 0-panByDist)

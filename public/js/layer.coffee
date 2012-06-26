@@ -310,6 +310,7 @@ L.DomTileLayer = L.Class.extend
     len = @_tilesToLoad
 
     while k < len
+      # console.log queue[k]
       @_addTile queue[k], fragment
       k++
     @_container.appendChild fragment
@@ -416,7 +417,7 @@ L.DomTileLayer = L.Class.extend
     # tile.src = @getTileUrl(tilePoint, zoom)
     tile._tilePoint = tilePoint
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
-    # dbg 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
+    # console.log 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
     layer.tileDrawn(tile)
  
     # check index of tiles otherwise TODO
@@ -425,10 +426,10 @@ L.DomTileLayer = L.Class.extend
       if frag
         layer.populateTile(tile, tilePoint, zoom, frag)
       else
-      now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-        delay 0, ->
-          frag=betterBuildTile(tile, tileData, atp)
-          layer.populateTile(tile, tilePoint, zoom, frag)
+        now.getTile absTilePoint, state.numRows(), (tileData, atp)->
+          delay 0, ->
+            frag=betterBuildTile(tile, tileData, atp)
+            layer.populateTile(tile, tilePoint, zoom, frag)
 
     return tile
 
