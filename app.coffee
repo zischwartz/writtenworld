@@ -156,6 +156,7 @@ app.get '/uw/:slug', (req, res)->
 app.get '/notes/:type?', (req, res) ->
   if not req.loggedIn then res.redirect('/login') else
   type = req.params.type
+  # should be filtered by current world, duh
   if not type or type is 'all'
     models.Note.where('type').or([ {from:req.user._id}, {to: req.user._id}]).sort('date', -1).run (err,notes) ->
       res.render 'include/notes.jade', { title: 'Notes', notes, type:'all'}
@@ -203,6 +204,22 @@ app.get '/secretreset11' , (req, res) ->
       25]
     nownow.now.insertMessage msg[0], msg[1], msg[2], msg[3] 
     res.render 'about.jade', { title: 'About'}
+    
+    #special color update code
+    colormap =
+      c0: '92A5C7'
+      c1: '4E7BCE'
+      c2: '6B52D2'
+      c3: '3EC8B9'
+      c4: '0500FF'
+      c5: 'EC535A'
+      c6: 'D64BA2'
+      c7: 'D91D27'
+    for k, v of colormap
+      console.log k,v
+      models.Rite.update {'props.color': k}, {'props.color': v}, {multi:true}, (err, numa) ->
+        console.log 'nnnn', numa
+
   else
     res.render 'about.jade', { title: 'About'}
 

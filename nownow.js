@@ -383,8 +383,9 @@
       };
 
       CUser.prototype.processEdit = function(results) {
-        var col, fix, fixed, i, login, note, r, row, s, toNotify, type, uid, x, y, _i, _j, _k, _len, _len1, _ref, _ref1, _ref2, _ref3;
+        var cellPoints, col, fix, fixed, i, login, note, r, row, s, toNotify, type, uid, x, y, _i, _j, _k, _len, _len1, _ref, _ref1, _ref2, _ref3;
         console.log('processEdit');
+        console.log(results);
         s = '';
         toNotify = {
           own: [results[0].rite.owner],
@@ -406,6 +407,7 @@
             }
           }
         }
+        cellPoints = [];
         for (y in fix) {
           if (!__hasProp.call(fix, y)) continue;
           row = fix[y];
@@ -413,6 +415,10 @@
             if (!__hasProp.call(row, x)) continue;
             col = row[x];
             fixed.push(col);
+            cellPoints.push({
+              x: x,
+              y: y
+            });
           }
         }
         fixed.sort(function(a, b) {
@@ -445,7 +451,9 @@
               from: results[0].rite.owner,
               fromLogin: login,
               to: uid,
-              type: type
+              type: type,
+              world: results[0].world,
+              cellPoints: cellPoints
             });
             if (type !== 'own') {
               if (CUser.byUid(uid)) {

@@ -224,7 +224,18 @@
     date: {
       type: Date,
       "default": Date.now
-    }
+    },
+    world: ObjectId,
+    cellPoints: [
+      {
+        x: {
+          type: Number
+        },
+        y: {
+          type: Number
+        }
+      }
+    ]
   });
 
   exports.Note = mongoose.model('Note', NoteSchema);

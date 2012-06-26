@@ -306,6 +306,7 @@ module.exports = (app, SessionModel) ->
 
     processEdit:(results) ->
       console.log 'processEdit'
+      console.log results
       s = ''
       toNotify =
         own: [results[0].rite.owner]
@@ -323,9 +324,12 @@ module.exports = (app, SessionModel) ->
           if (r.originalOwner.toString() not in toNotify[r.commandType]) and r.originalOwner.toString() isnt toNotify.own[0].toString()
             toNotify[r.commandType].push r.originalOwner.toString()
 
+      cellPoints=[]
+
       for own y, row of fix
         for own x, col of row
           fixed.push col
+          cellPoints.push {x:x, y:y}
 
       fixed.sort (a,b)->
         if a.y == b.y
@@ -351,6 +355,8 @@ module.exports = (app, SessionModel) ->
             fromLogin: login
             to: uid
             type: type
+            world: results[0].world
+            cellPoints: cellPoints 
 
           if type isnt 'own'
             if CUser.byUid(uid)
