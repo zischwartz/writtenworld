@@ -198,7 +198,7 @@ initializeInterface = ->
 
   $("a#makeLink").click ->
     if not config.isAuth()
-      insertMessage('Make an account', 'If you want to add links', "alert-error")
+      insertMessage('Register', 'If you want to add links', "alert-error")
       return false
     else
       return true

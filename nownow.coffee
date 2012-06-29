@@ -306,7 +306,7 @@ module.exports = (app, SessionModel) ->
 
     processEdit:(results) ->
       console.log 'processEdit'
-      console.log results
+      # console.log results
       s = ''
       toNotify =
         own: [results[0].rite.owner]

@@ -385,7 +385,6 @@
       CUser.prototype.processEdit = function(results) {
         var cellPoints, col, fix, fixed, i, login, note, r, row, s, toNotify, type, uid, x, y, _i, _j, _k, _len, _len1, _ref, _ref1, _ref2, _ref3;
         console.log('processEdit');
-        console.log(results);
         s = '';
         toNotify = {
           own: [results[0].rite.owner],

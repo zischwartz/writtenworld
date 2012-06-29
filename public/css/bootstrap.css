@@ -104,6 +104,7 @@ textarea {
   overflow: auto;
   vertical-align: top;
 }
+/*@linkColor:             #0076FF;*/
 .clearfix {
   *zoom: 1;
 }
@@ -6041,6 +6042,7 @@ a.thumbnail:hover {
  *
  * Designed and built with all the love in the world @twitter by @mdo and @fat.
  */
+/*@linkColor:             #0076FF;*/
 .clearfix {
   *zoom: 1;
 }
@@ -7393,6 +7395,7 @@ body {
 .navbar .brand {
   font-size: 18px;
   padding: 3px 10px 5px 10px;
+  margin-right: 20px;
 }
 .navbar .brand a.title {
   /*font-weight: 600;*/
@@ -7415,6 +7418,9 @@ body {
 .navbar a i,
 .navbar i {
   font-size: 16px;
+  color: #0088cc;
+  /* improve appearance of hover state and make it more obvious these are buttons/controls */
+
 }
 .navbar li small {
   font-size: 80%;
