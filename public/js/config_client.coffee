@@ -8,6 +8,16 @@ mapBoxUrl = "http://{s}.tiles.mapbox.com/v3/zischwartz.map-ei57zypj/{z}/{x}/{y}.
 
 tileServeUrl = "http://23.23.200.225/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png"
 
+colorOptions=[
+   '92A5C7'
+   '4E7BCE'
+   '6B52D2'
+   '3EC8B9'
+   '0500FF'
+   'EC535A'
+   'D64BA2'
+   'D91D27' ]
+
 Configuration = class Configuration
   constructor: (spec = {}) ->
     @tileSize = -> spec.tileSize ? {x: 192, y: 256} #been using THIS one
@@ -42,14 +52,16 @@ Configuration = class Configuration
     @isAuth = -> isReallyAuth ? false
 
     @maxJumpDistance = -> 100
+    @colorOptions= colorOptions
 
 window.config = new Configuration(window.worldSpec)
 
+
 window.officialCities =
   'New York City': new L.LatLng(40.73037270272987, -73.99361729621887)
-  'Washington DC': new L.LatLng(38.898715, -77.037655)
+  # 'Washington DC': new L.LatLng(38.898715, -77.037655)
   # 'Boston': new L.LatLng(42.358431,-71.059773)
   # 'Columbus': new L.LatLng( 39.961176,-82.998794)
-  'San Francisco': new L.LatLng(37.77493,-122.419415)
+  # 'San Francisco': new L.LatLng(37.77493,-122.419415)
 
 

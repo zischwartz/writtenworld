@@ -206,19 +206,19 @@ app.get '/secretreset11' , (req, res) ->
     res.render 'about.jade', { title: 'About'}
     
     #special color update code
-    colormap =
-      c0: '92A5C7'
-      c1: '4E7BCE'
-      c2: '6B52D2'
-      c3: '3EC8B9'
-      c4: '0500FF'
-      c5: 'EC535A'
-      c6: 'D64BA2'
-      c7: 'D91D27'
-    for k, v of colormap
-      console.log k,v
-      models.Rite.update {'props.color': k}, {'props.color': v}, {multi:true}, (err, numa) ->
-        console.log 'nnnn', numa
+    # colormap =
+    #   c0: '92A5C7'
+    #   c1: '4E7BCE'
+    #   c2: '6B52D2'
+    #   c3: '3EC8B9'
+    #   c4: '0500FF'
+    #   c5: 'EC535A'
+    #   c6: 'D64BA2'
+    #   c7: 'D91D27'
+    # for k, v of colormap
+    #   console.log k,v
+    #   models.Rite.update {'props.color': k}, {'props.color': v}, {multi:true}, (err, numa) ->
+    #     console.log 'nnnn', numa
 
   else
     res.render 'about.jade', { title: 'About'}

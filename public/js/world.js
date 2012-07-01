@@ -121,7 +121,7 @@
   };
 
   initializeInterface = function() {
-    var $userTotalRites;
+    var $userTotalRites, ignorefirstcolor;
     $("#map").click(function(e) {
       var cell;
       if ($(e.target).hasClass('cell')) {
@@ -147,10 +147,19 @@
       return $("#loadingIndicator").fadeOut('fast');
     });
     $userTotalRites = $("#userTotalRites");
+    ignorefirstcolor = true;
     $("#colorPicker").colorpicker({
+      realtime: false,
+      color: config.colorOptions[Math.floor(Math.random() * 8)],
+      swatches: config.colorOptions,
       onSelect: function(color, inst) {
+        if (ignorefirstcolor) {
+          ignorefirstcolor = false;
+          return;
+        }
         state.color = color.hex;
-        return now.setServerState('color', state.color);
+        now.setServerState('color', state.color);
+        return console.log('setting color');
       }
     });
     inputEl.keypress(function(e) {
@@ -422,14 +431,10 @@
       return $("#loadingIndicator").fadeOut('slow');
     });
     now.setClientStateFromServer(function(s) {
-      var color_ops;
       state.userPowers = s.powers;
       if (s.color) {
-        return state.color = s.color;
-      } else {
-        color_ops = ['c0', 'c1', 'c2', 'c3'];
-        state.color = color_ops[Math.floor(Math.random() * 4)];
-        return now.setServerState('color', state.color);
+        state.color = s.color;
+        return $('#colorPicker').colorpicker("option", "color", s.color);
       }
     });
     centerCursor();
