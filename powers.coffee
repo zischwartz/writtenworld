@@ -18,17 +18,27 @@ powers=
 module.exports=
   getAvailableColors: (echoes) ->
     if echoes<1
-      # console.log 'was 0'
       return powers.echo0.colors
     if 1<=echoes<5
-      # console.log 'was 1+'
       return powers.echo1.colors
     if echoes >=5
-      # console.log 'was 5+'
       return powers.echo5.colors
-    # console.log 'unreg'
     return powers.unregistered.colors
 
   unregisteredColors: ->
     powers.unregistered.colors
 
+  canLink: (user) ->
+    yest = new Date
+    yest.setHours(yest.getHours()-1)
+
+    if user.powers.lastLinkOn
+      if user.powers.lastLinkOn < yest
+        console.log 'cool, link away'
+        return true
+      else
+        console.log 'nope too recent'
+        return false
+     else
+       console.log 'never linked before, predates the field'
+       return true

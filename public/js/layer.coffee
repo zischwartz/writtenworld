@@ -28,22 +28,46 @@ L.WCanvas = L.TileLayer.extend(
     tile
       
   _loadTile: (tile, tilePoint, zoom) ->
+    # console.log "_loadtile #{zoom}"
     tile._layer = this
     tile._tilePoint = tilePoint
     tile._zoom = zoom
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
-    now.getZoomedOutTile absTilePoint, state.numRows(), state.numCols(), (tileData, atp) =>
-      @drawTile tile, tilePoint, zoom, tileData.density
-      @tileDrawn tile  unless @options.async
-      
-  drawTile: (tile, tilePoint, zoom, density) ->
-    if not density
-      return
+    if zoom > config.minCircleZoom()
+      now.getTile absTilePoint, state.numRows(), (tileData, atp)=>
+        delay 0, =>
+          @drawTile tile, atp, zoom, tileData
+          @tileDrawn tile  unless @options.async
+    else
+      now.getZoomedOutTile absTilePoint, state.numRows(), state.numCols(), (tileData, atp) =>
+        @drawTileCircles tile, tilePoint, zoom, tileData.density
+        @tileDrawn tile  unless @options.async
+
+  drawTile: (tile, absTilePoint, zoom, tileData) ->
+    ctx = tile.getContext('2d')
+    fontSize= state.cellHeight()
+    ctx.textBaseline= "top"
+    ctx.textAlign= "center"
+    ctx.font= "#{fontSize}px monospace !important"
+    ctx.fillStyle ="white"
+    for r in [0..state.numRows()-1]
+      for c in [0..state.numCols()-1]
+        cellData=tileData["#{absTilePoint.x+c}x#{absTilePoint.y+r}"]
+        if cellData
+          # console.log cellData.props.color
+          ctx.fillStyle = "#"+cellData.props.color
+          ctx.fillText(cellData.contents, c*state.cellWidth(), r*state.cellHeight())
+          # ctx.fillStyle ="white"
+
+  drawTileCircles: (tile, absTilePoint, zoom, density) ->
+    if not density then return false
+
+    ctx = tile.getContext('2d')
     offset= config.minLayerZoom()-zoom
     radius = density*offset*128
     if radius>96 then radius=96
-    ctx = tile.getContext('2d')
-    ctx.fillStyle = "rgba(195, 255, 195, 0.4 )"
+    if radius<10 then radius=10
+    ctx.fillStyle = "rgba(255, 255, 255, 0.8 )"
     ctx.beginPath()
     ctx.arc(96, 128, radius, 0, Math.PI*2, true)
     ctx.closePath()
@@ -54,7 +78,6 @@ L.WCanvas = L.TileLayer.extend(
     @_tileOnLoad.call tile
     
   getTilePointAbsoluteBounds: ->
-    getTilePointAbsoluteBounds: ->
     if this._map
       bounds = this._map.getPixelBounds()
       tileSize= this.options.tileSize
@@ -287,6 +310,7 @@ L.DomTileLayer = L.Class.extend
     len = @_tilesToLoad
 
     while k < len
+      # console.log queue[k]
       @_addTile queue[k], fragment
       k++
     @_container.appendChild fragment
@@ -397,6 +421,10 @@ L.DomTileLayer = L.Class.extend
     # dbg 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
     layer.tileDrawn(tile)
  
+    # console.log 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
+    layer.tileDrawn(tile)
+ 
+    # check index of tiles otherwise TODO
     delay 0, ->
       # console.log 'local'
       frag=getTileLocally(absTilePoint, tile)
@@ -405,7 +433,6 @@ L.DomTileLayer = L.Class.extend
       else
         now.getTile absTilePoint, state.numRows(), (tileData, atp)->
           delay 0, ->
-            # console.log tileData
             frag=betterBuildTile(tile, tileData, atp)
             layer.populateTile(tile, tilePoint, zoom, frag)
 
@@ -423,10 +450,6 @@ L.DomTileLayer = L.Class.extend
 
   tileDrawn: (tile) ->
     tile.className += ' leaflet-tile-drawn'
-    # $.doTimeout 200, ->
-    #   dbg 'tiledrawntimer'
-    #   tile.className += ' leaflet-tile-drawn'
-    #   return false
     @_tileOnLoad.call(tile)
     true
 
@@ -434,10 +457,6 @@ L.DomTileLayer = L.Class.extend
     # dbg '_tileOnLoad called'
     layer = @_layer
     @className += " leaflet-tile-loaded"
-    # $.doTimeout 500, =>
-    #   console.log 'tiledrawntimer'
-    #   @className += ' leaflet-tile-loaded'
-    #   return false
     layer.fire "tileload",
       tile: this
       url: @src
@@ -457,30 +476,17 @@ L.DomTileLayer = L.Class.extend
     true
 
   _onTileUnload: (e) ->
-    # $(e.tile).doTimeout 'populateDelay' #cancels the timer
-    # console.log 'tile to unload:'
-    # console.log e.tile
+    # console.log 'tile to unload:', e.tile
     tile = e.tile
-    #the fix!
     tile.style.display = 'none'
-    #what was I doing below? tile doesn't have a ._zoom prop. I could give it one...
-    # better to hook in to the _remove func
- 
-#     if e.tile._zoom == map.getZoom()
-#       dbg 'unload due to pan, easy'
-#       # for c in e.tile._cells
-#       #   c.kill()
-#       # e.tile = null #maybe dont' need to do this
-#     else if e.tile._zoom < map.getZoom()
-#       dbg 'unload due to zoom in, less easy'
-#     else if e.tile._zoom > map.getZoom()
-#       dbg 'zoom out' # this case requires nothing, every cell will still be there
-    true
+    return true
 
   _removeCellsFromTile: (tile) ->
     if tile._cells
       for c in tile._cells
-        c.kill
+        c.kill()
+      tile._cells = null
+    return
 
   getTilePointBounds: ->
     bounds = this._map.getPixelBounds()
@@ -488,7 +494,7 @@ L.DomTileLayer = L.Class.extend
     nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x), Math.floor(bounds.min.y / tileSize.y))
     seTilePoint = new L.Point( Math.floor(bounds.max.x / tileSize.x), Math.floor(bounds.max.y / tileSize.y))
     tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
-    tileBounds
+    return tileBounds
 
   # getTilePointAbsoluteBoundsTrue: -> #this version doesn't have the additional buffertile, for use with getCenterTile
   #   bounds = this._map.getPixelBounds()
