@@ -6,43 +6,69 @@ body
 {
   margin-bottom: 0px;
 }
-.navbar a.brand
+.navbar .brand
 {
-  font-size: 15px;
-  padding: 10px 20px 12px;
-  //font-family: fixed;
-  //color: @grayDark !important;
-  // text-shadow: 1px 1px 5px @black;
+  font-size: 18px;
+  padding: 3px 10px 5px 10px;
+  margin-right: 20px;
+  a.title
+  {
+    /*font-weight: 600;*/
+    color: @grayLight; 
+  }
+  .super 
+  { 
+     vertical-align: super;
+     font-size: 11px; 
+  }
+  .subbrand
+  {
+    display: block !important;
+  }
+  .subbrand a
+  {
+    color: @blue;
+    font-size: 12px;
+    margin-right: 5px;
+  }
 }
 
 //for the zoom controls
  //.leaflet-left*/ //except now i'm using my own so
 //.leaflet-control-zoom
-.leaflet-top
+
+
+/* NAV STUFF */
+
+
+.navbar a i, .navbar i
 {
-  margin-top: @navbarHeight;
-  //padding: 8px;
+  font-size: 16px;
+  color: @linkColor;
+/* improve appearance of hover state and make it more obvious these are buttons/controls */
 }
 
-a i.icon-search
+.navbar li small
 {
-  .opacity(50); 
+  font-size:80%;
+  padding-left: 4px;
+  color: black;
 }
 
-a:hover i.icon-search
-{
-  .opacity(100) !important;
-} 
 
-a.direction-dropdown
+.navbar .hasUnread 
 {
+  color: lighten(@orange, 5%);
+  &:hover
+  { color: @yellow;}
+}
 
-  .opacity(50); 
-}
-a.direction-dropdown:hover
+.tooltip.bottom
 {
-  .opacity(100) !important;
+  z-index: 3000;
+  margin-top: -12px;
 }
+
 
 #username
 {
@@ -61,6 +87,15 @@ a.direction-dropdown:hover
   margin-right: -20px;
 }
 
+
+
+
+/* BODY, ETC */
+
+.leaflet-top
+{
+  margin-top: @navbarHeight;
+}
 #messages
 {
   position: absolute;
@@ -69,6 +104,72 @@ a.direction-dropdown:hover
   z-index: 10;
   width: 100%;  
 }
+
+#notes
+{
+  padding-top: @navbarHeight+10;
+  background-color: @grayDark;
+  height: 98%;
+  position: absolute;
+  right: 0px;
+  z-index: 9;
+  display: none;
+  border-left: 2px solid @grayDarker;
+  overflow-y: scroll; 
+  overflow-x: hidden;
+
+  li.note
+  {
+    list-style: none;
+    /*.well;*/
+    padding: 5px;
+    margin: 5px 5px 10px 5px; 
+    .border-radius(3px);
+    background-color: #3F3F3F;
+    color: @grayLight;
+    
+    .btn
+    { margin-top: -10px;}
+
+    b { .label; text-transform: capitalize;}
+  }
+
+  li.note.echo b
+  {
+    .label-info;
+  }
+
+  li.note.overrite b
+  {
+    .label-important;
+  }
+
+  li.note.downrote b
+  {
+    .label-warning;
+  }
+
+  li.note.own b
+  {
+    .label-success;
+  }
+
+  blockquote
+  {
+    padding: 5px 5px 5px 15px;
+    margin:10px 0 18px 0;
+    background-color: white;
+    font-family: monospace;
+    font-size: 1.5em;
+    color: @grayDarker;
+  }
+  .loading
+  {
+    overflow: hidden;
+  }
+
+}
+
 
 #loadingIndicator
 {
@@ -103,6 +204,22 @@ a.direction-dropdown:hover
   width: 20%;
   left: 74%;
   position: absolute;
+  
+  blockquote
+  {
+    padding: 5px 5px 5px 15px;
+    margin:10px 0 18px 0;
+    background-color: white;
+    font-family: monospace;
+    font-size: 1.5em;
+  }
+  
+  span.user
+  {
+  text-transform: capitalize;
+  font-weight: bold;
+  }
+
 }
 
 .alert.major
@@ -110,11 +227,29 @@ a.direction-dropdown:hover
   position: absolute;
   width: 86%;
   left: 7%;
+  font-size: 110%;
+  color: @grayDark;
   .alert-heading
   {
     font-size: 140%;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
   } 
+
+  .btn
+  {
+    .btn-large;
+  }
+}
+
+
+
+#welcome.alert
+{
+  bottom: 20px;
+  p{ font-size: 108%;}
+  
+  a { color: @blueDark; font-weight: bold;}
+
 }
 
 //signup modal

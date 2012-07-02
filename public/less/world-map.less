@@ -35,8 +35,22 @@ body, html
 .cell
 {
   color: @white;
+  text-align: center;
+  float:left;
+  display: block;
 }
 
+  .cell a
+  {
+    text-decoration: underline !important;
+    color: inherit !important;
+  }
+
+  .cell.link
+  {
+    /*background: rgba(0, 0, 0, 0.5);*/
+    background-color: black;
+  }
 
 div.leaflet-tile
 {
@@ -49,13 +63,13 @@ div.leaflet-tile
 }
 
 // a cell
-div.leaflet-tile span 
-{
-  text-align: center;
-  float:left;
-  display: block;
-}
-
+/*div.leaflet-tile span */
+/*{*/
+/*  text-align: center;*/
+/*  float:left;*/
+/*  display: block;*/
+/*}*/
+/**/
 div.leaflet-tile-drawn
 {
   /*.opacity(100) !important;*/
@@ -82,26 +96,25 @@ div.leaflet-tile-loaded
 @green0: #3EC8B9;
 
 @blue1: #0500FF;
+@red1: #EC535A;
+@orange1: #EE9854;
+@pink1: #D64BA2;
 
-.c0 { color: @defaultBlue !important;} //for cell (also used for colorpick modal buttons)
-.cc0 { background-color: @defaultBlue !important;} //for otherUser selected
+@red2: #D91D27; //bright! 5 echoes
 
-.c1 { color: @blue0 !important;}
-.cc1 { background-color: @blue0 !important;}
-
-.c2 { color: @purple0 !important;} 
-.cc2 { background-color: @purple0 !important;} 
-
-.c3 { color: @green0 !important;}
-.cc3 { background-color: @green0 !important;}
-
-.c4 { color: @blue1  !important;}
-.cc4 { background-color: @blue1 !important;}
+@specialOrange: #FF7100;
+.cS0
+{
+  /*color: @specialOrange !important;*/
+  color: white;
+  /*background-color: black;*/
+  #translucent > .background(@black, 0.5);
+  font-family: monospace;
+}
 
 /* ECHOES */
 /* ECHOES */
 
-// Error below  this
 .e1, .e2, .e3, .e4, .e5, .e6, .e7  
 {
   font-weight: bold !important;
@@ -109,7 +122,6 @@ div.leaflet-tile-loaded
   /*text-shadow: 0px 1px 3px  rgba(0, 0 ,0, .8);*/
   #translucent > .background(@white, 0.1);
 }
-
 .e2
 {
   #translucent > .background(@white, 0.3);
@@ -125,7 +137,6 @@ div.leaflet-tile-loaded
   #translucent > .background(@white, 0.6);
 }
 
-
 .e5
 {
   #translucent > .background(@white, 0.7);
@@ -135,7 +146,6 @@ div.leaflet-tile-loaded
 {
   #translucent > .background(@white, 0.8);
 }
-
 
 .e7
 {
@@ -162,7 +172,7 @@ div.leaflet-tile-loaded
 /*}*/
 
 
-@bgcolor: @grayLight;
+@bgcolor: @white;
 
 @-webkit-keyframes pulserBg {
   0%  { 
@@ -170,7 +180,7 @@ div.leaflet-tile-loaded
         /*box-shadow: 0px 0px 4px white;*/
       }
  50%  {
-        background-color: lighten(@bgcolor, 40%);
+        background-color: darken(@bgcolor, 50%);
         /*box-shadow: 0px 0px 8px white;*/
       }
  100% {
@@ -179,6 +189,20 @@ div.leaflet-tile-loaded
       }
 }
 
+@-moz-keyframes pulserBg {
+  0%  { 
+        background-color: @bgcolor;
+        /*box-shadow: 0px 0px 4px white;*/
+      }
+ 50%  {
+        background-color: darken(@bgcolor, 50%);
+        /*box-shadow: 0px 0px 8px white;*/
+      }
+ 100% {
+        background-color: @bgcolor;
+         /*box-shadow: 0px 0px 4px white;*/
+      }
+}
 /* SELECTED CELLS */
 /* SELECTED CELLS */
 
@@ -186,6 +210,7 @@ div.leaflet-tile-loaded
       box-shadow: 0px 0px 4px white;
       background-color: @grayLight;
       -webkit-animation: pulserBg 1s infinite;   
+      -moz-animation: pulserBg 1s infinite;
      /*-webkit-animation: pulserOp 1s infinite;*/
       /*opacity: 1;*/
 }
@@ -205,17 +230,45 @@ div.leaflet-tile-loaded
 .ar1
 {
   .transition(all ease-out .5s);
-  opacity: .0 !important;
+  opacity: 0 !important;
   font-size: 19em !important;
   top: 400px !important;
   left: 150px !important;
   .skew(30deg,35deg);
 }
 
-//inserts
+.ar2
+{
+  .transition(all ease-out .5s);
+  opacity: 0 !important;
+  font-size: 19em !important;
+  top: 500px !important;
+  left: 50px !important;
+  .skew(25deg,35deg);
+}
+
+.ar3
+{
+  .transition(all ease-out .5s);
+  opacity: 0 !important;
+  font-size: 19em !important;
+  top: 300px !important;
+  left: 250px !important;
+  .skew(30deg,35deg);
+}
+
+.ar4
+{
+  .transition(all ease-out .2s);
+  opacity: .0 !important;
+  font-size: 19em !important;
+  top: 400px !important;
+  left: 150px !important;
+}
+//INSERTS
 .ai1
 {
-  .transition(all ease-in .2s); //ease-out .2s);
+  .transition(all ease-out .2s); //ease-out .2s);
   font-size: 25em ;
   top: 0px;
   left: 0px;
@@ -225,7 +278,7 @@ div.leaflet-tile-loaded
 
 .ai2
 {
-  .transition(all ease-in .2s); //ease-out .2s);
+  .transition(all ease-out .2s); //ease-out .2s);
   font-size: 30em ;
   top: 200px;
   left: 0px;
@@ -236,16 +289,25 @@ div.leaflet-tile-loaded
 
 .ai3
 {
-  .transition(all ease-in .2s); //ease-out .2s);
+  .transition(all ease-out .2s); //ease-out .2s);
   font-size: 30em ;
   top: 400px;
   left: 50px;
   .skew(10deg,55deg);
   z-index: 100;
 }
+.ai4
+{
+  .transition(all ease-out .2s); //ease-out .2s);
+  font-size: 30em ;
+  top: 400px;
+  left: 50px;
+  /*.skew(10deg,55deg);*/
+  z-index: 100;
+}
 .aa //for the below
 {
-  .transition(all ease-in-out .4s);
+  .transition(all ease-in-out .3s);
 }
 
 .aa1 //currently not used

@@ -1,79 +1,85 @@
--if (!everyauth.loggedIn)
-  - var colors = {gray:'c0', blue: 'c1', purple: 'c2', green: 'c3' } 
--else
-  - var colors = {gray:'c0', blue: 'c1', purple: 'c2', green: 'c3', blue2: 'c4'}
 
-link(rel='stylesheet', href="/css/bootstrap.css")
+// link(rel='stylesheet', href="/css/bootstrap.css")
 
-.modal.fade.hide#colorModal
+form.modal.hide#linkModal
+  .modal-header
+      a.close(data-dismiss='modal') ×
+      h3 Add a Link 
+  .modal-body
+      p Put the url of your link below.
+      input#linkurl.span5(type='text', name='linkurl', value="http://")
+      p Then, the next character you write will be a link. 
+  .modal-footer
+      button.btn.btn-primary(type="submit") Link!
+      a.btn(href='#', data-dismiss='modal') Na
+
+.modal.hide#colorModal
   .modal-header
       a.close(data-dismiss='modal') ×
       h3 Pick A Color 
-    .modal-body.colorOption
-      p Any color. As long as it's one of these. Want more options? Get some echoes (and an account).
-      each val, key in colors
-        a.btn.btn-large.btn-inverse.trigger(class=val, data-payload=val, data-type='color', data-action='set', data-dismiss='modal') #{key} 
-    .modal-footer
+  .modal-body.colorOption
+      p Any color. As long as it's one of these. Want more colors? Get some echoes.
+      each val in availableColors
+        a.btn.btn-large.btn-inverse.trigger(class=val, data-payload=val, data-type='color', data-action='set', data-dismiss='modal') Color 
+  .modal-footer
       a.btn(href='#', data-dismiss='modal') Close
 
-form.modal.fade.hide#registerModal(action="/register", method="POST")
+form.modal.hide#registerModal(action="/register", method="POST")
   .modal-header
       a.close(data-dismiss='modal') ×
       h3 Get an Account 
-    .modal-body
+  .modal-body
       p Sign up and get: echoes, a private world + history, more color options, notifications, and more crap like that.
       .well 
         label User name
         input.span4(type='text', name='login')
-        span.help-inline Your public name on Written World
+        span.help-inline Public 
         label Password 
         input.span4(type='password', name='password') 
         span.help-inline Shhhh, it's a secret
         label Email 
          i (Optional) 
         input.span4(type='email', name='email') 
-        span.help-inline Optional. We hate spam too. 
-    .modal-footer
+        span.help-inline We hate spam too. 
+  .modal-footer
       button.btn.btn-primary(type="submit") Sign up!
       a.btn(href='#', data-dismiss='modal') Nevermind 
 
-form.modal.fade.hide#locationSearch
+form.modal.hide#locationSearch
   .modal-header
       a.close(data-dismiss='modal') ×
       h3 Find a Place 
-    .modal-body
+  .modal-body
       p Where would you like to go?
       -if (!everyauth.loggedIn)
-        p You can only jump 50km at once. With an account, you can jump up to 500km at once. With echoes, even more. 
-      -else
-        p You can jump 500km at once. With echoes, even more. 
+        p You can only jump 50km at once. With an account, you can jump way more. 
       .well 
         input.span5#locationSearchInput
-      p Hint: Include the state, in the US, or country, if not. Americas only for now.
-    .modal-footer
+      p Hint: Include the state, in the US, or country if outside the US.
+  .modal-footer
       button.btn.btn-primary(type="submit") Go!
       a.btn(href='#', data-dismiss='modal') Nevermind 
 
-form.modal.fade.hide#loginModal(action="/login", method="POST")
+form.modal.hide#loginModal(action="/login", method="POST")
   .modal-header
       a.close(data-dismiss='modal') ×
       h3 Log In
-    .modal-body
+  .modal-body
       .well 
         label User name
         input.span4(type='text', name='login')
         label Password 
         input.span4(type='password', name='password') 
-    .modal-footer
+  .modal-footer
       button.btn.btn-primary(type="submit") Sign in!
       a.btn(href='#', data-dismiss='modal') Nevermind 
 
 
-div.modal.fade.hide#feedbackModal
+div.modal.hide#feedbackModal
   .modal-header
       a.close(data-dismiss='modal') ×
       h3 What do you think? 
-    .modal-body
+  .modal-body
       .well 
         textarea#feedback.span5(name='feedback', placeholder='Write your comment or suggestion here...') 
         select#t
@@ -82,9 +88,17 @@ div.modal.fade.hide#feedbackModal
           option Feature Idea
           option Just Saying Hi
           option Other 
-    .modal-footer
+  .modal-footer
       button.btn.btn-primary.trigger(data-type='submitfeedback') Submit!
       a.btn(href='#', data-dismiss='modal') Nevermind 
 
-
-
+// not a modal
+  -if (!everyauth.loggedIn)
+    div.alert.alert-block.major#welcome.fade.in
+      a.close(data-dismiss="alert", href="#") x
+      h4.alert-heading Write on a map. It'll be fun.
+      p The glowing cursor is waiting for you to type. You can move around with the keyboard arrows, by dragging the map, zooming out, or searching for an address.
+      p
+        a(href="#registerModal", data-toggle="modal") Sign up for an account
+        |, and get your own private history world, more colors, notifications, and the ability to go further afield. For more info, check out the <a href="/about"> FAQ</a>.
+        

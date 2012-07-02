@@ -2,6 +2,7 @@
 models= require './models'
 nowjs = require 'now'
 
+powers = require './powers'
 # async = require './lib/async.js'
 
 leaflet = require './lib/leaflet-custom-src.js'
@@ -11,18 +12,12 @@ module.exports = (app, SessionModel) ->
   # module.everyone = everyone
   bridge = require('./bridge')(everyone, SessionModel)
 
-  everyone.now.setCurrentWorld = (currentWorldId, personalWorldId) ->
-    this.user.personalWorldId = personalWorldId
+  everyone.now.setGroup = (currentWorldId) ->
     if currentWorldId
       group = nowjs.getGroup(currentWorldId).addUser(this.user.clientId)
-      this.user.currentWorldId=currentWorldId
+      return
     else
-      this.user.currentWorldId=false
-    # if currentWorldId != models.mainWorldId.toString() and currentWorldId != personalWorldId
-    #   console.log 'NOT MAIN, NOT PERSONAL'
-    #   this.user.specialWorld = true
-    #   models.World.findById currentWorldId, (err, world) =>
-    #     this.user.specialWorldName= world.name
+      return false
 
   nowjs.on 'connect', ->
     this.user.cid = this.user.clientId
@@ -34,7 +29,7 @@ module.exports = (app, SessionModel) ->
     u=CUser.byCid(cid)
     update =
       cid: cid
-    getWhoCanSee u.cursor, this.user.currentWorldId, (toUpdate)->
+    getWhoCanSee u.cursor, this.now.currentWorldId, (toUpdate)->
       for i of toUpdate
           nowjs.getClient i, ->
             this.now.updateCursors(update)
@@ -42,6 +37,8 @@ module.exports = (app, SessionModel) ->
     return
 
   everyone.now.setBounds = (bounds) ->
+    if not bounds
+      return false
     b = new leaflet.L.Bounds bounds.max, bounds.min
     CUser.byCid(this.user.cid).bounds=b
 
@@ -50,7 +47,7 @@ module.exports = (app, SessionModel) ->
       callback(this.user.session)
 
   everyone.now.setCursor = (cellPoint) ->
-    if not this.user.currentWorldId
+    if not this.now.currentWorldId
       return false
     cid = this.user.clientId
     CUser.byCid(cid).cursor = cellPoint
@@ -60,32 +57,63 @@ module.exports = (app, SessionModel) ->
       y: cellPoint.y
       color: this.user.session.color if this.user.session
 
-    getWhoCanSee cellPoint, this.user.currentWorldId, (toUpdate)->
+    getWhoCanSee cellPoint, this.now.currentWorldId, (toUpdate)->
       for i of toUpdate
         if i != cid #not you
           nowjs.getClient i, ->
             this.now.updateCursors(update)
 
   everyone.now.writeCell = (cellPoint, content) ->
-    if not this.user.currentWorldId
+    if not this.now.currentWorldId
       return false
-    currentWorldId = this.user.currentWorldId
+    currentWorldId = this.now.currentWorldId
     cid = this.user.clientId
 
-    bridge.processRite cellPoint, content, this.user, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false)->
+    if typeof content isnt 'string'
+      for k, v of content
+        if k is 'linkurl'
+           process.nextTick =>
+              models.User.findById CUser.byCid(this.user.cid).uid, (err, doc) =>
+                doc.powers.lastLinkOn = new Date
+                doc.save()
+                this.user.powers.lastLinkOn= new Date
+                return
+          if not powers.canLink this.user
+              this.now.insertMessage "Sorry, 1 Link/Hour", "For now. Sorry." , 'alert-error'
+              return false 
+
+    bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false, originalOwner=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
       getWhoCanSee cellPoint, currentWorldId, (toUpdate)->
         for i of toUpdate
           # if i !=cid # ie not you, removed for my hack 
             if rite # it was a legit rite
+              CUser.byCid(cid).addToRiteQueue {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite, commandType, originalOwner}
               nowjs.getClient i, ->
+                # console.log i
                 this.now.drawRite(commandType, rite, cellPoint, cellProps)
     return true
 
-  everyone.now.getTile= (absTilePoint, numRows, callback) ->
-    if not this.user.currentWorldId
+
+  everyone.now.getZoomedOutTile= (absTilePoint, numRows, numCols, callback) ->
+    if not this.now.currentWorldId
       return false
-    models.Cell.where('world', this.user.currentWorldId)
+    models.Cell.where('world', this.now.currentWorldId)
+      .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numCols)
+      .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
+      .count (err,count) =>
+        if count
+          density= count/(numRows*numCols)
+          results= {density: density}
+        else
+          results= {density: 0}
+        callback(results, absTilePoint)
+
+  everyone.now.getTile= (absTilePoint, numRows, callback) ->
+    # console.log 'getTile'
+    if not this.now.currentWorldId
+      return false
+    models.Cell.where('world', this.now.currentWorldId)
       .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
       .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
       .populate('current')
@@ -96,7 +124,7 @@ module.exports = (app, SessionModel) ->
             if c.current
               pCell = {x: c.y, y: c.y, contents: c.current.contents, props: c.current.props}
               results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
-            # console.log results
+            # console.log "results"
           callback(results, absTilePoint)
         else
           # console.log 'not found'
@@ -113,7 +141,7 @@ module.exports = (app, SessionModel) ->
       cb(toUpdate)
 
   everyone.now.getCloseUsers= (cb)->
-    if not this.user.currentWorldId
+    if not this.now.currentWorldId
       return false
     console.log 'getCloseUsers called'
     closeUsers= []
@@ -121,7 +149,7 @@ module.exports = (app, SessionModel) ->
     aC=CUser.byCid(cid).cursor
     # console.log cUsers[cid]
     # console.log 'ac', aC
-    nowjs.getGroup(this.user.currentWorldId).getUsers (users) ->
+    nowjs.getGroup(this.now.currentWorldId).getUsers (users) ->
       for i in users
         uC = CUser.byCid(i).cursor
         distance = Math.sqrt((aC.x-uC.x)*(aC.x-uC.x)+(aC.y-uC.y)*(aC.y-uC.y))
@@ -141,9 +169,9 @@ module.exports = (app, SessionModel) ->
     feedback = new models.Feedback({contents: f, t:t})
     feedback.save (err) -> console.log err if err
 
-  everyone.now.setUserOption = (type, payload) ->
+  everyone.now.setServerState = (type, payload) ->
     console.log 'setUserOption', type, payload
-    if type = 'color'
+    if type == 'color'
       cid=this.user.clientId
       CUser.byCid(cid).color= payload
       this.user.session.color=payload
@@ -154,37 +182,55 @@ module.exports = (app, SessionModel) ->
           console.log err if err
           doc.color= payload
           doc.save()
-          console.log 'USER COLORCHANGE', doc
+          # console.log 'USER COLORCHANGE', doc
           this.now.insertMessage('hi', 'nice color')
 
-  # can I impliment this on CUser  instead....
-  models.User.prototype.on 'receivedEcho', (rite) ->
-      console.log 'rcvd echo called'
-      userId= this._id
-      rite.getOwner (err,u)->
-        console.log err if err
-        cid = CUser.byUid(userId)?.cid
-        if cid
-          nowjs.getClient cid, ->
-            if u
-              this.now.insertMessage 'Echoed!', "#{u.login} echoed what you said!"
-            else
-              this.now.insertMessage 'Echoed!', "Someone echoed what you said!"
-      return true
+  everyone.now.createGeoLink = (cellKey, zoom) ->
+    # console.log geoLink
+    # b="#{geoLink.lat}:#{geoLink.lng}"
+    b= "#{zoom}x#{cellKey}"
+    geoLink64 = new Buffer(b).toString('base64')
+    this.now.insertMessage('Have a link:', "<a href='/l/#{geoLink64}'>/l/#{geoLink64}</a>")
 
-  models.User.prototype.on 'receivedOverRite', (rite) ->
-      console.log 'rcd ovrt called'
-      userId= this._id
-      rite.getOwner (err,u)->
-        console.log err if err
-        cid=CUser.byUid(userId)?.cid
-        if cid
-          nowjs.getClient cid, ->
-            if u
-              this.now.insertMessage 'Over Written', "#{u.login} is writing over your cells"
-            else
-              this.now.insertMessage 'Over Written', "Someone is writing over your cells."
-      return true
+  # not for initial load, for notifications and such
+  # everyone.now.goToGeoLink = (geoLink64) ->
+  #   # console.log 'goto GEO'
+  #   b=new Buffer(geoLink64, 'base64').toString('ascii')
+  #   g= b.split(':')
+  #   console.log g
+  #   latlng = {x: g[0], y: g[1]}
+  #   console.log latlng
+    # this.now.mapGoTo(latlng)
+
+  # or with my CUser, and by edit, not rite
+  # can I impliment this on CUser  instead....
+  # models.User.prototype.on 'receivedEcho', (rite) ->
+  #     console.log 'rcvd echo called'
+  #     userId= this._id
+  #     rite.getOwner (err,u)->
+  #       console.log err if err
+  #       cid = CUser.byUid(userId)?.cid
+  #       if cid
+  #         nowjs.getClient cid, ->
+  #           if u
+  #             this.now.insertMessage 'Echoed!', "#{u.login} echoed what you said!"
+  #           else
+  #             this.now.insertMessage 'Echoed!', "Someone echoed what you said!"
+  #     return true
+
+  # models.User.prototype.on 'receivedOverRite', (rite) ->
+  #     console.log 'rcd ovrt called'
+  #     userId= this._id
+  #     rite.getOwner (err,u)->
+  #       console.log err if err
+  #       cid=CUser.byUid(userId)?.cid
+  #       if cid
+  #         nowjs.getClient cid, ->
+  #           if u
+  #             this.now.insertMessage 'Over Written', "#{u.login} is writing over your cells"
+  #           else
+  #             this.now.insertMessage 'Over Written', "Someone is writing over your cells."
+  #     return true
 
 
   class CUser
@@ -200,32 +246,129 @@ module.exports = (app, SessionModel) ->
       return allByCid[cid]
     
     @bySid: (sid) ->
-      return allBy[sid]
+      return allBySid[sid]
 
     @byUid: (uid) ->
+      # console.log 'allbyuid:', allByUid
       return allByUid[uid]
 
     constructor: (@nowUser) ->
       @cid = @nowUser.clientId
       @sid = decodeURIComponent(@nowUser.cookie['connect.sid'])
+      @riteQueue = []
       if nowUser.session?.auth
         @uid= nowUser.session.auth.userId
         models.User.findById @uid, (err, doc) =>
             @login = doc.login
             @nowUser.login = doc.login
             @nowUser.powers = doc.powers
-            @nowUser.session?.powers = doc.powers
+        allByUid[@uid] = this
       else
+        # this is neccesary because sids don't presist, but the doc._id should
         SessionModel.findOne {'sid': @sid } , (err, doc) =>
           @uid = doc._id
           @nowUser.soid=doc._id
-          @nowUser.powers = defaultUserPowers()
-          @nowUser.session?.powers = defaultUserPowers()
+          allByUid[@uid] = this
       
       allByCid[@cid] = this
       allBySid[@sid] = this
-      allByUid[@uid] = this
       
+
+    findEdits: (riteQueue) ->
+      if riteQueue.length is 1
+        return riteQueue
+      results=[]
+      riteQueue.sort (a,b)->
+        if a.y == b.y
+          if a.x==b.x
+            return a.rite.date - b.rite.date
+          else
+            return a.x - b.x
+        else
+          return a.y - b.y
+
+      for i in [0..riteQueue.length-1]
+        if riteQueue[i].y == riteQueue[i+1]?.y
+          results.push riteQueue[i]
+        else if riteQueue[i].y == riteQueue[i-1]?.y #for the last el
+          results.push riteQueue[i]
+      return results
+
+    addToRiteQueue: (edit) ->
+      @riteQueue.push edit
+      clearTimeout(@timerId)
+      @timerId= delay 1000*5, =>
+        results=@findEdits(@riteQueue)
+        @riteQueue=[]
+        @processEdit results
+        return false
+    
+
+    processEdit:(results) ->
+      console.log 'processEdit'
+      # console.log results
+      s = ''
+      toNotify =
+        own: [results[0].rite.owner]
+        overrite: []
+        echo: []
+        downrote:[]
+      fix = {}
+      fixed=[]
+      #to get the final state of the edit/each contained cell, i.e. if user made a mistake
+      for r in results
+        if not fix[r.y] then fix[r.y]={}
+        fix[r.y][r.x] =r
+
+        if r.originalOwner #and since we're already looping through it
+          if (r.originalOwner.toString() not in toNotify[r.commandType]) and r.originalOwner.toString() isnt toNotify.own[0].toString()
+            toNotify[r.commandType].push r.originalOwner.toString()
+
+      cellPoints=[]
+
+      for own y, row of fix
+        for own x, col of row
+          fixed.push col
+          cellPoints.push {x:x, y:y}
+
+      fixed.sort (a,b)->
+        if a.y == b.y
+          return a.x - b.x
+        else
+          return a.y - b.y
+      
+      for i in [0..fixed.length-1]
+        s+= fixed[i].rite.contents
+        if fixed[i+1] and fixed[i+1]?.y isnt fixed[i].y
+          s+='<br>'
+
+      if @login then login=@login else login='Someone'
+
+      for type of toNotify
+        for uid in toNotify[type]
+          note = new models.Note
+            x: results[0].x
+            y: results[0].y
+            contents: s
+            read: if type is 'own' then true else false
+            from: results[0].rite.owner
+            fromLogin: login
+            to: uid
+            type: type
+            world: results[0].world
+            cellPoints: cellPoints 
+
+          if type isnt 'own'
+            if CUser.byUid(uid)
+              nowjs.getClient CUser.byUid(uid).cid, ->
+                # console.log s
+                this.now.insertMessage noteHeads[type], "<span class='user'>#{login}</span> #{noteBodies[type]}<br>They wrote: <blockquote>#{s}</blockquote><br><a class='btn trigger' data-action='goto' data-payload='#{note.x}x#{note.y}'>Go See</a>" , 'alert-info', 10
+                note.read = true
+            # else
+              # console.log 'theyre notonline'
+              #do something here, add to unread count or somesuch`
+          note.save()
+      return
 
     destroy: ->
       delete allByCid[@cid]
@@ -235,16 +378,28 @@ module.exports = (app, SessionModel) ->
       # console.log this
       # delete this
 
-  exports.CUser = CUser
+  return [everyone, CUser]
 
-  # return true
-  return everyone
+noteBodies=
+    overrite: 'wrote over what you wrote. '
+    echo:  'echoed something you wrote. '
+    downrote: 'tried to over write what you wrote. '
 
-defaultUserPowers= ->
-  powers =
-    jumpDistance:50
+noteHeads=
+    overrite: 'Over Written!'
+    echo:  'Echoed'
+    downrote:'Attempted Over Write'
+# 
+# defaultUserPowers= ->
+#   powers =
+#     jumpDistance:50
+    
 
-#this one isn't used, yet
-defaultRegisteredPowers = ->
-  powers=
-    jumpDistance: 500
+#this is just a reminder of whats in the model
+# defaultRegisteredPowers = ->
+#   powers=
+#     jumpDistance: 500
+
+delay = (ms, func) -> setTimeout func, ms
+
+Array::filter = (func) -> x for x in @ when func(x)

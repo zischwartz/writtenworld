@@ -1,3 +1,104 @@
+delay = (ms, func) -> setTimeout func, ms
+
+
+L.WCanvas = L.TileLayer.extend(
+  options:
+    async: false
+      
+  initialize: (options) ->
+    L.Util.setOptions this, options
+    
+  redraw: ->
+    tiles = @_tiles
+    for i of tiles
+      @_redrawTile tiles[i]  if tiles.hasOwnProperty(i)
+    
+  _redrawTile: (tile) ->
+    @drawTile tile, tile._tilePoint, tile._zoom
+      
+  _createTileProto: ->
+    proto = @_canvasProto = L.DomUtil.create("canvas", "leaflet-tile")
+    tileSize = @options.tileSize
+    proto.width = tileSize.x
+    proto.height = tileSize.y
+    
+  _createTile: ->
+    tile = @_canvasProto.cloneNode(false)
+    tile.onselectstart = tile.onmousemove = L.Util.falseFn
+    tile
+      
+  _loadTile: (tile, tilePoint, zoom) ->
+    # console.log "_loadtile #{zoom}"
+    tile._layer = this
+    tile._tilePoint = tilePoint
+    tile._zoom = zoom
+    absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
+    if zoom > config.minCircleZoom()
+      now.getTile absTilePoint, state.numRows(), (tileData, atp)=>
+        delay 0, =>
+          @drawTile tile, atp, zoom, tileData
+          @tileDrawn tile  unless @options.async
+    else
+      now.getZoomedOutTile absTilePoint, state.numRows(), state.numCols(), (tileData, atp) =>
+        @drawTileCircles tile, tilePoint, zoom, tileData.density
+        @tileDrawn tile  unless @options.async
+
+  drawTile: (tile, absTilePoint, zoom, tileData) ->
+    ctx = tile.getContext('2d')
+    fontSize= state.cellHeight()
+    ctx.textBaseline= "top"
+    ctx.textAlign= "center"
+    ctx.font= "#{fontSize}px monospace !important"
+    ctx.fillStyle ="white"
+    for r in [0..state.numRows()-1]
+      for c in [0..state.numCols()-1]
+        cellData=tileData["#{absTilePoint.x+c}x#{absTilePoint.y+r}"]
+        if cellData
+          # console.log cellData.props.color
+          ctx.fillStyle = "#"+cellData.props.color
+          ctx.fillText(cellData.contents, c*state.cellWidth(), r*state.cellHeight())
+          # ctx.fillStyle ="white"
+
+  drawTileCircles: (tile, absTilePoint, zoom, density) ->
+    if not density then return false
+
+    ctx = tile.getContext('2d')
+    offset= config.minLayerZoom()-zoom
+    radius = density*offset*128
+    if radius>96 then radius=96
+    if radius<10 then radius=10
+    ctx.fillStyle = "rgba(255, 255, 255, 0.8 )"
+    ctx.beginPath()
+    ctx.arc(96, 128, radius, 0, Math.PI*2, true)
+    ctx.closePath()
+    ctx.fill()
+    return
+    
+  tileDrawn: (tile) ->
+    @_tileOnLoad.call tile
+    
+  getTilePointAbsoluteBounds: ->
+    if this._map
+      bounds = this._map.getPixelBounds()
+      tileSize= this.options.tileSize
+      offset = Math.pow 2, state.zoomDiff()
+      nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x)*offset, Math.floor(bounds.min.y / tileSize.y)*offset)
+      seTilePoint = new L.Point( Math.ceil(bounds.max.x / tileSize.x)*offset, Math.ceil(bounds.max.y / tileSize.y)*offset)
+      tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
+      return tileBounds
+    else
+      return false
+
+  getCenterTile: ->
+    bounds= @getTilePointAbsoluteBounds()
+    if bounds #this is always used inside a poll, as it's hard to see if our tiles really have loaded
+      center = bounds.getCenter()
+      return center
+    else
+      return false
+)
+
+
 
 # window.times =[]
 # 
@@ -47,8 +148,8 @@ getTileLocally =(absTilePoint, tile) ->
 L.DomTileLayer = L.Class.extend
   includes: L.Mixin.Events
   options:
-    minZoom: config.minZoom()
-    maxZoom: config.maxZoom() #18
+    minZoom: config.minLayerZoom()-1 # we're handling this elsewhere, but we don't want it accidentally loading this layer way zoomed out, like on reload 
+    maxZoom: config.maxZoom()
     tileSize:
       x: 256
       y: 256
@@ -81,7 +182,6 @@ L.DomTileLayer = L.Class.extend
     true
 
   onAdd: (map, insertAtTheBottom) ->
-    
     @_map = map
     @_insertAtTheBottom = insertAtTheBottom
     @_initContainer()
@@ -104,7 +204,7 @@ L.DomTileLayer = L.Class.extend
     
 
     # $(@_container).remove()
-    console.log 'onRemove called'
+    # console.log 'onRemove called'
     map._panes.tilePane.removeChild @_container
     map.off "viewreset", @_resetCallback, this
     map.off "moveend", @_update, this
@@ -210,6 +310,7 @@ L.DomTileLayer = L.Class.extend
     len = @_tilesToLoad
 
     while k < len
+      # console.log queue[k]
       @_addTile queue[k], fragment
       k++
     @_container.appendChild fragment
@@ -316,31 +417,21 @@ L.DomTileLayer = L.Class.extend
     # tile.src = @getTileUrl(tilePoint, zoom)
     tile._tilePoint = tilePoint
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
-    # dbg 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
+    # console.log 'loadTile called for abstp: ', absTilePoint.x, absTilePoint.y
     layer.tileDrawn(tile)
  
-    # if state.zoomDiff() > 4 # only doTimeout if its zoomed out far enough
-    #   dbg 'popualteDelay timer active'
-    #   $(tile).doTimeout 'populateDelay', 500, ->
-    #     frag=getTileLocally(absTilePoint, tile)
-    #     if frag
-    #       layer.populateTile(tile, tilePoint, zoom, frag)
-    #     else
-    #       now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-    #         frag=betterBuildTile(tile, tileData, atp)
-    #         layer.populateTile(tile, tilePoint, zoom, frag)
-    #     return false #so it doesn't poll
-    # else
-
     # check index of tiles otherwise TODO
-    frag=getTileLocally(absTilePoint, tile)
-    if frag
-      layer.populateTile(tile, tilePoint, zoom, frag)
-    else
-      now.getTile absTilePoint, state.numRows(), (tileData, atp)->
-        frag=betterBuildTile(tile, tileData, atp)
+    delay 0, ->
+      frag=getTileLocally(absTilePoint, tile)
+      if frag
         layer.populateTile(tile, tilePoint, zoom, frag)
-    tile
+      else
+        now.getTile absTilePoint, state.numRows(), (tileData, atp)->
+          delay 0, ->
+            frag=betterBuildTile(tile, tileData, atp)
+            layer.populateTile(tile, tilePoint, zoom, frag)
+
+    return tile
 
   drawTile: (tile, tilePoint, zoom, frag)->
     tile.appendChild(frag) # tile.appendChild(content.cloneNode(true))
@@ -354,10 +445,6 @@ L.DomTileLayer = L.Class.extend
 
   tileDrawn: (tile) ->
     tile.className += ' leaflet-tile-drawn'
-    # $.doTimeout 200, ->
-    #   dbg 'tiledrawntimer'
-    #   tile.className += ' leaflet-tile-drawn'
-    #   return false
     @_tileOnLoad.call(tile)
     true
 
@@ -365,10 +452,6 @@ L.DomTileLayer = L.Class.extend
     # dbg '_tileOnLoad called'
     layer = @_layer
     @className += " leaflet-tile-loaded"
-    # $.doTimeout 500, =>
-    #   console.log 'tiledrawntimer'
-    #   @className += ' leaflet-tile-loaded'
-    #   return false
     layer.fire "tileload",
       tile: this
       url: @src
@@ -388,30 +471,17 @@ L.DomTileLayer = L.Class.extend
     true
 
   _onTileUnload: (e) ->
-    # $(e.tile).doTimeout 'populateDelay' #cancels the timer
-    # console.log 'tile to unload:'
-    # console.log e.tile
+    # console.log 'tile to unload:', e.tile
     tile = e.tile
-    #the fix!
     tile.style.display = 'none'
-    #what was I doing below? tile doesn't have a ._zoom prop. I could give it one...
-    # better to hook in to the _remove func
- 
-#     if e.tile._zoom == map.getZoom()
-#       dbg 'unload due to pan, easy'
-#       # for c in e.tile._cells
-#       #   c.kill()
-#       # e.tile = null #maybe dont' need to do this
-#     else if e.tile._zoom < map.getZoom()
-#       dbg 'unload due to zoom in, less easy'
-#     else if e.tile._zoom > map.getZoom()
-#       dbg 'zoom out' # this case requires nothing, every cell will still be there
-    true
+    return true
 
   _removeCellsFromTile: (tile) ->
     if tile._cells
       for c in tile._cells
-        c.kill
+        c.kill()
+      tile._cells = null
+    return
 
   getTilePointBounds: ->
     bounds = this._map.getPixelBounds()
@@ -419,7 +489,7 @@ L.DomTileLayer = L.Class.extend
     nwTilePoint = new L.Point( Math.floor(bounds.min.x / tileSize.x), Math.floor(bounds.min.y / tileSize.y))
     seTilePoint = new L.Point( Math.floor(bounds.max.x / tileSize.x), Math.floor(bounds.max.y / tileSize.y))
     tileBounds = new L.Bounds(nwTilePoint, seTilePoint)
-    tileBounds
+    return tileBounds
 
   # getTilePointAbsoluteBoundsTrue: -> #this version doesn't have the additional buffertile, for use with getCenterTile
   #   bounds = this._map.getPixelBounds()

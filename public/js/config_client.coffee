@@ -1,5 +1,5 @@
 window.DEBUG = false
-window.USEMAP = true
+window.NOMAP = false
 window.VARYLATLNG = false
 window.MapBoxBadZoomOffset=3 #3 for mapbox, 2 for a ts with max zoom of 18
 
@@ -8,54 +8,60 @@ mapBoxUrl = "http://{s}.tiles.mapbox.com/v3/zischwartz.map-ei57zypj/{z}/{x}/{y}.
 
 tileServeUrl = "http://23.23.200.225/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png"
 
+colorOptions=[
+   '92A5C7'
+   '4E7BCE'
+   '6B52D2'
+   '3EC8B9'
+   '0500FF'
+   'EC535A'
+   'D64BA2'
+   'D91D27' ]
+
 Configuration = class Configuration
   constructor: (spec = {}) ->
     @tileSize = -> spec.tileSize ? {x: 192, y: 256} #been using THIS one
+    # @tileServeUrl = -> spec.tileServeUrl ? tileServeUrl # @tileServeUrl = -> s3Url 
     @tileServeUrl = -> mapBoxUrl #spec.tileServeUrl ? mapBoxUrl # tileServeUrl
 
     @maxZoom = -> spec.maxZoom ? 20 # this is super important and sets the resolution. was 18, current image tiles are only 18
-    @minZoom = -> spec.minZoom ? 15 # was 16
+    @minZoom = -> spec.minZoom ? 11 # was 16
     @defZoom = -> spec.defZoom ? 16 # was 17 till weds night before thesis
-    @minLayerZoom = -> spec.minLayerZoom ? 16 #turn off the layer at this zoom
+    @minLayerZoom = -> spec.minLayerZoom ? 16 # was 16. turn off the interactive layer
+    @minCircleZoom = -> spec.minCircleZoom ? 13
+
     @defaultChar = -> spec.defaultChar ? " "
-    @inputRateLimit = -> spec.inputRateLimit ? 20
-    @maxDistanceFromOfficial = -> spec.maxDistanceFromOfficial ? 10000 # from official City, for rollout, see below
-    @scrollWheelZoom= -> false
-    @autoPan = -> false
+    @inputRateLimit = -> spec.inputRateLimit ? 80# was 20 # actually for arrowkey, not input
+    @maxDistanceFromOfficial = -> spec.maxDistanceFromOfficial ? 15000 # from official City, for rollout, see below
+
+    # leaflet
+    @scrollWheelZoom= -> true#false
     @updateWhenIdle = -> false
-    #not implimented
-    # @maxJumpDistance = spec.maxJumpDistance ? 0 # 0 no max, -1=no jumps, units are cells I supose 
+  
+    @autoPan = -> true
+
+    initialPosReal=initialPos
+    @initialPos= ->
+      if initialPosReal == 'false' #sigh
+        return false
+      else
+        # l = {x:parseFloat(initialPosReal.x), y: parseFloat(initialPosReal.y)}
+        return initialPosReal
+
+    isReallyAuth= isAuth
+    @isAuth = -> isReallyAuth ? false
+
+    @maxJumpDistance = -> 100
+    @colorOptions= colorOptions
 
 window.config = new Configuration(window.worldSpec)
+
 
 window.officialCities =
   'New York City': new L.LatLng(40.73037270272987, -73.99361729621887)
   # 'Washington DC': new L.LatLng(38.898715, -77.037655)
+  # 'Boston': new L.LatLng(42.358431,-71.059773)
+  # 'Columbus': new L.LatLng( 39.961176,-82.998794)
+  # 'San Francisco': new L.LatLng(37.77493,-122.419415)
 
-
-
-# Thoughts!
-# <- is a link. the arrow, not the hash. hash for location maybe. hover for url, location name
-# get a limited number of those. 3? 1? regenerates over time/typing?
-# also for links to locations in world. generate hash, link your friends
-
-
-# attempt to hide address bar iOS
-# window.addEventListener "load", ->
-#   setTimeout ->
-#     console.log 'trying to scroll yo'
-#     window.scrollTo(0,0)
-#   , 0
-
-
-#ratio of row/cols in WW was .77.. (14/18)
-  # ALT TILE SIZES/RATIO
-  # @tileSize = -> spec.tileSize ? {x: 128, y: 256} #the best powers of 2
-  # @tileSize = -> spec.tileSize ? {x: 128, y: 196}
-  # @tileSize = -> spec.tileSize ? {x: 128, y: 160} #this one is good, but 160 isn't a power of 2
-  # @tileSize = -> spec.tileSize ? {x: 256, y: 256}
-  # @tileSize = -> spec.tileSize ? {x: 192, y: 224} #liking this one
-
-
-  # tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png' # tileServeUrl = 'http://ec2-107-20-56-118.compute-1.amazonaws.com/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png' # tileServeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/999/256/{z}/{x}/{y}.png'
 

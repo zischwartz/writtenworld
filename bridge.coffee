@@ -8,18 +8,29 @@ leaflet = require './lib/leaflet-custom-src.js'
 
 module.exports = (everyone, SessionModel) ->
   
-  processRite = (cellPoint, contents, nowUser, currentWorldId, callback) ->
+  processRite = (cellPoint, contents, nowUser, nowThis, currentWorldId, callback) ->
     cid = nowUser.clientId
     sid= decodeURIComponent nowUser.cookie['connect.sid']
     color= nowUser.session?.color
-    
-    #otherwise, main or personal
+
+    # console.log contents
+    # console.log typeof contents
+    if typeof contents isnt 'string'
+      extras=contents
+      contents= extras.contents
+      delete extras.contents
+      # console.log 'extras', extras
+      # console.log 'contents', contents
+
     # If user has an account and is logged in
     if nowUser.session.auth
-      personalWorld = models.ObjectIdFromString(nowUser.personalWorldId)
-      
+      personalWorld = models.ObjectIdFromString(nowThis.personalWorldId)
       riter=nowUser.session.auth.userId
-      rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], echoes:-1, downroters:[], color: color}})
+      rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], isLocal: nowThis.isLocal, echoes:-1, downroters:[], color: color}})
+      if extras
+        for k,v of extras
+          rite.props[k]=v
+
       models.Cell .findOne({world: personalWorld, x:cellPoint.x, y: cellPoint.y}) .populate('current')
       .run (err, cell) ->
           console.log err if err
@@ -28,11 +39,14 @@ module.exports = (everyone, SessionModel) ->
           rite.save (err) ->
             cell.current= rite._id
             cell.save()
-      if nowUser.personalWorldId.toString() is currentWorldId  #check if they're already in their own world (heh)
-        console.log 'was actually writing directly to yr world, so skip the echo behavior below'
+
+      if nowThis.personalWorldId.toString() is currentWorldId  #check if they're already in their own world (heh)
+        # console.log 'was actually writing directly to yr world, so skip the echo behavior below'
         callback('normalRite', rite, cellPoint)
         return
-    else # Not logged in
+
+    # Not logged in
+    else
       riter = nowUser.soid #session object id
 
     models.Cell
@@ -51,7 +65,6 @@ module.exports = (everyone, SessionModel) ->
           # console.log determineStatus(cell, riter)
           [already, alreadyPos] = determineStatus(cell, riter)
        
-        #todo load the world, outside of this function, it its not main or personal
         logic=
           blankCurrently : not cell?.current or cell?.current?.contents == models.mainWorld.config.defaultChar #TODO make this a config
           blankRite: contents == models.mainWorld.config.defaultChar
@@ -65,51 +78,51 @@ module.exports = (everyone, SessionModel) ->
         logic.legitDownrote= not logic.blankCurrently and not logic.potentialEcho and already != 'downroter'
         originalOwner = cell.current?.owner
 
-        debug = ' '
-        for k, v of logic
-         debug+="#{k} : #{v}  .  "
+        # debug = ' '
+        # for k, v of logic
+        #  debug+="#{k} : #{v}  .  "
         
-        rite = new models.Rite({contents: contents, owner:riter, props:{echoers:[], echoes:-1, downroters:[], color: color}})
-        console.log ' '
-        # console.log ' '
-        # console.log 'riter ', riter
+        rite = new models.Rite({contents: contents, owner:riter, props:{isLocal:nowThis.isLocal, echoers:[], echoes:-1, downroters:[], color: color}})
+        if extras
+          for k,v of extras
+            rite.props[k]=v
         # console.log debug
 
         if logic.blankCurrently
-          console.log 'Blank, just write'
+          # console.log 'Blank, just write'
           normalRite(cell, rite, riter, logic)
           callback('normalRite', rite, cellPoint)
         else if logic.potentialEcho and logic.already == 'echoer'
-          console.log 'Echoing yourself too much will make you go blind'
+          # console.log 'Echoing yourself too much will make you go blind'
           logic.riteToHistory=false
           callback('alreadyEchoed')
         else if logic.already=='downroter' and not logic.potentialEcho
-          console.log 'You cannot downrote again '
+          # console.log 'You cannot downrote again '
           logic.riteToHistory=false
           callback('alreadyDownroted')
         else if logic.legitEcho
-            console.log 'Legit echo, cool'
+            # console.log 'Legit echo, cool'
             echoIt(cell, rite, riter, logic)
-            callback('echo', rite, cellPoint, cell.current.props)
+            callback('echo', rite, cellPoint, cell.current.props, originalOwner)
         else if logic.cEchoes<=0
-            console.log 'Legit overrite, there were no echoes'
+            # console.log 'Legit overrite, there were no echoes'
             overriteIt(cell, rite, riter, logic) # this changes c.current to the rite
-            callback('overrite', rite, cellPoint, cell.current.props)
+            callback('overrite', rite, cellPoint, cell.current.props, originalOwner)
         else if logic.cEchoes>=1
-            console.log '.'
+            # console.log '.'
             if logic.already isnt 'echoer'
-              console.log 'Legit Downrote'
+              # console.log 'Legit Downrote'
               downroteIt(cell, rite, riter, logic)
-              callback('downrote', rite, cellPoint, cell.current.props)
+              callback('downrote', rite, cellPoint, cell.current.props, originalOwner)
             else if logic.already == 'echoer'
               if logic.cEchoes ==1
                 console.log 'Overrite something you echoed!'
                 overriteIt(cell, rite, riter, logic)
-                callback('overrite', rite, cellPoint, cell.current.props)
+                callback('overrite', rite, cellPoint, cell.current.props, originalOwner)
               else
                 console.log 'Downroting something you echoed!'
                 downroteIt(cell, rite, riter, logic)
-                callback('downrote', rite, cellPoint, cell.current.props)
+                callback('downrote', rite, cellPoint, cell.current.props, originalOwner)
         else
           console.log 'WELL SHIT THIS SHOULDNT HAVE HAPPENED'
         
@@ -127,9 +140,11 @@ module.exports = (everyone, SessionModel) ->
             if user and logic.legitEcho
               user.totalEchoes+=1
               user.save (err)-> console.log err if err
-              user.emit('receivedEcho', rite)
-            if user and logic.legitDownrote and originalOwner.toString() isnt riter.toString()
-              user.emit('receivedOverRite', rite)
+              #
+              # Removed in favor of using the CUser obj
+              # user.emit('receivedEcho', rite)
+            # if user and logic.legitDownrote and originalOwner.toString() isnt riter.toString()
+              # user.emit('receivedOverRite', rite)
 
   # END processRite
 

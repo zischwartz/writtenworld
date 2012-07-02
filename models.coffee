@@ -74,29 +74,29 @@ exports.World.findOne {name: 'main'}, (err, world)->
       exports.mainWorld
 
 
-exports.World.findOne {name: 'words'}, (err, world)->
-  if world
-    console.log ' Found word world'
-  else
-    console.log ' Could not find WORD  world...'
-    world = new exports.World
-      name: 'words'
-      personal: false
-      public: true
-      config:
-        maxZoom:20
-        minZoom:10
-        tileSize:
-          x: 192
-          y: 256
-        tileServeUrl: "http://23.23.200.225/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png"  #"http://s3.amazonaws.com/ww-tiles/wwtiles/{z}/{x}/{y}.png"
-        ruleSet: true
-        props:
-          echoes: false
-
-    world.save (err, world) ->
-      console log err if err
-      console.log 'So we created the word world'
+# exports.World.findOne {name: 'words'}, (err, world)->
+#   if world
+#     console.log ' Found word world'
+#   else
+#     console.log ' Could not find WORD  world...'
+#     world = new exports.World
+#       name: 'words'
+#       personal: false
+#       public: true
+#       config:
+#         maxZoom:20
+#         minZoom:10
+#         tileSize:
+#           x: 192
+#           y: 256
+#         tileServeUrl: "http://23.23.200.225/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png"  #"http://s3.amazonaws.com/ww-tiles/wwtiles/{z}/{x}/{y}.png"
+#         ruleSet: true
+#         props:
+#           echoes: false
+# 
+#     world.save (err, world) ->
+#       console log err if err
+#       console.log 'So we created the word world'
 
 RiteSchema = new Schema
   contents: {type: String, default: ' '} #conig TODO
@@ -110,12 +110,10 @@ RiteSchema.methods.getOwner= (cb)->
 Rite = mongoose.model('Rite', RiteSchema)
 exports.Rite = Rite
 
-
 CellSchema = new Schema
   world: ObjectId
   x: {type: Number, required: true, min: 0}
   y: {type: Number, required: true, min: 0}
-  # contents: {type: String, default: ' '}
   current: { type: Schema.ObjectId, ref: 'Rite' }
   history: [{ type: Schema.ObjectId, ref: 'Rite' }]
 
@@ -123,6 +121,28 @@ CellSchema.index {world:1, x:1, y:1}, {unique:true}
 
 exports.Cell = mongoose.model('Cell', CellSchema)
 
+# asyncReal=(data, callback) ->
+#   process.nextTick ->
+#     callback(data)
+
+NoteSchema = new Schema
+  x: {type: Number, required: true, min: 0}
+  y: {type: Number, required: true, min: 0}
+  contents: {type: String, default: ''}
+  read:{type:Boolean, default: false}
+  to: { type: Schema.ObjectId }
+  from: { type: Schema.ObjectId}
+  fromLogin: {type: String}
+  type: {type: String}
+  date: { type: Date, default: Date.now }
+  #impliment these
+  world: ObjectId
+  cellPoints: [
+    x: {type: Number}
+    y: {type: Number}
+  ]
+
+exports.Note = mongoose.model('Note', NoteSchema)
 
 
 mongooseAuth=require('mongoose-auth')
@@ -135,7 +155,8 @@ UserSchema = new Schema
   personalWorld: ObjectId
   email: String
   powers:
-    jumpDistance: {type: Number, default: 500}
+    jumpDistance: {type: Number, default: 500000}
+    lastLinkOn: {type: Date, default: new Date(0)} #epoch
 
 console.log 'debug?', DEBUG
 
@@ -212,3 +233,27 @@ Array::filter = (func) -> x for x in @ when func(x)
 # console.log util.inspect exports.User, true, 2, true
 
 exports.mongooseAuth= mongooseAuth
+
+
+
+clone = (obj) ->
+  if not obj? or typeof obj isnt 'object'
+    return obj
+
+  if obj instanceof Date
+    return new Date(obj.getTime()) 
+
+  if obj instanceof RegExp
+    flags = ''
+    flags += 'g' if obj.global?
+    flags += 'i' if obj.ignoreCase?
+    flags += 'm' if obj.multiline?
+    flags += 'y' if obj.sticky?
+    return new RegExp(obj.source, flags) 
+
+  newInstance = new obj.constructor()
+
+  for key of obj
+    newInstance[key] = clone obj[key]
+
+  return newInstance

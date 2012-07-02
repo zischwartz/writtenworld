@@ -15,19 +15,27 @@ window.state =
     config.tileSize().x/state.numCols()
   cellHeight: ->
     config.tileSize().y/state.numRows()
-  belowInputRateLimit: true
-  topLayerStamp: null
-  baseLayer: null
+
+  topLayerStamp: null #assigning in init to domtiles
+  lastLayerStamp: null
+  isTopLayerInteractive: true
+  
   cursors: {}
+  isLocal: true
+  # belowInputRateLimit: true
+  belowArrowKeyRateLimit: true
+  linkurl:false
 
 setTileStyle = ->
  width = state.cellWidth()
  height = state.cellHeight()
  fontSize = height*0.9
  rules = []
- rules.push("div.leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
+ # rules.push("div.leaflet-tile span { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
+ rules.push(".cell { width: #{width}px; height: #{height}px; font-size: #{fontSize}px;}")
  $("#dynamicStyles").text rules.join("\n")
 
+# just yr cursor
 window.setCursor = (cell) ->  # takes the object, not the dom element
   if state.selectedEl
     $(state.selectedEl).removeClass('selected')
@@ -35,16 +43,20 @@ window.setCursor = (cell) ->  # takes the object, not the dom element
   $(cell.span).addClass('selected')
   state.selectedCell =cell
   now.setCursor cellKeyToXY cell.key
- 
-  if cell.props
-    if cell.props.decayed
-     cell.animateTextRemove(1)
-  true
+  # if cell.props?.decayed
+  #  cell.animateTextRemove(1)
+  return true
 
+moveCursor = (direction, from = state.selectedCell, force=false, arrowKey=false) ->
+  if arrowKey
+    if not (state.belowArrowKeyRateLimit)
+      return false
+    state.belowArrowKeyRateLimit = false
+    $.doTimeout 'keydownlimit', config.inputRateLimit(), ->
+      state.belowArrowKeyRateLimit =true
+      return false
 
-moveCursor = (direction, from = state.selectedCell) ->
   target = cellKeyToXY(from.key)
-  
   switch direction
     when 'up'
       target.y =  target.y-1
@@ -61,20 +73,20 @@ moveCursor = (direction, from = state.selectedCell) ->
     return false
      # throw 'cell does not exist'
   else
-
-    panIfAppropriate(direction) if config.autoPan()
+    if config.autoPan() or force
+      panIfAppropriate(direction, force)
     setCursor(targetCell)
     return targetCell
 
 window.centerCursor = ->
   $.doTimeout 400, ->
-    # target = window.domTiles.getCenterTile()
-    # console.log state.topLayerStamp
+    if state.selectedCell and $(".selected").length
+      inputEl.focus()
+      return false # they clicked and set it themselves, so don't center it
     layer=getLayer(state.topLayerStamp)
     if not layer
       return true
     target=layer.getCenterTile()
-    # console.log('center cursor poll')
     key = "c#{target.x}x#{target.y}"
     targetCell=Cell.all()[key]
     if not targetCell
@@ -82,11 +94,14 @@ window.centerCursor = ->
     else
       setCursor(targetCell)
       state.lastClickCell = targetCell
+      inputEl.focus()
+      $('.leaflet-tile a').tooltip({placement:'top'})
       return false
-    true
+  return true
 
 #INTERFACE INITIALIZER 
 initializeInterface = ->
+
   $("#map").click (e) ->
     # console.log e.target
     if $(e.target).hasClass 'cell'
@@ -94,81 +109,89 @@ initializeInterface = ->
       state.lastClickCell = cell
       setCursor(cell)
       inputEl.focus()
+      return false
+    else if e.target.href
+      return true
     else
       inputEl.focus()
       return false
 
   window.inputEl = $ "#input"
   inputEl.focus()
+  $('.navbar a').tooltip({placement:'bottom'})
 
   map.on 'zoomend', ->
     inputEl.focus()
-
-  map.on 'viewreset', (e) ->
-    $("#loadingIndicator").fadeIn('fast')
-    if map.getZoom() >= config.minLayerZoom() and not state.topLayerStamp
-      turnOnMainLayer() #should be turnOnLastLayer 
+    $("#loadingIndicator").fadeOut('fast')
   
-  map.on 'dblclick', (e) ->
-    $("#loadingIndicator").fadeIn('fast')
+  $userTotalRites = $("#userTotalRites")
 
-  $(".leaflet-control-zoom-in, .leaflet-control-zoom-out").click (e) ->
-    $("#loadingIndicator").fadeIn('fast')
+
+  ignorefirstcolor=true
+  $("#colorPicker").colorpicker
+    realtime: false
+    color: config.colorOptions[ Math.floor(Math.random() * 8)]
+    swatches: config.colorOptions
+    onSelect: (color, inst)->
+      if ignorefirstcolor
+        ignorefirstcolor = false
+        return
+      state.color= color.hex
+      now.setServerState('color', state.color)
+      # console.log 'setting color'
+      # $.colorpicker._hideColorpicker()
+
 
   inputEl.keypress (e) ->
     # console.log e.which
+    if not state.isTopLayerInteractive
+      return false
     if e.which in [0, 13, 32, 9, 8] # 40, 39, 38  were here, but that seems to be single quote?
-      # console.log 'SPECIAL KEY, screw this keypress'
       return false
     else
       c = String.fromCharCode e.which
-      state.selectedCell.write( c)
+      state.selectedCell.write(c)
 
-      userTotalRites=parseInt($("#userTotalRites").text())
-      $("#userTotalRites").text(userTotalRites+1)
-      # cellPoint = cellKeyToXY state.selectedCell.key
-
+      userTotalRites=parseInt($userTotalRites.text())
+      $userTotalRites.text(userTotalRites+1)
       moveCursor(state.writeDirection)
-
-    # inp = String.fromCharCode(event.keyCode)
-    # if (/[a-zA-Z0-9-_ ]/.test(inp))
-      # console.log("input was a letter, number, hyphen, underscore or space")
+      return
 
   inputEl.keydown (e) ->
-    # e.stopPropagation() # e.stopImmediatePropagation()
+    if not state.isTopLayerInteractive
+      return false
 
-    if not (state.belowInputRateLimit)
-      return false
-    state.belowInputRateLimit = false
-    $.doTimeout 'keydownlimit', config.inputRateLimit(), ->
-      state.belowInputRateLimit =true
-      return false
+    # if not (state.belowInputRateLimit)
+    #   return false
+    # state.belowInputRateLimit = false
+    # $.doTimeout 'keydownlimit', config.inputRateLimit(), ->
+    #   state.belowInputRateLimit =true
+    #   return false
 
     switch e.which
       when 9 #tab
         e.preventDefault()
         return false
       when 38
-        moveCursor('up')
+        moveCursor('up', null, true, true)
       when 40
-        moveCursor('down')
+        moveCursor('down', null, true, true)
       when 39
-        moveCursor('right')
+        moveCursor('right', null, true, true)
       when 37
-        moveCursor('left')
+        moveCursor('left', null, true, true)
       when 8 # delete
-        moveCursor 'left'
+        moveCursor 'left' , null
         state.selectedCell.clear()
         setCursor(state.selectedCell)
       when 13 #enter
-        t = moveCursor 'down', state.lastClickCell
+        t = moveCursor 'down', state.lastClickCell, true
         state.lastClickCell = t
       when 32 #space
         state.selectedCell.clear()
         moveCursor state.writeDirection
     # return false
 
-  # todo limit 
   $("#locationSearch").submit ->
     locationString= $("#locationSearchInput").val()
     $.ajax
@@ -177,15 +200,31 @@ initializeInterface = ->
         result =  data['ResultSet']['Results'][0]
         latlng = new L.LatLng parseFloat(result.latitude), parseFloat(result.longitude)
         km=latlng.distanceTo(state.geoPos)/1000
-        # console.log km
-        # console.log state.userPowers.jumpDistance
-        if km <= state.userPowers.jumpDistance
+        if km<=config.maxJumpDistance()
           map.panTo(latlng)
           state.geoPos= latlng
+        else if config.isAuth()
+          state.isLocal = false
+          map.panTo(latlng)
+          state.geoPos= latlng
+          now.isLocal= false
         else
-          insertMessage('Too Far!', "Sorry, you can't jump that far. Get some echoes to go further than #{state.userPowers.jumpDistance}km.")
+          insertMessage('Too Far!', "Sorry, you can't jump that far. Signup to go further than #{config.maxJumpDistance()} km.")
         $('#locationSearch').modal('hide')
         centerCursor()
+    return false
+
+  $("a#makeLink").click ->
+    if not config.isAuth()
+      insertMessage('Register', 'If you want to add links', "alert-error")
+      return false
+    else
+      return true
+
+  $("#linkModal").submit ->
+    $('#linkModal').modal('hide')
+    url= $("#linkurl").val()
+    state.linkurl=url
     return false
 
   $(".modal").on 'shown', ->
@@ -193,17 +232,6 @@ initializeInterface = ->
  
   $(".modal").on 'hidden', ->
     inputEl.focus()
-
-  $(".leaflet-control-zoom-in").click (e) ->
-    map.zoomIn()
-    return
-
-  $(".leaflet-control-zoom-out").click (e) ->
-    if map.getZoom() <=config.minLayerZoom() and state.topLayerStamp
-      removeLayerThenZoomOut()
-    else
-      map.zoomOut()
-    return
 
   $(".trigger").live 'click', ->
     action= $(this).data('action')
@@ -215,29 +243,38 @@ initializeInterface = ->
     $(this).parent().addClass('active')
     # console.log 'trigger triggered'
 
-    if action == 'set' #change this (and setUserOption below) setServerState
+    if type == 'geoLink'
+      now.createGeoLink(state.selectedCell.key.slice(1), map.getZoom())
+      #dang this won't work zoomed out, i don't have a selected cell...
+
+    if action == 'set' #setServerState, more properly, like color
       state[type]=payload
-      now.setUserOption(type, payload)
-    if action == 'setClientState' # unrelated to setClientStateFromServer 
-      # console.log 'settingClientState', type
+      now.setServerState(type, payload)
+    if action == 'setClientState' # unrelated to setClientStateFromServer, used for stuff like writedirection
       state[type] = payload
-    
-    
-    #specific interfaces
 
-    # Layer Switching
-    if type=='layer'
-      $("#worldLayer").html(text+'<b class="caret"></b>' )
-      if payload=='off' and state.topLayerStamp
-        turnOffLayer()
-      else if payload=='main'
-        turnOnMainLayer()
-      else
-        switchToLayer(payload)
+    if action == 'goto'
+      goToCell(payload, map.getZoom())
 
-    if type == 'color'
+    if action is 'show' and type is 'notes'
+      $('#notes').slideToggle().find('.loading').load("/notes/#{payload}")
+      $("#notes li.#{payload}").addClass('active')
+      if payload is 'unread'
+        $(this).find('i').removeClass('hasUnread')
+      return false
+
+    if action is 'get' and type is 'notes'
+      $('#notes .loading').load("/notes/#{payload}")
+      $("#notes li.#{payload}").addClass('active')
+      return false
+      
+
+    # if type=='layer'
+      # do something
+  
+    # if type == 'color'
       # console.log 'ch color'
-      $("#color").addClass(payload)
+      # $("#color").addClass(payload)
     if type == 'writeDirection'
       c= this.innerHTML
       $('.direction-dropdown')[0].innerHTML=c
@@ -253,13 +290,15 @@ initializeInterface = ->
     return
 
 
-panIfAppropriate = (direction)->
+panIfAppropriate = (direction, force)->
   selectedPP= $(state.selectedEl).offset()
-  panOnDist = 200
+  panOnDist = 120
   if direction is 'left' or direction is 'right'
-    panByDist = state.cellWidth()
+    panByDist = config.tileSize().x 
+    panByDist = state.cellWidth() if force
   else
-    panByDist = state.cellHeight()
+    panByDist = config.tileSize().y/2
+    panByDist = state.cellHeight() if force
   if direction == 'up'
     if selectedPP.top < panOnDist
       pan(0, 0-panByDist)
@@ -275,40 +314,79 @@ panIfAppropriate = (direction)->
 
 
 jQuery ->
-  tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()})
-  state.baseLayer= tileServeLayer
+  welcome()
 
-  centerPoint= new L.LatLng(40.714269, -74.005972)
+  if not window.NOMAP then tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()}) else  tileServeLayer = new L.TileLayer('', {maxZoom: config.maxZoom()})
+  # state.baseLayer= tileServeLayer
+
+  centerPoint= window.officialCities["New York City"]
   mapOptions =
     center: centerPoint
-    zoomControl: false
     attributionControl:false
     zoom: config.defZoom()
     scrollWheelZoom: config.scrollWheelZoom()
     minZoom: config.minZoom()
     maxZoom: config.maxZoom()-window.MapBoxBadZoomOffset
   window.map= new L.Map('map', mapOptions).addLayer(tileServeLayer)
-
-  initializeGeo()
   
+  map.preZoom= (zoomDelta,cb) ->
+    current= map.getZoom()
+    if zoomDelta > 0 #zooming out
+      if current <= config.minLayerZoom() and state.isTopLayerInteractive
+        layerUtils.remove(state.topLayerStamp)
+        $.doTimeout 200, ->
+          layerUtils.addCanvas()
+          return false
+        insertMessage('No Writing', " You've zoomed out too far to write. Zoom back in to write again.")
+
+    else if zoomDelta < 0  #zooming in
+      if current >= config.minLayerZoom()-1 and not state.isTopLayerInteractive
+        layerUtils.remove(state.topLayerStamp)
+        layerUtils.addDom()
+        #
+        # now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds()
+    
+    if current==config.minZoom()+1 and  zoomDelta > 0
+      insertMessage('Zoomed Out', "That's as far as you can zoom out right now.")
+      return false
+
+    cb()
+    return
+
+  state.geoLinked = window.location.hash.slice(1)
+  initializeGeo()
 
   now.ready ->
     doNowInit(now)
-    # now.core.socketio.on 'reconnect', ->
-    #   console.log 'reconnected!'
+    # now.core.socketio.on 'reconnect', -> #   console.log 'reconnected!'
     return # end now.ready
 
   return true # end doc.ready
 
 doNowInit= (now)->
-    domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
-    state.topLayerStamp = L.Util.stamp domTiles
+    # now.mapGoTo= (latlng) ->
+    #   console.log 'hi1', latlng
+    #   l = new L.LatLng(latlng.x, latlng.y)
+    #   map.setView(l)
 
-    now.setCurrentWorld(initialWorldId, personalWorldId)
+    # now.goToGeoLink(state.geoLinked) if state.geoLinked
+
+    domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+    
+    state.topLayerStamp = L.Util.stamp domTiles
+    now.isLocal= state.isLocal
+
+    now.setGroup(initialWorldId)
+    now.currentWorldId= initialWorldId
+    now.personalWorldId= personalWorldId #may be blank
+
     map.addLayer(domTiles)
     setTileStyle() #set initial
+
     map.on 'zoomend', ->
       setTileStyle()
+      $('.leaflet-tile a').tooltip({placement:'top'})
+
     initializeInterface()
     $("#loadingIndicator").fadeOut('slow')
     
@@ -322,41 +400,48 @@ doNowInit= (now)->
     map.on 'moveend', (e)->
       now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
       $("#loadingIndicator").fadeOut('slow')
-    map.on 'zoomend', (e)->
-      now.setBounds getLayer(state.topLayerStamp).getTilePointAbsoluteBounds() if state.topLayerStamp
-      $("#loadingIndicator").fadeOut('slow')
 
     now.setClientStateFromServer (s)->
       state.userPowers = s.powers
       if s.color # s is session
         state.color= s.color
-      else #easy fix for override issue, set default color. this could be random.
-        color_ops = ['c0', 'c1', 'c2', 'c3']
-        state.color=color_ops[ Math.floor(Math.random() * 4)]
-        # state.color = 'c0'
-        now.setUserOption('color',state.color)
-      
+        $('#colorPicker').colorpicker("option", "color", s.color)
+      else
+        $('#colorPicker').colorpicker("option", "color", s.color)
+        # state.color=config.colorOptions[ Math.floor(Math.random() * 8)]
+        now.setServerState('color', state.color)
+ 
     centerCursor()
 
+    now.goTo =(latlng) ->
+        map.panTo(latlng)
+        return
+      
     now.updateCursors = (updatedCursor) ->
+      # console.log updatedCursor
+      #todo, what if they go out of bounds and come back? something here is buggy
       if state.cursors[updatedCursor.cid]
         cursor=state.cursors[updatedCursor.cid]
         selectedCell = Cell.get(cursor.x, cursor.y)
-        $(selectedCell.span).removeClass("c#{cursor.color} otherSelected")
+        # console.log selectedCell
+        if selectedCell
+          selectedCell.cursor(false)
       state.cursors[updatedCursor.cid]= updatedCursor
       cursor= updatedCursor
       if cursor.x and cursor.y
         selectedCell = Cell.get(cursor.x, cursor.y)
-        $(selectedCell.span).addClass("c#{cursor.color} otherSelected")
+        if selectedCell
+          selectedCell.cursor(cursor.color)
       else
         delete state.cursors[cursor.cid] # on disconnect, remove
-  
+      return
+
     $("#getNearby").click ->
       now.getCloseUsers (closeUsers)->
         # console.log closeUsers
         $("#nearby").empty()
         if closeUsers.length is 0
-          $("ul#nearby").append -> $ '<li> <a>Sorry, no one is nearby. </a></li>'
+          $("ul#nearby").append -> $ "<li> <a>Sorry, no one is nearby. </a> <small> Or they're too zoomed out to count.</small></li>"
           return false
         cellPoint=cellKeyToXY state.selectedCell.key
         for user in closeUsers
@@ -367,17 +452,18 @@ doNowInit= (now)->
           if not user.login
             user.login= 'Someone'
           $("ul#nearby").append ->
-            arrow= $("<li><a><i class='icon-arrow-left' style='-moz-transform: rotate(#{user.degrees}deg);-webkit-transform: rotate(#{user.degrees}deg);'></i> #{user.login}</a></li>")
-        true
-
+            arrow= $("<li><a class='trigger' data-action='goto' data-payload='#{user.cursor.x-1}x#{user.cursor.y-1}'><i class='icon-arrow-left' style='-moz-transform: rotate(#{user.degrees}deg);-webkit-transform: rotate(#{user.degrees}deg);'></i> #{user.login}</a></li>")
+      return
+    
     now.drawRite = (commandType, rite, cellPoint, cellProps) ->
       # console.log(commandType, rite, cellPoint)
       c=Cell.get(cellPoint.x, cellPoint.y)
       c[commandType](rite, cellProps)
 
-    now.insertMessage = (heading, message, cssclass) ->
-      insertMessage(heading, message, cssclass)
+    now.insertMessage = (heading, message, cssclass, timing=6) ->
+      insertMessage(heading, message, cssclass, timing)
 ## END doNowInit()
+
 
 # this shouldn't get called until docready anyway...
 window.insertMessage = (heading, message, cssclass="", timing=6 ) ->
@@ -398,6 +484,7 @@ window.clearMessages = ->
 $().alert() #applies close functionality to all alerts
 
 #todo disable cell caching, because then they don't get liveupdated when not visible, duh...
+# possibly fixed, check with two screens
 
 window.Cell = class Cell
   all = {}
@@ -424,11 +511,17 @@ window.Cell = class Cell
     all[@key]=this
     @span = document.createElement('span')
     @span.innerHTML= @contents
+    if @props.linkurl
+      $(@span).addClass('link')
+      @span.innerHTML= "<a href='#{@props.linkurl}' TARGET='_blank' rel='tooltip' title='#{@props.linkurl}'>#{@contents}</a>"
+
     @span.id= @key
     $(@span).addClass('cell')
+
     if not @props.color
       @props.color = 'c0'
-    $(@span).addClass(@props.color)
+    # $(@span).addClass(@props.color)
+    @span.style.color="##{@props.color}"
     if @props.echoes
       $(@span).addClass("e#{@props.echoes}")
     
@@ -437,29 +530,43 @@ window.Cell = class Cell
       return newval
 
     $span = $(@span)
+    span=@span
     @props.watch "echoes", (id, oldval, newval) ->
-      # console.log "echoes changed, #{oldval} to #{newval}"
-      # console.log $span 
       $span.removeClass('e'+oldval)
       $span.addClass('e'+newval)
       return newval
 
     @props.watch "color", (id, oldval, newval) ->
-      # console.log "color changed, #{oldval} to #{newval}"
-      # console.log $span 
-      $span.removeClass(oldval)
-      $span.addClass(newval)
+      span.style.color="##{newval}"
       return newval
 
   write: (c) ->
     cellPoint = cellKeyToXY @key
-    now.writeCell(cellPoint,c)
+    if state.linkurl
+      contents={contents:c, linkurl: state.linkurl}
+      now.writeCell(cellPoint, contents)
+      state.linkurl=false
+      now.setServerState('linked', true)
+    else
+      now.writeCell(cellPoint, c)
+    return
     # TODO this is so simple, but really we should be handling this client side. lag will be frustrating.
 
+  cursor: (color) ->
+      if color
+        @span.style.backgroundColor='#'+color
+      else
+        @span.style.backgroundColor=''
+      return
+
   # COMMAND PATTERN
-  normalRite: (rite) ->
+  normalRite: (rite, cellProps) ->
     @contents = rite.contents
     @props.color= rite.props.color
+    if rite.props.linkurl
+      @props.linkurl=rite.props.linkurl
+      $(@span).addClass('link')
+      @span.innerHTML= "<a href='#{@props.linkurl}' TARGET='_blank' rel='tooltip' title='#{@props.linkurl}'>#{@contents}</a>"
 
   echo: (rite, cellProps) ->
     @props.echoes = cellProps.echoes
@@ -467,7 +574,7 @@ window.Cell = class Cell
     @props.color= cellProps.color
 
   overrite: (rite, cellProps) ->
-    @animateTextRemove(1)
+    @animateTextRemove()
     @contents = rite.contents
     @props.echoes =0
     @props.color= rite.props.color
@@ -485,22 +592,23 @@ window.Cell = class Cell
   clear: ->
     @write(config.defaultChar())
   
-  animateTextInsert: (animateWith=0, c) ->
-    if not prefs.animate.writing
-      @span.innerHTML = c
-      return
+  animateTextInsert: (c, animateWith, color=state.color, welcome=false) ->
     clone=  document.createElement('SPAN') #$(@span).clone().removeClass('selected')
-    clone.className='cell ' + state.color
+    clone.className='cell ' + color
     clone.innerHTML=c
     span=@span
+    if not animateWith
+        animateWith=Math.floor(Math.random() * 3)+1
     $(clone).css('position', 'absolute').insertBefore('body').addClass('ai'+animateWith)
     offset= $(@span).offset()
     $(clone).css({'opacity': '1 !important', 'font-size': '1em'})
     $(clone).css({'position':'absolute', left: offset.left, top: offset.top})
-    $(clone).doTimeout 200, ->
-      span.innerHTML = c
-      $(clone).remove()
-      return false
+    if not welcome
+      $(clone).doTimeout 200, ->
+        span.innerHTML = c
+        span.className+=" #{color} "
+        $(clone).remove()
+        return false
   
   animateText: (animateWith=0) ->
     span= @span #the original
@@ -510,22 +618,22 @@ window.Cell = class Cell
     $(clone).removeClass('selected')
     $(clone).addClass('aa').css({'position':'absolute', left: offset.left, top: offset.top}).hide() #?
     $(clone).queue ->
-      # $(this).show().css({'fontSize':'+=90', 'marginTop': -state.cellHeight()/2, 'marginLeft': -state.cellWidth()/2})
       $(this).show().css({'fontSize':'+=90' , 'marginTop': "-=45", 'marginLeft': "-=45"})
-      # $(this).addClass('aa'+animateWith)
       $(this).dequeue()
     $(clone).doTimeout 400, ->
-      # $(clone).removeClass('aa'+animateWith)
       $(this).css({'fontSize':'-=90', 'marginTop': 0, 'marginLeft': 0})
       this.doTimeout 400, ->
         $(span).show()
         $(clone).remove()
       return false
 
-  animateTextRemove: (animateWith=0) ->
+  animateTextRemove: (animateWith) ->
+    if not animateWith
+      animateWith= Math.floor(Math.random() * 3)+1
     span= @span #the original
     clone=  $(@span).clone()
     @span.innerHTML= config.defaultChar()
+    # @span.className= 'cell'
     offset= $(@span).position()#offset()
     $(@span).after(clone)
     $(clone).removeClass('selected')
@@ -550,57 +658,74 @@ window.Cell = class Cell
       return cell
 
 
-removeLayerThenZoomOut=  ->
-  Cell.killAll()
-  layer= map._layers[state.topLayerStamp]
-  $layer = $(".layer-#{state.topLayerStamp}")
-  $layer.fadeOut('slow')
-  # console.log 'turn off layer'
-  map.removeLayer(layer) if state.topLayerStamp
-  state.topLayerStamp = 0
-  now.setCurrentWorld(null)
-  map.zoomOut()
-  return
+layerUtils=
+  remove: (stamp) ->
+    layer= map._layers[stamp]
+    map.removeLayer(layer)
+    return
+  addCanvas: ->
+    canvasTiles = new L.WCanvas({tileSize:{x:192, y:256}})
+    map.addLayer canvasTiles
+    state.isTopLayerInteractive= false
+    state.topLayerStamp = L.Util.stamp(canvasTiles)
+    state.selectedCell = null
+    state.lastClickCell = null
+    now.setBounds false
+    return
+  addDom: ->
+    map.options.zoomAnimation = false
+    domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
+    map.addLayer(domTiles)
+    state.topLayerStamp = L.Util.stamp(domTiles)
+    state.isTopLayerInteractive= true
+    now.setBounds domTiles.getTilePointAbsoluteBounds()
+    inputEl.focus()
+    centerCursor()
+    $.doTimeout 1000, ->
+      map.options.zoomAnimation =true
+      return false
+    return
 
-
-turnOffLayer = ->
-  #hide the layer first, with css?
-  Cell.killAll()
-  layer= map._layers[state.topLayerStamp]
-  $layer = $(".layer-#{state.topLayerStamp}")
-  $layer.fadeOut('slow')
-  $.doTimeout 500, ->
-    # console.log 'turn off layer'
-    map.removeLayer(layer) if state.topLayerStamp
-    state.topLayerStamp = 0
-    now.setCurrentWorld(null)
-    return false
-  return
-
-turnOnMainLayer= ->
-  console.log 'turn on layer'
-  Cell.killAll()
-  now.setCurrentWorld(mainWorldId, personalWorldId)
-  domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
-  map.addLayer(domTiles)
-  stamp= L.Util.stamp(domTiles)
-  # console.log 'stamp', stamp
-  state.topLayerStamp = stamp
-  now.setBounds domTiles.getTilePointAbsoluteBounds()
-  inputEl.focus()
-  centerCursor()
-
-switchToLayer= (worldId) ->
-  #todo load ruleset/config from now
-  Cell.killAll()
-  map.removeLayer(getLayer(state.topLayerStamp)) if state.topLayerStamp
-  now.setCurrentWorld(worldId)
-  domTiles = new L.DomTileLayer {tileSize: config.tileSize()}
-  map.addLayer(domTiles)
-  state.topLayerStamp = L.Util.stamp domTiles
-  now.setBounds domTiles.getTilePointAbsoluteBounds()
-  inputEl.focus()
-  centerCursor()
+welcome = ->
+  welcome_message=[]
+  welcome_message.push c for c in "Hey. Try typing on the map./It'll be fun. I swear. "
+  welcome_cells=[]
+  $.doTimeout 8000, ->
+    $('.cS0').live 'click', ->
+      $.doTimeout 'welcome'
+      $('.cS0').addClass('ar1').doTimeout 200, -> @remove()
+    map.on 'movestart', ->
+      $('.cS0').addClass('ar1').doTimeout 200, -> @remove()
+      $.doTimeout 'welcome'
+      return false
+    layer=getLayer(state.topLayerStamp)
+    if not layer then return true
+    target=layer.getCenterTile()
+    target.x-=15
+    target.y-=10
+    initial_x = target.x
+    key = "c#{target.x}x#{target.y}"
+    targetCell=Cell.all()[key]
+    if not targetCell then return true
+    $.doTimeout 'welcome', 120, ->
+      l = welcome_message.shift()
+      if l == '/'
+        target.y+=1
+        target.x = initial_x
+      else
+        target.x+=1
+        key = "c#{target.x}x#{target.y}"
+        targetCell=Cell.all()[key]
+        targetCell.animateTextInsert(l, 4, 'cS0', true)
+        welcome_cells.push targetCell
+      if welcome_message.length
+        return true
+      else
+        $.doTimeout 8000, ->
+          $('.cS0').addClass('ar1').doTimeout 200, -> @remove()
+          return false
+        return false
+    return
 
 getLayer = (stamp) ->
   return map._layers[stamp]
@@ -620,11 +745,37 @@ window.shakeWindow =(s=1) ->
     b.trigger('stopRumble')
     false
   true
+
 #Having to create a point is dumb
 pan = (x, y)->
   p= new L.Point( x, y )
   map.panBy(p)
   map
+
+window.goToCell= (key, zoom=false) ->
+  if not zoom
+    [z, x, y] = key.split('x')
+  else
+    [x, y] = key.split('x')
+    z =zoom
+  zoomDiff=config.maxZoom()-z
+  numRC =Math.pow(2, zoomDiff)
+  cWidth = config.tileSize().x/numRC
+  cHeight = config.tileSize().y/numRC
+  pixelX = x*cWidth
+  pixelY = y*cHeight
+  # console.log pixelX, pixelY
+  latlng=map.unproject({x:pixelX, y:pixelY}, z)
+  # console.log latlng
+  map.setView(latlng, z)
+  $.doTimeout 200, ->
+    cell = Cell.get(x,y)
+    if not cell then return true
+    else
+      setCursor(cell)
+      return false
+  return latlng
+
 
 cellKeyToXY = (key) ->
   target= {}
