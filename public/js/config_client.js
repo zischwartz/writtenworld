@@ -61,6 +61,10 @@
         var _ref;
         return (_ref = spec.defaultChar) != null ? _ref : " ";
       };
+      this.inputRateLimit = function() {
+        var _ref;
+        return (_ref = spec.inputRateLimit) != null ? _ref : 80;
+      };
       this.maxDistanceFromOfficial = function() {
         var _ref;
         return (_ref = spec.maxDistanceFromOfficial) != null ? _ref : 15000;

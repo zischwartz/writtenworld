@@ -32,6 +32,7 @@
     isTopLayerInteractive: true,
     cursors: {},
     isLocal: true,
+    belowArrowKeyRateLimit: true,
     linkurl: false
   };
 
@@ -56,13 +57,26 @@
     return true;
   };
 
-  moveCursor = function(direction, from, force) {
+  moveCursor = function(direction, from, force, arrowKey) {
     var key, target, targetCell;
     if (from == null) {
       from = state.selectedCell;
     }
     if (force == null) {
       force = false;
+    }
+    if (arrowKey == null) {
+      arrowKey = false;
+    }
+    if (arrowKey) {
+      if (!state.belowArrowKeyRateLimit) {
+        return false;
+      }
+      state.belowArrowKeyRateLimit = false;
+      $.doTimeout('keydownlimit', config.inputRateLimit(), function() {
+        state.belowArrowKeyRateLimit = true;
+        return false;
+      });
     }
     target = cellKeyToXY(from.key);
     switch (direction) {
@@ -158,8 +172,7 @@
           return;
         }
         state.color = color.hex;
-        now.setServerState('color', state.color);
-        return console.log('setting color');
+        return now.setServerState('color', state.color);
       }
     });
     inputEl.keypress(function(e) {
@@ -187,13 +200,13 @@
           e.preventDefault();
           return false;
         case 38:
-          return moveCursor('up', null, true);
+          return moveCursor('up', null, true, true);
         case 40:
-          return moveCursor('down', null, true);
+          return moveCursor('down', null, true, true);
         case 39:
-          return moveCursor('right', null, true);
+          return moveCursor('right', null, true, true);
         case 37:
-          return moveCursor('left', null, true);
+          return moveCursor('left', null, true, true);
         case 8:
           moveCursor('left', null);
           state.selectedCell.clear();
@@ -435,6 +448,9 @@
       if (s.color) {
         state.color = s.color;
         return $('#colorPicker').colorpicker("option", "color", s.color);
+      } else {
+        $('#colorPicker').colorpicker("option", "color", s.color);
+        return now.setServerState('color', state.color);
       }
     });
     centerCursor();
@@ -447,7 +463,7 @@
         cursor = state.cursors[updatedCursor.cid];
         selectedCell = Cell.get(cursor.x, cursor.y);
         if (selectedCell) {
-          $(selectedCell.span).removeClass("c" + cursor.color + " otherSelected");
+          selectedCell.cursor(false);
         }
       }
       state.cursors[updatedCursor.cid] = updatedCursor;
@@ -455,7 +471,7 @@
       if (cursor.x && cursor.y) {
         selectedCell = Cell.get(cursor.x, cursor.y);
         if (selectedCell) {
-          $(selectedCell.span).addClass("c" + cursor.color + " otherSelected");
+          selectedCell.cursor(cursor.color);
         }
       } else {
         delete state.cursors[cursor.cid];
@@ -625,6 +641,14 @@
       }
     };
 
+    Cell.prototype.cursor = function(color) {
+      if (color) {
+        this.span.style.backgroundColor = '#' + color;
+      } else {
+        this.span.style.backgroundColor = '';
+      }
+    };
+
     Cell.prototype.normalRite = function(rite, cellProps) {
       this.contents = rite.contents;
       this.props.color = rite.props.color;
@@ -745,7 +769,6 @@
       span = this.span;
       clone = $(this.span).clone();
       this.span.innerHTML = config.defaultChar();
-      this.span.className = 'cell';
       offset = $(this.span).position();
       $(this.span).after(clone);
       $(clone).removeClass('selected');

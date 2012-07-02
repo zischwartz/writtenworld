@@ -109,18 +109,18 @@ module.exports = (everyone, SessionModel) ->
             overriteIt(cell, rite, riter, logic) # this changes c.current to the rite
             callback('overrite', rite, cellPoint, cell.current.props, originalOwner)
         else if logic.cEchoes>=1
-            console.log '.'
+            # console.log '.'
             if logic.already isnt 'echoer'
               # console.log 'Legit Downrote'
               downroteIt(cell, rite, riter, logic)
               callback('downrote', rite, cellPoint, cell.current.props, originalOwner)
             else if logic.already == 'echoer'
               if logic.cEchoes ==1
-                # console.log 'Overrite something you echoed!'
+                console.log 'Overrite something you echoed!'
                 overriteIt(cell, rite, riter, logic)
                 callback('overrite', rite, cellPoint, cell.current.props, originalOwner)
               else
-                # console.log 'Downroting something you echoed!'
+                console.log 'Downroting something you echoed!'
                 downroteIt(cell, rite, riter, logic)
                 callback('downrote', rite, cellPoint, cell.current.props, originalOwner)
         else

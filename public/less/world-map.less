@@ -172,7 +172,7 @@ div.leaflet-tile-loaded
 /*}*/
 
 
-@bgcolor: @grayLight;
+@bgcolor: @white;
 
 @-webkit-keyframes pulserBg {
   0%  { 
@@ -180,7 +180,7 @@ div.leaflet-tile-loaded
         /*box-shadow: 0px 0px 4px white;*/
       }
  50%  {
-        background-color: lighten(@bgcolor, 80%);
+        background-color: darken(@bgcolor, 50%);
         /*box-shadow: 0px 0px 8px white;*/
       }
  100% {
@@ -189,6 +189,20 @@ div.leaflet-tile-loaded
       }
 }
 
+@-moz-keyframes pulserBg {
+  0%  { 
+        background-color: @bgcolor;
+        /*box-shadow: 0px 0px 4px white;*/
+      }
+ 50%  {
+        background-color: darken(@bgcolor, 50%);
+        /*box-shadow: 0px 0px 8px white;*/
+      }
+ 100% {
+        background-color: @bgcolor;
+         /*box-shadow: 0px 0px 4px white;*/
+      }
+}
 /* SELECTED CELLS */
 /* SELECTED CELLS */
 
@@ -196,6 +210,7 @@ div.leaflet-tile-loaded
       box-shadow: 0px 0px 4px white;
       background-color: @grayLight;
       -webkit-animation: pulserBg 1s infinite;   
+      -moz-animation: pulserBg 1s infinite;
      /*-webkit-animation: pulserOp 1s infinite;*/
       /*opacity: 1;*/
 }

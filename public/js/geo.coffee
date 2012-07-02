@@ -13,11 +13,13 @@ window.initializeGeo = ()->
         if position.coords.accuracy < 500
           # console.log 'more accurate loc found'
           timeSinceLoad= new Date().getTime()-window.pageStartLoad
-          if not state.geoPos and (timeSinceLoad>1500)
+          if not state.geoPos and (timeSinceLoad>1200)
             window.insertMessage "We found you", "It took a second, but we've found your location more accurately. Moving you there shortly." , 'alert-info'
+            state.selectedCell = false
             $.doTimeout 1000, geoHasPosition(position)
           else
             # console.log 'moving it without telling you'
+            state.selectedCell = false
             geoHasPosition(position)
           navigator.geolocation.clearWatch(watchID)
 
@@ -34,8 +36,9 @@ geoFailed = (error) ->
   return true
 
 geoSucceeded = (position) ->
-  geoHasPosition position if not state.geoPos
   # console.log 'position from geoSucceed', position
+  state.selectedCell = false
+  geoHasPosition position if not state.geoPos
   true
 
 # chicago = new L.LatLng(41.878114,-87.629798) # for testing
@@ -43,17 +46,13 @@ geoSucceeded = (position) ->
 # la = new L.LatLng(34.052234,-118.243685) # for testing
 
 geoHasPosition = (position) ->
-  
+  # console.log 'has pos', position 
   linkPos=config.initialPos()
-  # console.log linkPos
-  # console.log position
   if linkPos
     state.isLocal=false
-    # p = new L.LatLng(linkPos.x, linkPos.y)
     p=goToCell(linkPos)
     state.geoPos = p
     state.initialGeoPos = new L.LatLng(p.lat, p.lng)
-    # map.setView(p, config.defZoom() )
     return true
 
   #normal (not from a geolink)
@@ -96,6 +95,7 @@ geoHasPosition = (position) ->
 $('.goToActualPos').live 'click', ->
   map.setView(state.geoPos, config.defZoom() )
   state.isLocal=true
+  state.selectedCell = false
   window.centerCursor()
   true
 

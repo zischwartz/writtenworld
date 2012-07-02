@@ -17,10 +17,12 @@
         var timeSinceLoad;
         if (position.coords.accuracy < 500) {
           timeSinceLoad = new Date().getTime() - window.pageStartLoad;
-          if (!state.geoPos && (timeSinceLoad > 1500)) {
+          if (!state.geoPos && (timeSinceLoad > 1200)) {
             window.insertMessage("We found you", "It took a second, but we've found your location more accurately. Moving you there shortly.", 'alert-info');
+            state.selectedCell = false;
             $.doTimeout(1000, geoHasPosition(position));
           } else {
+            state.selectedCell = false;
             geoHasPosition(position);
           }
           return navigator.geolocation.clearWatch(watchID);
@@ -48,6 +50,7 @@
   };
 
   geoSucceeded = function(position) {
+    state.selectedCell = false;
     if (!state.geoPos) {
       geoHasPosition(position);
     }
@@ -108,6 +111,7 @@
   $('.goToActualPos').live('click', function() {
     map.setView(state.geoPos, config.defZoom());
     state.isLocal = true;
+    state.selectedCell = false;
     window.centerCursor();
     return true;
   });
