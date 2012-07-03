@@ -53,6 +53,22 @@ def prepare_server():
         sudo('yum install openssl openssl-devel -y') #for mongoose-auth
 	# sudo('yum install mysql mysql-server mysql-client mysql-devel -y')
 
+def install_redis():
+    run('wget http://redis.googlecode.com/files/redis-2.4.15.tar.gz')
+    run('tar xzf redis-2.4.15.tar.gz')
+    with cd('redis-2.4.15'):
+        run('make')
+        run('make test')
+        sudo('make install') #maybe not sudo?
+        with cd('utils'):
+            sudo('./install_server.sh') #this requires answers
+
+    with cd(env.project_name):
+        run('npm install hiredis redis')
+
+
+
+
 def setup_remote():
         with settings(warn_only=True):
             run('mkdir %s' % env.project_name)

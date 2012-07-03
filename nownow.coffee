@@ -111,7 +111,6 @@ module.exports = (app, SessionModel, redis_client) ->
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
     # console.log 'getTile'
-    # really, we need access to the world.config, to know the zoom level. or make it two, well, three different functions. yeah.
     if not this.now.currentWorldId
       return false
     models.Cell.where('world', this.now.currentWorldId)
@@ -152,12 +151,12 @@ module.exports = (app, SessionModel, redis_client) ->
     redis_client.exists key, (err, exists) =>
       if exists
         redis_client.hgetall key, (err, obj)->
-          console.log 'hit', key
+          # console.log 'hit', key
           for i of obj
             obj[i] = JSON.parse obj[i]
           callback(obj, absTilePoint)
       else
-        console.log 'miss', key
+        # console.log 'miss', key
         models.Cell.where('world', this.now.currentWorldId)
           .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
           .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)

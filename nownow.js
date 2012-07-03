@@ -227,14 +227,12 @@
         if (exists) {
           return redis_client.hgetall(key, function(err, obj) {
             var i;
-            console.log('hit', key);
             for (i in obj) {
               obj[i] = JSON.parse(obj[i]);
             }
             return callback(obj, absTilePoint);
           });
         } else {
-          console.log('miss', key);
           return models.Cell.where('world', _this.now.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
             var c, pCell, results, _i, _len;
             results = {};
