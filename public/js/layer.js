@@ -53,7 +53,7 @@
         y: tilePoint.y * Math.pow(2, state.zoomDiff())
       };
       if (zoom > config.minCircleZoom()) {
-        return now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
+        return now.getTileCached(absTilePoint, state.numRows(), function(tileData, atp) {
           return delay(0, function() {
             _this.drawTile(tile, atp, zoom, tileData);
             if (!_this.options.async) {
@@ -62,7 +62,7 @@
           });
         });
       } else {
-        return now.getZoomedOutTile(absTilePoint, state.numRows(), state.numCols(), function(tileData, atp) {
+        return now.getTileAve(absTilePoint, state.numRows(), state.numCols(), function(tileData, atp) {
           _this.drawTileCircles(tile, tilePoint, zoom, tileData.density);
           if (!_this.options.async) {
             return _this.tileDrawn(tile);

@@ -12,7 +12,7 @@
 
   leaflet = require('./lib/leaflet-custom-src.js');
 
-  module.exports = function(app, SessionModel) {
+  module.exports = function(app, SessionModel, redis_client) {
     var CUser, bridge, everyone, getWhoCanSee;
     everyone = nowjs.initialize(app);
     bridge = require('./bridge')(everyone, SessionModel);
@@ -153,7 +153,7 @@
       });
       return true;
     };
-    everyone.now.getZoomedOutTile = function(absTilePoint, numRows, numCols, callback) {
+    everyone.now.getTileAve = function(absTilePoint, numRows, numCols, callback) {
       var _this = this;
       if (!this.now.currentWorldId) {
         return false;
@@ -213,6 +213,52 @@
           }
         }
         return cb(toUpdate);
+      });
+    };
+    everyone.now.getTileCached = function(absTilePoint, numRows, callback) {
+      var key, worldId,
+        _this = this;
+      if (!this.now.currentWorldId) {
+        return false;
+      }
+      worldId = this.now.currentWorldId.toString();
+      key = "t:" + worldId + ":" + numRows + ":" + absTilePoint.x + ":" + absTilePoint.y;
+      return redis_client.exists(key, function(err, exists) {
+        if (exists) {
+          return redis_client.hgetall(key, function(err, obj) {
+            var i;
+            console.log('hit', key);
+            for (i in obj) {
+              obj[i] = JSON.parse(obj[i]);
+            }
+            return callback(obj, absTilePoint);
+          });
+        } else {
+          console.log('miss', key);
+          return models.Cell.where('world', _this.now.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
+            var c, pCell, results, _i, _len;
+            results = {};
+            if (docs.length) {
+              for (_i = 0, _len = docs.length; _i < _len; _i++) {
+                c = docs[_i];
+                if (c.current) {
+                  pCell = {
+                    x: c.y,
+                    y: c.y,
+                    contents: c.current.contents,
+                    props: c.current.props
+                  };
+                  results["" + c.x + "x" + c.y] = pCell;
+                  redis_client.hmset(key, "" + c.x + "x" + c.y, JSON.stringify(pCell));
+                }
+              }
+              return callback(results, absTilePoint);
+            } else {
+              redis_client.set(key, results);
+              return callback(results, absTilePoint);
+            }
+          });
+        }
       });
     };
     everyone.now.getCloseUsers = function(cb) {

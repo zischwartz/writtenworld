@@ -15,6 +15,11 @@ mongoose = require 'mongoose'
 mongoose.connect('mongodb://localhost/mapist')
 jade = require('jade')
 
+redis = require "redis"
+redis_client = redis.createClient()
+
+redis_client.on "error", (error)-> console.log "Redis Error"+error
+
 fs = require('fs')
 events = require('events')
 util = require('util')
@@ -85,7 +90,7 @@ app.configure 'production', ->
   app.set 'port', 3000
   # app.set 'port', 80
 
-[nownow, CUser] = require('./nownow')(app, SessionModel)
+[nownow, CUser] = require('./nownow')(app, SessionModel, redis_client)
 
   
 render_world = (req, res, options={}) ->
