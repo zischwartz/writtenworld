@@ -449,7 +449,8 @@
         state.color = s.color;
         return $('#colorPicker').colorpicker("option", "color", s.color);
       } else {
-        $('#colorPicker').colorpicker("option", "color", s.color);
+        state.color = config.colorOptions[Math.floor(Math.random() * 8)];
+        $('#colorPicker').colorpicker("option", "color", state.color);
         return now.setServerState('color', state.color);
       }
     });
