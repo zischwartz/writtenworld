@@ -222,7 +222,7 @@ module.exports = (app, SessionModel, redis_client) ->
           doc.color= payload
           doc.save()
           # console.log 'USER COLORCHANGE', doc
-          this.now.insertMessage('hi', 'nice color')
+          # this.now.insertMessage('hi', 'nice color')
 
   everyone.now.createGeoLink = (cellKey, zoom) ->
     # console.log geoLink

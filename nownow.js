@@ -321,8 +321,7 @@
               console.log(err);
             }
             doc.color = payload;
-            doc.save();
-            return _this.now.insertMessage('hi', 'nice color');
+            return doc.save();
           });
         }
       }

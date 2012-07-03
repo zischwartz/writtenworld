@@ -127,17 +127,20 @@ initializeInterface = ->
   $userTotalRites = $("#userTotalRites")
 
 
-  ignorefirstcolor=true
+  colorselectcounter=0
   $("#colorPicker").colorpicker
     realtime: false
     color: config.colorOptions[ Math.floor(Math.random() * 8)]
     swatches: config.colorOptions
     onSelect: (color, inst)->
-      if ignorefirstcolor
-        ignorefirstcolor = false
+      if not colorselectcounter
+        colorselectcounter+=1
         return
       state.color= color.hex
       now.setServerState('color', state.color)
+      if colorselectcounter > 1
+        insertMessage('Hey', 'Nice color!')
+      colorselectcounter+=1
       # console.log 'setting color'
       # $.colorpicker._hideColorpicker()
 
