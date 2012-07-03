@@ -170,11 +170,13 @@ module.exports = (app, SessionModel, redis_client) ->
                   pCell = {x: c.y, y: c.y, contents: c.current.contents, props: c.current.props}
                   results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
                   redis_client.hmset key, "#{c.x}x#{c.y}", JSON.stringify(pCell)
+                  redis_client.expire key, 600
                 # console.log "results"
               callback(results, absTilePoint)
             else
               # console.log 'not found'
               redis_client.set key, results
+              redis_client.expire key, 600
               callback(results, absTilePoint)
 
 

@@ -250,11 +250,13 @@
                   };
                   results["" + c.x + "x" + c.y] = pCell;
                   redis_client.hmset(key, "" + c.x + "x" + c.y, JSON.stringify(pCell));
+                  redis_client.expire(key, 600);
                 }
               }
               return callback(results, absTilePoint);
             } else {
               redis_client.set(key, results);
+              redis_client.expire(key, 600);
               return callback(results, absTilePoint);
             }
           });
