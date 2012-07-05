@@ -6,6 +6,9 @@ echo 'Starting shit up...'
 FIRST_ARGUMENT="$1"
 echo "Hello, world $FIRST_ARGUMENT!"
 
+echo ' To quit redis: '
+echo ' redis-cli shutdown'
+redis-server & 
 
 nodemon app.coffee &
 # was just nodemon app.coffee &

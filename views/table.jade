@@ -4,5 +4,12 @@ block contents
     div(class="row-fluid")
        div(class="span3")  .  
        div(class="span6") 
-        p #{things}
+         table
+          for thing in things
+            tr
+              td=thing.t
+              td=thing.contents
+            tr
+              td
+                br
         div(class="span3") .

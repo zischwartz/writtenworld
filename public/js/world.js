@@ -135,7 +135,7 @@
   };
 
   initializeInterface = function() {
-    var $userTotalRites, ignorefirstcolor;
+    var $userTotalRites, colorselectcounter;
     $("#map").click(function(e) {
       var cell;
       if ($(e.target).hasClass('cell')) {
@@ -161,18 +161,22 @@
       return $("#loadingIndicator").fadeOut('fast');
     });
     $userTotalRites = $("#userTotalRites");
-    ignorefirstcolor = true;
+    colorselectcounter = 0;
     $("#colorPicker").colorpicker({
       realtime: false,
       color: config.colorOptions[Math.floor(Math.random() * 8)],
       swatches: config.colorOptions,
       onSelect: function(color, inst) {
-        if (ignorefirstcolor) {
-          ignorefirstcolor = false;
+        if (!colorselectcounter) {
+          colorselectcounter += 1;
           return;
         }
         state.color = color.hex;
-        return now.setServerState('color', state.color);
+        now.setServerState('color', state.color);
+        if (colorselectcounter > 1) {
+          insertMessage('Hey', 'Nice color!');
+        }
+        return colorselectcounter += 1;
       }
     });
     inputEl.keypress(function(e) {
@@ -449,7 +453,8 @@
         state.color = s.color;
         return $('#colorPicker').colorpicker("option", "color", s.color);
       } else {
-        $('#colorPicker').colorpicker("option", "color", s.color);
+        state.color = config.colorOptions[Math.floor(Math.random() * 8)];
+        $('#colorPicker').colorpicker("option", "color", state.color);
         return now.setServerState('color', state.color);
       }
     });

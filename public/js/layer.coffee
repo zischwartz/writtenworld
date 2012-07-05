@@ -34,12 +34,12 @@ L.WCanvas = L.TileLayer.extend(
     tile._zoom = zoom
     absTilePoint = {x: tilePoint.x*Math.pow(2, state.zoomDiff()), y:tilePoint.y*Math.pow(2, state.zoomDiff())}
     if zoom > config.minCircleZoom()
-      now.getTile absTilePoint, state.numRows(), (tileData, atp)=>
+      now.getTileCached absTilePoint, state.numRows(), (tileData, atp)=>
         delay 0, =>
           @drawTile tile, atp, zoom, tileData
           @tileDrawn tile  unless @options.async
     else
-      now.getZoomedOutTile absTilePoint, state.numRows(), state.numCols(), (tileData, atp) =>
+      now.getTileAve absTilePoint, state.numRows(), state.numCols(), (tileData, atp) =>
         @drawTileCircles tile, tilePoint, zoom, tileData.density
         @tileDrawn tile  unless @options.async
 
@@ -426,6 +426,7 @@ L.DomTileLayer = L.Class.extend
       if frag
         layer.populateTile(tile, tilePoint, zoom, frag)
       else
+        # now.getTileCached absTilePoint, state.numRows(), (tileData, atp)->
         now.getTile absTilePoint, state.numRows(), (tileData, atp)->
           delay 0, ->
             frag=betterBuildTile(tile, tileData, atp)

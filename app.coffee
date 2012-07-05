@@ -15,6 +15,11 @@ mongoose = require 'mongoose'
 mongoose.connect('mongodb://localhost/mapist')
 jade = require('jade')
 
+redis = require "redis"
+redis_client = redis.createClient()
+
+redis_client.on "error", (error)-> console.log "Redis Error"+error
+
 fs = require('fs')
 events = require('events')
 util = require('util')
@@ -85,7 +90,7 @@ app.configure 'production', ->
   app.set 'port', 3000
   # app.set 'port', 80
 
-[nownow, CUser] = require('./nownow')(app, SessionModel)
+[nownow, CUser] = require('./nownow')(app, SessionModel, redis_client)
 
   
 render_world = (req, res, options={}) ->
@@ -154,23 +159,26 @@ app.get '/uw/:slug', (req, res)->
     res.redirect('/login')
 
 app.get '/notes/:type?', (req, res) ->
-  if not req.loggedIn then res.redirect('/login') else
-  type = req.params.type
-  # should be filtered by current world, duh
-  if not type or type is 'all'
-    models.Note.where('type').or([ {from:req.user._id}, {to: req.user._id}]).sort('date', -1).run (err,notes) ->
-      res.render 'include/notes.jade', { title: 'Notes', notes, type:'all'}
-  if type is 'unread'
-    models.Note.where('read', false).where('to', req.user._id).sort('date', -1).run (err,notes) ->
-      res.render 'include/notes.jade', { title: 'Notes', notes, type}
-      #mark unread only if they clicked unread, for now
-      models.Note.update {to: req.user._id, read:false}, {read:true}, {multi: true}, (err, num) -> return
-  if type is 'others'
-    models.Note.where('to', req.user._id).where('from').ne(req.user._id).sort('date', -1).run (err,notes) ->
-      res.render 'include/notes.jade', { title: 'Notes', notes, type}
-  if type is 'own'
-    models.Note.where('from', req.user._id).where('type', 'own').sort('date', -1).run (err,notes) ->
-      res.render 'include/notes.jade', { title: 'Notes', notes, type}
+  if not req.loggedIn
+    res.redirect('/login')
+    return
+  else
+    type = req.params.type
+    #TODO should be filtered by current world, duh
+    if not type or type is 'all'
+      models.Note.where('type').or([ {from:req.user._id}, {to: req.user._id}]).sort('date', -1).run (err,notes) ->
+        res.render 'include/notes.jade', { title: 'Notes', notes, type:'all'}
+    if type is 'unread'
+      models.Note.where('read', false).where('to', req.user._id).sort('date', -1).run (err,notes) ->
+        res.render 'include/notes.jade', { title: 'Notes', notes, type}
+        #mark unread only if they clicked unread, for now
+        models.Note.update {to: req.user._id, read:false}, {read:true}, {multi: true}, (err, num) -> return
+    if type is 'others'
+      models.Note.where('to', req.user._id).where('from').ne(req.user._id).sort('date', -1).run (err,notes) ->
+        res.render 'include/notes.jade', { title: 'Notes', notes, type}
+    if type is 'own'
+      models.Note.where('from', req.user._id).where('type', 'own').sort('date', -1).run (err,notes) ->
+        res.render 'include/notes.jade', { title: 'Notes', notes, type}
 
 
 

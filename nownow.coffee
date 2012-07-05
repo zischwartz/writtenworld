@@ -7,7 +7,7 @@ powers = require './powers'
 
 leaflet = require './lib/leaflet-custom-src.js'
 
-module.exports = (app, SessionModel) ->
+module.exports = (app, SessionModel, redis_client) ->
   everyone = nowjs.initialize app
   # module.everyone = everyone
   bridge = require('./bridge')(everyone, SessionModel)
@@ -95,7 +95,7 @@ module.exports = (app, SessionModel) ->
     return true
 
 
-  everyone.now.getZoomedOutTile= (absTilePoint, numRows, numCols, callback) ->
+  everyone.now.getTileAve= (absTilePoint, numRows, numCols, callback) ->
     if not this.now.currentWorldId
       return false
     models.Cell.where('world', this.now.currentWorldId)
@@ -140,6 +140,45 @@ module.exports = (app, SessionModel) ->
               toUpdate[i] = CUser.byCid(i)
       cb(toUpdate)
 
+  everyone.now.getTileCached= (absTilePoint, numRows, callback) ->
+    # console.log 'getTileCached'
+    # really, we need access to the world.config, to know the zoom level. or make it two, well, three different functions. yeah.
+    if not this.now.currentWorldId
+      return false
+    worldId= this.now.currentWorldId.toString()
+
+    key="t:#{worldId}:#{numRows}:#{absTilePoint.x}:#{absTilePoint.y}"
+    redis_client.exists key, (err, exists) =>
+      if exists
+        redis_client.hgetall key, (err, obj)->
+          # console.log 'hit', key
+          for i of obj
+            obj[i] = JSON.parse obj[i]
+          callback(obj, absTilePoint)
+      else
+        # console.log 'miss', key
+        models.Cell.where('world', this.now.currentWorldId)
+          .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
+          .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
+          .populate('current')
+          .run (err,docs) =>
+            results = {}
+            if docs.length
+              for c in docs
+                if c.current
+                  pCell = {x: c.y, y: c.y, contents: c.current.contents, props: c.current.props}
+                  results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
+                  redis_client.hmset key, "#{c.x}x#{c.y}", JSON.stringify(pCell)
+                  redis_client.expire key, 600
+                # console.log "results"
+              callback(results, absTilePoint)
+            else
+              # console.log 'not found'
+              redis_client.set key, results
+              redis_client.expire key, 600
+              callback(results, absTilePoint)
+
+
   everyone.now.getCloseUsers= (cb)->
     if not this.now.currentWorldId
       return false
@@ -183,7 +222,7 @@ module.exports = (app, SessionModel) ->
           doc.color= payload
           doc.save()
           # console.log 'USER COLORCHANGE', doc
-          this.now.insertMessage('hi', 'nice color')
+          # this.now.insertMessage('hi', 'nice color')
 
   everyone.now.createGeoLink = (cellKey, zoom) ->
     # console.log geoLink
