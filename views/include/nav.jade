@@ -95,7 +95,7 @@
                       i.icon-envelope
                 li.dropdown
                   a.dropdown-toggle(href='#', data-toggle='dropdown')
-                    span#username(href='#') #{user.login} 
+                    span#username(href='#') #{user.name} 
                       b.caret 
                   ul.dropdown-menu
                     - if (isPersonal)
@@ -103,7 +103,7 @@
                         a(href='/') Main World
                     - else
                       li
-                        a(href='/wid/#{user.personalWorld}') Your (History) World 
+                        a(href='/w/history') Your (History) World 
                     li.divider
                     li
                       a(href="/logout") Log out

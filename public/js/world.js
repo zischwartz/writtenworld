@@ -449,6 +449,7 @@
     });
     now.setClientStateFromServer(function(s) {
       state.userPowers = s.powers;
+      console.log('setcl from serv', s);
       if (s.color) {
         state.color = s.color;
         return $('#colorPicker').colorpicker("option", "color", s.color);

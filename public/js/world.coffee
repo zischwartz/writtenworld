@@ -406,6 +406,7 @@ doNowInit= (now)->
 
     now.setClientStateFromServer (s)->
       state.userPowers = s.powers
+      console.log 'setcl from serv', s
       if s.color # s is session
         state.color= s.color
         $('#colorPicker').colorpicker("option", "color", s.color)

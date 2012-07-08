@@ -74,29 +74,6 @@ exports.World.findOne {name: 'main'}, (err, world)->
       exports.mainWorld
 
 
-# exports.World.findOne {name: 'words'}, (err, world)->
-#   if world
-#     console.log ' Found word world'
-#   else
-#     console.log ' Could not find WORD  world...'
-#     world = new exports.World
-#       name: 'words'
-#       personal: false
-#       public: true
-#       config:
-#         maxZoom:20
-#         minZoom:10
-#         tileSize:
-#           x: 192
-#           y: 256
-#         tileServeUrl: "http://23.23.200.225/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png"  #"http://s3.amazonaws.com/ww-tiles/wwtiles/{z}/{x}/{y}.png"
-#         ruleSet: true
-#         props:
-#           echoes: false
-# 
-#     world.save (err, world) ->
-#       console log err if err
-#       console.log 'So we created the word world'
 
 RiteSchema = new Schema
   contents: {type: String, default: ' '} #conig TODO
@@ -135,7 +112,6 @@ NoteSchema = new Schema
   fromLogin: {type: String}
   type: {type: String}
   date: { type: Date, default: Date.now }
-  #impliment these
   world: ObjectId
   cellPoints: [
     x: {type: Number}
@@ -154,11 +130,11 @@ UserSchema = new Schema
   color: {type: String, default: ''}
   personalWorld: ObjectId
   email: String
+  name: String # we'll use this for display purposes, non unique
+  inactive: {type:Boolean, default: true}
   powers:
     jumpDistance: {type: Number, default: 500000}
     lastLinkOn: {type: Date, default: new Date(0)} #epoch
-
-console.log 'debug?', DEBUG
 
 UserSchema.plugin mongooseAuth,
     everymodule:
@@ -169,11 +145,15 @@ UserSchema.plugin mongooseAuth,
         myHostname: if DEBUG then 'http://0.0.0.0:3000' else 'http://writtenworld.org'
         consumerKey: if DEBUG then 'DEIaTcd5DQ7yceARLk6KLA' else 'CaOVgX2g6tJoJCHDoBUVg'
         consumerSecret: if DEBUG then 'NFKIDiVyQpRIXVu0T7nVEIylErrpdPcMFrewAgWDbjM' else 'pwC2JFsI96ApwCqtPwwU1HEqFwOGOAj0PcTmxpOjsfA'
-        redirectPath: '/'
-        #findOrCreateUser logic here, sigh
-        
+        redirectPath: '/welcome'
+    facebook:
+      everyauth:
+        myHostname: if DEBUG then 'http://0.0.0.0:3000' else 'http://writtenworld.org'
+        appId: if DEBUG then '166126233512041' else '391056084275527'
+        appSecret: if DEBUG then '272b9cb2b28698932dfca93aef9eee47' else '1e8690b4c88153a1626b3851ffe5f557'
+        redirectPath: '/welcome'
+
     password:
-      # loginWith: 'email',
       extraParams:
          email: String
       everyauth:
@@ -183,20 +163,20 @@ UserSchema.plugin mongooseAuth,
         getRegisterPath: '/register'
         postRegisterPath: '/register'
         registerView: 'register.jade'
-        loginSuccessRedirect: '/'
-        registerSuccessRedirect: '/'
+        loginSuccessRedirect: '/welcome'
+        registerSuccessRedirect: '/welcome' # this was '/' as was above
 
-        respondToRegistrationSucceed: (res, user, data) ->
-          personal= new exports.World {personal:true, owner:user._id, name:"#{user.login}'s History", ownerlogin: user.login }
-          personal.save (err, doc)->
-            user.personalWorld = personal._id
-            user.save (err) -> console.log err if err
-          if data.session.redirectTo
-            res.writeHead 303, {'Location': data.session.redirectTo}
-          else
-            res.writeHead 303, {'Location': '/'}  # data.session.redirectTo}
-          res.end()
-          return true
+        # respondToRegistrationSucceed: (res, user, data) ->
+        #   personal= new exports.World {personal:true, owner:user._id, name:"#{user.login}'s History", ownerlogin: user.login }
+        #   personal.save (err, doc)->
+        #     user.personalWorld = personal._id
+        #     user.save (err) -> console.log err if err
+        #   if data.session.redirectTo
+        #     res.writeHead 303, {'Location': data.session.redirectTo}
+        #   else
+        #     res.writeHead 303, {'Location': '/'}  # data.session.redirectTo}
+        #   res.end()
+        #   return true
 
 exports.User= mongoose.model('User', UserSchema)
 
@@ -212,25 +192,6 @@ exports.Feedback = mongoose.model('Feedback', FeedbackSchema)
 # Array::remove = (e) -> @[t..t] = [] if (t = @indexOf(e)) > -1
 
 Array::filter = (func) -> x for x in @ when func(x)
-
-# 
-# exports.User.prototype.on 'receivedEcho', (rite) ->
-#   console.log 'GOT AN ECHO EVENT !!!!!!!!!!!!!!!!!!!!!!!!!!!ADSFADSFASDFASDFADF'
-#   console.log 'this: ', this
-#   console.log details
-#   return true
-
-
-# rite = new Rite({contents: contents, owner:ownerId, props:props })
-
-# aUser = new exports.User
-# aUser.prototype = new events.EventEmitter
-
-# util.inherits(exports.User, events.EventEmitter)
-# console.log 'aUser! ',  aUser
-# console.log util.inspect exports.User, true, 2, true
-
-# console.log util.inspect exports.User, true, 2, true
 
 exports.mongooseAuth= mongooseAuth
 

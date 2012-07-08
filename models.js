@@ -268,6 +268,11 @@
     },
     personalWorld: ObjectId,
     email: String,
+    name: String,
+    inactive: {
+      type: Boolean,
+      "default": true
+    },
     powers: {
       jumpDistance: {
         type: Number,
@@ -279,8 +284,6 @@
       }
     }
   });
-
-  console.log('debug?', DEBUG);
 
   UserSchema.plugin(mongooseAuth, {
     everymodule: {
@@ -295,7 +298,15 @@
         myHostname: DEBUG ? 'http://0.0.0.0:3000' : 'http://writtenworld.org',
         consumerKey: DEBUG ? 'DEIaTcd5DQ7yceARLk6KLA' : 'CaOVgX2g6tJoJCHDoBUVg',
         consumerSecret: DEBUG ? 'NFKIDiVyQpRIXVu0T7nVEIylErrpdPcMFrewAgWDbjM' : 'pwC2JFsI96ApwCqtPwwU1HEqFwOGOAj0PcTmxpOjsfA',
-        redirectPath: '/'
+        redirectPath: '/welcome'
+      }
+    },
+    facebook: {
+      everyauth: {
+        myHostname: DEBUG ? 'http://0.0.0.0:3000' : 'http://writtenworld.org',
+        appId: DEBUG ? '166126233512041' : '391056084275527',
+        appSecret: DEBUG ? '272b9cb2b28698932dfca93aef9eee47' : '1e8690b4c88153a1626b3851ffe5f557',
+        redirectPath: '/welcome'
       }
     },
     password: {
@@ -309,36 +320,8 @@
         getRegisterPath: '/register',
         postRegisterPath: '/register',
         registerView: 'register.jade',
-        loginSuccessRedirect: '/',
-        registerSuccessRedirect: '/',
-        respondToRegistrationSucceed: function(res, user, data) {
-          var personal;
-          personal = new exports.World({
-            personal: true,
-            owner: user._id,
-            name: "" + user.login + "'s History",
-            ownerlogin: user.login
-          });
-          personal.save(function(err, doc) {
-            user.personalWorld = personal._id;
-            return user.save(function(err) {
-              if (err) {
-                return console.log(err);
-              }
-            });
-          });
-          if (data.session.redirectTo) {
-            res.writeHead(303, {
-              'Location': data.session.redirectTo
-            });
-          } else {
-            res.writeHead(303, {
-              'Location': '/'
-            });
-          }
-          res.end();
-          return true;
-        }
+        loginSuccessRedirect: '/welcome',
+        registerSuccessRedirect: '/welcome'
       }
     }
   });

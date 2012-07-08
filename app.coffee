@@ -117,7 +117,7 @@ render_world = (req, res, options={}) ->
     initialWorldId: initialWorldId
     personalWorldId:personalWorldId
     worldSpec: JSON.stringify(worldSpec)
-    availableColors: availableColors
+    # availableColors: availableColors
     isPersonal: options.world?.personal ? false
     isAuth: req.loggedIn
     initialPos: options.initialPos ? false
@@ -126,37 +126,48 @@ render_world = (req, res, options={}) ->
 app.get '/', (req, res) ->
   if req.loggedIn
     models.Note.count {to: req.user._id, read:false}, (err, noteNum) ->
-      console.log 'unread notes', noteNum
+      # console.log 'unread notes', noteNum
       render_world(req,res, {unreadNotes:noteNum})
   else
     render_world(req,res)
+
 
 app.get '/l/:l', (req, res) ->
   b=new Buffer(req.params.l, 'base64').toString('ascii')
   render_world(req, res, {initialPos:b})
 
-app.get '/wid/:id' , (req, res) ->
-    models.World.findById req.params.id,(err,world) ->
-      if world
-        if world.personal
-          res.redirect("/uw/#{world.slug}")
-        else
-          res.redirect("/")
-      else
-        res.redirect("/")
-
-app.get '/uw/:slug', (req, res)->
-  if req.loggedIn
-    models.World.findOne {slug: req.params.slug},(err,world) ->
-      if world.personal
-        if world.owner.toString() is req.user._id.toString()
-          render_world(req, res, {world: world})
-      else #it's not personal/private
-        render_world(req, res, {world: world._id,})
-        # res.render 'map_base.jade', {title: world.name}
-  else
-    #first add a message saying you gota login
+app.get '/w/history', (req, res) ->
+  if not req.loggedIn
     res.redirect('/login')
+  else
+    worldId= req.user.personalWorld.toString()
+    console.log worldId
+    models.World.findById worldId , (err,world) ->
+      console.log err if err
+      render_world(req, res, {world: world})
+
+# app.get '/wid/:id' , (req, res) ->
+#     models.World.findById req.params.id,(err,world) ->
+#       if world
+#         if world.personal
+#           res.redirect("/uw/#{world.slug}")
+#         else
+#           res.redirect("/")
+#       else
+#         res.redirect("/")
+
+# app.get '/uw/:slug', (req, res)->
+#   if req.loggedIn
+#     models.World.findOne {slug: req.params.slug},(err,world) ->
+#       if world.personal
+#         if world.owner.toString() is req.user._id.toString()
+#           render_world(req, res, {world: world})
+#       else #it's not personal/private
+#         render_world(req, res, {world: world._id,})
+#         # res.render 'map_base.jade', {title: world.name}
+#   else
+#     #first add a message saying you gota login
+#     res.redirect('/login')
 
 app.get '/notes/:type?', (req, res) ->
   if not req.loggedIn
@@ -181,7 +192,46 @@ app.get '/notes/:type?', (req, res) ->
         res.render 'include/notes.jade', { title: 'Notes', notes, type}
 
 
+app.get '/welcome', (req, res) ->
+  # console.log req.user
+  user = req.user
+  console.log '-------------'
+  if not req.user?.inactive
+    #redirect to /
+    console.log 'not inactive'
+    res.redirect("/")
+  else
+    if req.user.twit?.screenName
+      user.name= req.user.twit.screenName
+    else if req.user.fb?.name.first
+      user.name=  req.user.fb.name.first
+    else
+      user.name =  req.user.login
+    personalWorld = new models.World {personal: true, owner: user._id, name:"#{user.name}'s History" }
+    personalWorld.save (err, doc) ->
+      user.personalWorld = personalWorld._id
+      user.inactive = false
+      user.save (err, doc) ->
+        console.log err if err
+        console.log doc
+    
+    res.redirect("/")
 
+    #assign name, create personal world, redirect to /
+    # set active
+  # res.render 'welcome.jade', { title: 'About'}
+
+        # respondToRegistrationSucceed: (res, user, data) ->
+        #   personal= new exports.World {personal:true, owner:user._id, name:"#{user.login}'s History", ownerlogin: user.login }
+        #   personal.save (err, doc)->
+        #     user.personalWorld = personal._id
+        #     user.save (err) -> console.log err if err
+        #   if data.session.redirectTo
+        #     res.writeHead 303, {'Location': data.session.redirectTo}
+        #   else
+        #     res.writeHead 303, {'Location': '/'}  # data.session.redirectTo}
+        #   res.end()
+        #   return true
 # PAGES
 app.get '/home', (req, res) ->
   if req.loggedIn

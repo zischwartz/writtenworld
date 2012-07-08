@@ -210,6 +210,7 @@ module.exports = (app, SessionModel, redis_client) ->
 
   everyone.now.setServerState = (type, payload) ->
     console.log 'setUserOption', type, payload
+    # console.log this.user
     if type == 'color'
       cid=this.user.clientId
       CUser.byCid(cid).color= payload
@@ -241,43 +242,13 @@ module.exports = (app, SessionModel, redis_client) ->
   #   console.log latlng
     # this.now.mapGoTo(latlng)
 
-  # or with my CUser, and by edit, not rite
-  # can I impliment this on CUser  instead....
-  # models.User.prototype.on 'receivedEcho', (rite) ->
-  #     console.log 'rcvd echo called'
-  #     userId= this._id
-  #     rite.getOwner (err,u)->
-  #       console.log err if err
-  #       cid = CUser.byUid(userId)?.cid
-  #       if cid
-  #         nowjs.getClient cid, ->
-  #           if u
-  #             this.now.insertMessage 'Echoed!', "#{u.login} echoed what you said!"
-  #           else
-  #             this.now.insertMessage 'Echoed!', "Someone echoed what you said!"
-  #     return true
-
-  # models.User.prototype.on 'receivedOverRite', (rite) ->
-  #     console.log 'rcd ovrt called'
-  #     userId= this._id
-  #     rite.getOwner (err,u)->
-  #       console.log err if err
-  #       cid=CUser.byUid(userId)?.cid
-  #       if cid
-  #         nowjs.getClient cid, ->
-  #           if u
-  #             this.now.insertMessage 'Over Written', "#{u.login} is writing over your cells"
-  #           else
-  #             this.now.insertMessage 'Over Written', "Someone is writing over your cells."
-  #     return true
-
-
   class CUser
     allByCid = {}
     allBySid = {}
     allByUid = {}
     
     @byCid: (cid)->
+      #just get the essentials
       return allByCid[cid]
     
     # sometimes we pass the whole thing to the client, security, bla
@@ -298,8 +269,12 @@ module.exports = (app, SessionModel, redis_client) ->
       if nowUser.session?.auth
         @uid= nowUser.session.auth.userId
         models.User.findById @uid, (err, doc) =>
-            @login = doc.login
-            @nowUser.login = doc.login
+            console.log err if err
+            # console.log doc
+            # lets keep calling it login on this side. i really should change it, but this will be so much easier TODO
+            @login = doc.name # .login
+            @nowUser.login = doc.name # .login
+
             @nowUser.powers = doc.powers
         allByUid[@uid] = this
       else
@@ -344,7 +319,7 @@ module.exports = (app, SessionModel, redis_client) ->
     
 
     processEdit:(results) ->
-      console.log 'processEdit'
+      # console.log 'processEdit'
       # console.log results
       s = ''
       toNotify =

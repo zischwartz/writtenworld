@@ -369,8 +369,11 @@
         if ((_ref = nowUser.session) != null ? _ref.auth : void 0) {
           this.uid = nowUser.session.auth.userId;
           models.User.findById(this.uid, function(err, doc) {
-            _this.login = doc.login;
-            _this.nowUser.login = doc.login;
+            if (err) {
+              console.log(err);
+            }
+            _this.login = doc.name;
+            _this.nowUser.login = doc.name;
             return _this.nowUser.powers = doc.powers;
           });
           allByUid[this.uid] = this;
@@ -429,7 +432,6 @@
 
       CUser.prototype.processEdit = function(results) {
         var cellPoints, col, fix, fixed, i, login, note, r, row, s, toNotify, type, uid, x, y, _i, _j, _k, _len, _len1, _ref, _ref1, _ref2, _ref3;
-        console.log('processEdit');
         s = '';
         toNotify = {
           own: [results[0].rite.owner],
