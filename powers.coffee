@@ -30,7 +30,8 @@ module.exports=
 
   canLink: (user) ->
     yest = new Date
-    yest.setHours(yest.getHours()-1)
+    yest.setMinutes(yest.getMinutes()-1)
+    # yest.setHours(yest.getHours()-1)
 
     if user.powers.lastLinkOn
       if user.powers.lastLinkOn < yest

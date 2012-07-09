@@ -110,7 +110,7 @@
             });
           }
           if (!powers.canLink(this.user)) {
-            this.now.insertMessage("Sorry, 1 Link/Hour", "For now. Sorry.", 'alert-error');
+            this.now.insertMessage("Sorry, 1 link per minute", "For now. Sorry.", 'alert-error');
             return false;
           }
         }
@@ -331,6 +331,46 @@
       b = "" + zoom + "x" + cellKey;
       geoLink64 = new Buffer(b).toString('base64');
       return this.now.insertMessage('Have a link:', "<a href='/l/" + geoLink64 + "'>/l/" + geoLink64 + "</a>");
+    };
+    everyone.now.getCellInfo = function() {
+      var cid, cursor, worldId,
+        _this = this;
+      if (!this.now.currentWorldId) {
+        return false;
+      }
+      worldId = this.now.currentWorldId;
+      cid = this.user.clientId;
+      cursor = CUser.byCid(cid).cursor;
+      console.log(cursor, worldId);
+      return models.Cell.findOne({
+        x: cursor.x,
+        y: cursor.y,
+        world: worldId
+      }).populate('current').exec(function(err, cell) {
+        var waslocalstring;
+        if (err) {
+          console.log(err);
+        }
+        console.log(cell);
+        if (cell.current.props.isLocal) {
+          waslocalstring = "was local when they wrote it.";
+        } else {
+          waslocalstring = "was not local when they wrote it";
+        }
+        return models.User.findById(cell.current.owner, function(err, u) {
+          var name;
+          if (err) {
+            console.log(err);
+          }
+          console.log(u);
+          if (u) {
+            name = u.name;
+          } else {
+            name = 'Anonymous';
+          }
+          return _this.now.insertMessage("Written by <b>" + name + "</b>", " On " + cell.current.date + ". " + name + " " + waslocalstring + " There have been " + cell.history.length + " things written here total");
+        });
+      });
     };
     CUser = (function() {
       var allByCid, allBySid, allByUid;

@@ -268,16 +268,17 @@ initializeInterface = ->
 
     if action is 'get' and type is 'notes'
       $('#notes .loading').load("/notes/#{payload}")
+      $("#notes li").removeClass('active')
       $("#notes li.#{payload}").addClass('active')
       return false
       
+    if action is 'get' and type is 'info'
+      now.getCellInfo()
+      return false
 
     # if type=='layer'
       # do something
   
-    # if type == 'color'
-      # console.log 'ch color'
-      # $("#color").addClass(payload)
     if type == 'writeDirection'
       c= this.innerHTML
       $('.direction-dropdown')[0].innerHTML=c

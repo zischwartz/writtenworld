@@ -79,8 +79,8 @@ module.exports = (app, SessionModel, redis_client) ->
                 this.user.powers.lastLinkOn= new Date
                 return
           if not powers.canLink this.user
-              this.now.insertMessage "Sorry, 1 Link/Hour", "For now. Sorry." , 'alert-error'
-              return false 
+              this.now.insertMessage "Sorry, 1 link per minute", "For now. Sorry." , 'alert-error'
+              return false
 
     bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false, originalOwner=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
@@ -226,21 +226,29 @@ module.exports = (app, SessionModel, redis_client) ->
           # this.now.insertMessage('hi', 'nice color')
 
   everyone.now.createGeoLink = (cellKey, zoom) ->
-    # console.log geoLink
-    # b="#{geoLink.lat}:#{geoLink.lng}"
     b= "#{zoom}x#{cellKey}"
     geoLink64 = new Buffer(b).toString('base64')
     this.now.insertMessage('Have a link:', "<a href='/l/#{geoLink64}'>/l/#{geoLink64}</a>")
 
-  # not for initial load, for notifications and such
-  # everyone.now.goToGeoLink = (geoLink64) ->
-  #   # console.log 'goto GEO'
-  #   b=new Buffer(geoLink64, 'base64').toString('ascii')
-  #   g= b.split(':')
-  #   console.log g
-  #   latlng = {x: g[0], y: g[1]}
-  #   console.log latlng
-    # this.now.mapGoTo(latlng)
+  everyone.now.getCellInfo = ->
+    if not this.now.currentWorldId
+      return false
+    worldId=this.now.currentWorldId
+    cid=this.user.clientId
+    cursor=CUser.byCid(cid).cursor
+    console.log cursor, worldId
+    models.Cell
+      .findOne({x:cursor.x, y:cursor.y, world: worldId})
+      .populate('current')
+      .exec (err, cell) =>
+        console.log err if err
+        console.log cell
+        if cell.current.props.isLocal then waslocalstring= "was local when they wrote it." else waslocalstring= "was not local when they wrote it"
+        models.User.findById cell.current.owner, (err, u) =>
+          console.log err if err
+          console.log u
+          if u then name=u.name else name = 'Anonymous'
+          this.now.insertMessage("Written by <b>#{name}</b>", " On #{cell.current.date}. #{name} #{waslocalstring} There have been #{cell.history.length} things written here total")
 
   class CUser
     allByCid = {}

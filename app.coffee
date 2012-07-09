@@ -124,6 +124,7 @@ render_world = (req, res, options={}) ->
     unreadNotes: options.unreadNotes ? 0
 
 app.get '/', (req, res) ->
+  console.log req.sessionID
   if req.loggedIn
     models.Note.count {to: req.user._id, read:false}, (err, noteNum) ->
       # console.log 'unread notes', noteNum

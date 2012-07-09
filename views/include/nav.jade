@@ -33,15 +33,17 @@
                     li
                       a(href='#') More Worlds...
               li
-                a(href='#locationSearch', data-toggle="modal", rel="tooltip", title="Search for a place") 
+                a(href='#locationSearch', data-toggle="modal", rel="tooltip", title="Search for a place", rel="tooltip") 
                   i.icon-search.icon-white 
+              li
+                a.trigger(data-type='info', data-action='get', href='#', title="Get info about what's written at your cursor")
+                  i.icon-info-sign
               li.dropdown
                 a#getNearby.dropdown-toggle(href='#', data-toggle='dropdown', data-action='get', data-type='nearby', rel="tooltip", title="Who else is nearby?")
                   | Nearby
                   b.caret
                 ul#nearby.dropdown-menu
               li
-                //  a#color(href='#colorModal', data-toggle="modal", rel="tooltip", title="Change the color of your text") Colors
                 span#colorPicker
                li.dropdown
                  a.dropdown-toggle.direction-dropdown(href='#', data-toggle='dropdown', rel="tooltip", title="Change writing direction")

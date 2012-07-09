@@ -303,7 +303,12 @@
       }
       if (action === 'get' && type === 'notes') {
         $('#notes .loading').load("/notes/" + payload);
+        $("#notes li").removeClass('active');
         $("#notes li." + payload).addClass('active');
+        return false;
+      }
+      if (action === 'get' && type === 'info') {
+        now.getCellInfo();
         return false;
       }
       if (type === 'writeDirection') {
