@@ -110,7 +110,7 @@
             });
           }
           if (!powers.canLink(this.user)) {
-            this.now.insertMessage("Sorry, 1 Link/Hour", "For now. Sorry.", 'alert-error');
+            this.now.insertMessage("Sorry, 1 link per minute", "For now. Sorry.", 'alert-error');
             return false;
           }
         }
@@ -332,6 +332,46 @@
       geoLink64 = new Buffer(b).toString('base64');
       return this.now.insertMessage('Have a link:', "<a href='/l/" + geoLink64 + "'>/l/" + geoLink64 + "</a>");
     };
+    everyone.now.getCellInfo = function() {
+      var cid, cursor, worldId,
+        _this = this;
+      if (!this.now.currentWorldId) {
+        return false;
+      }
+      worldId = this.now.currentWorldId;
+      cid = this.user.clientId;
+      cursor = CUser.byCid(cid).cursor;
+      console.log(cursor, worldId);
+      return models.Cell.findOne({
+        x: cursor.x,
+        y: cursor.y,
+        world: worldId
+      }).populate('current').exec(function(err, cell) {
+        var waslocalstring;
+        if (err) {
+          console.log(err);
+        }
+        console.log(cell);
+        if (cell.current.props.isLocal) {
+          waslocalstring = "was local when they wrote it.";
+        } else {
+          waslocalstring = "was not local when they wrote it";
+        }
+        return models.User.findById(cell.current.owner, function(err, u) {
+          var name;
+          if (err) {
+            console.log(err);
+          }
+          console.log(u);
+          if (u) {
+            name = u.name;
+          } else {
+            name = 'Anonymous';
+          }
+          return _this.now.insertMessage("Written by <b>" + name + "</b>", " On " + cell.current.date + ". " + name + " " + waslocalstring + " There have been " + cell.history.length + " things written here total");
+        });
+      });
+    };
     CUser = (function() {
       var allByCid, allBySid, allByUid;
 
@@ -369,8 +409,11 @@
         if ((_ref = nowUser.session) != null ? _ref.auth : void 0) {
           this.uid = nowUser.session.auth.userId;
           models.User.findById(this.uid, function(err, doc) {
-            _this.login = doc.login;
-            _this.nowUser.login = doc.login;
+            if (err) {
+              console.log(err);
+            }
+            _this.login = doc.name;
+            _this.nowUser.login = doc.name;
             return _this.nowUser.powers = doc.powers;
           });
           allByUid[this.uid] = this;
@@ -429,7 +472,6 @@
 
       CUser.prototype.processEdit = function(results) {
         var cellPoints, col, fix, fixed, i, login, note, r, row, s, toNotify, type, uid, x, y, _i, _j, _k, _len, _len1, _ref, _ref1, _ref2, _ref3;
-        console.log('processEdit');
         s = '';
         toNotify = {
           own: [results[0].rite.owner],
@@ -481,7 +523,7 @@
         if (this.login) {
           login = this.login;
         } else {
-          login = 'Someone';
+          login = "Anonymous #" + (Math.floor(Math.random() * 100));
         }
         for (type in toNotify) {
           _ref3 = toNotify[type];

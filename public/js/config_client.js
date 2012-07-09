@@ -4,7 +4,7 @@
 
   window.DEBUG = false;
 
-  window.NOMAP = false;
+  window.NOMAP = true;
 
   window.VARYLATLNG = false;
 

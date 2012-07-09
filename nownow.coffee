@@ -79,8 +79,8 @@ module.exports = (app, SessionModel, redis_client) ->
                 this.user.powers.lastLinkOn= new Date
                 return
           if not powers.canLink this.user
-              this.now.insertMessage "Sorry, 1 Link/Hour", "For now. Sorry." , 'alert-error'
-              return false 
+              this.now.insertMessage "Sorry, 1 link per minute", "For now. Sorry." , 'alert-error'
+              return false
 
     bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false, originalOwner=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
@@ -210,6 +210,7 @@ module.exports = (app, SessionModel, redis_client) ->
 
   everyone.now.setServerState = (type, payload) ->
     console.log 'setUserOption', type, payload
+    # console.log this.user
     if type == 'color'
       cid=this.user.clientId
       CUser.byCid(cid).color= payload
@@ -225,52 +226,29 @@ module.exports = (app, SessionModel, redis_client) ->
           # this.now.insertMessage('hi', 'nice color')
 
   everyone.now.createGeoLink = (cellKey, zoom) ->
-    # console.log geoLink
-    # b="#{geoLink.lat}:#{geoLink.lng}"
     b= "#{zoom}x#{cellKey}"
     geoLink64 = new Buffer(b).toString('base64')
     this.now.insertMessage('Have a link:', "<a href='/l/#{geoLink64}'>/l/#{geoLink64}</a>")
 
-  # not for initial load, for notifications and such
-  # everyone.now.goToGeoLink = (geoLink64) ->
-  #   # console.log 'goto GEO'
-  #   b=new Buffer(geoLink64, 'base64').toString('ascii')
-  #   g= b.split(':')
-  #   console.log g
-  #   latlng = {x: g[0], y: g[1]}
-  #   console.log latlng
-    # this.now.mapGoTo(latlng)
-
-  # or with my CUser, and by edit, not rite
-  # can I impliment this on CUser  instead....
-  # models.User.prototype.on 'receivedEcho', (rite) ->
-  #     console.log 'rcvd echo called'
-  #     userId= this._id
-  #     rite.getOwner (err,u)->
-  #       console.log err if err
-  #       cid = CUser.byUid(userId)?.cid
-  #       if cid
-  #         nowjs.getClient cid, ->
-  #           if u
-  #             this.now.insertMessage 'Echoed!', "#{u.login} echoed what you said!"
-  #           else
-  #             this.now.insertMessage 'Echoed!', "Someone echoed what you said!"
-  #     return true
-
-  # models.User.prototype.on 'receivedOverRite', (rite) ->
-  #     console.log 'rcd ovrt called'
-  #     userId= this._id
-  #     rite.getOwner (err,u)->
-  #       console.log err if err
-  #       cid=CUser.byUid(userId)?.cid
-  #       if cid
-  #         nowjs.getClient cid, ->
-  #           if u
-  #             this.now.insertMessage 'Over Written', "#{u.login} is writing over your cells"
-  #           else
-  #             this.now.insertMessage 'Over Written', "Someone is writing over your cells."
-  #     return true
-
+  everyone.now.getCellInfo = ->
+    if not this.now.currentWorldId
+      return false
+    worldId=this.now.currentWorldId
+    cid=this.user.clientId
+    cursor=CUser.byCid(cid).cursor
+    console.log cursor, worldId
+    models.Cell
+      .findOne({x:cursor.x, y:cursor.y, world: worldId})
+      .populate('current')
+      .exec (err, cell) =>
+        console.log err if err
+        console.log cell
+        if cell.current.props.isLocal then waslocalstring= "was local when they wrote it." else waslocalstring= "was not local when they wrote it"
+        models.User.findById cell.current.owner, (err, u) =>
+          console.log err if err
+          console.log u
+          if u then name=u.name else name = 'Anonymous'
+          this.now.insertMessage("Written by <b>#{name}</b>", " On #{cell.current.date}. #{name} #{waslocalstring} There have been #{cell.history.length} things written here total")
 
   class CUser
     allByCid = {}
@@ -278,6 +256,7 @@ module.exports = (app, SessionModel, redis_client) ->
     allByUid = {}
     
     @byCid: (cid)->
+      #just get the essentials
       return allByCid[cid]
     
     # sometimes we pass the whole thing to the client, security, bla
@@ -298,8 +277,12 @@ module.exports = (app, SessionModel, redis_client) ->
       if nowUser.session?.auth
         @uid= nowUser.session.auth.userId
         models.User.findById @uid, (err, doc) =>
-            @login = doc.login
-            @nowUser.login = doc.login
+            console.log err if err
+            # console.log doc
+            # lets keep calling it login on this side. i really should change it, but this will be so much easier TODO
+            @login = doc.name # .login
+            @nowUser.login = doc.name # .login
+
             @nowUser.powers = doc.powers
         allByUid[@uid] = this
       else
@@ -344,7 +327,7 @@ module.exports = (app, SessionModel, redis_client) ->
     
 
     processEdit:(results) ->
-      console.log 'processEdit'
+      # console.log 'processEdit'
       # console.log results
       s = ''
       toNotify =
@@ -381,7 +364,10 @@ module.exports = (app, SessionModel, redis_client) ->
         if fixed[i+1] and fixed[i+1]?.y isnt fixed[i].y
           s+='<br>'
 
-      if @login then login=@login else login='Someone'
+      if @login
+        login=@login
+      else
+        login="Anonymous ##{Math.floor(Math.random()*100)}"
 
       for type of toNotify
         for uid in toNotify[type]

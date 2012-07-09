@@ -13,16 +13,6 @@ form.modal.hide#linkModal
       button.btn.btn-primary(type="submit") Link!
       a.btn(href='#', data-dismiss='modal') Na
 
-.modal.hide#colorModal
-  .modal-header
-      a.close(data-dismiss='modal') ×
-      h3 Pick A Color 
-  .modal-body.colorOption
-      p Any color. As long as it's one of these. Want more colors? Get some echoes.
-      each val in availableColors
-        a.btn.btn-large.btn-inverse.trigger(class=val, data-payload=val, data-type='color', data-action='set', data-dismiss='modal') Color 
-  .modal-footer
-      a.btn(href='#', data-dismiss='modal') Close
 
 form.modal.hide#registerModal(action="/register", method="POST")
   .modal-header
@@ -38,9 +28,18 @@ form.modal.hide#registerModal(action="/register", method="POST")
         input.span4(type='password', name='password') 
         span.help-inline Shhhh, it's a secret
         label Email 
-         i (Optional) 
         input.span4(type='email', name='email') 
         span.help-inline We hate spam too. 
+        br
+        h3 Or Use:
+        br
+        #twitter-login(style='float: left; margin-left: 5px')
+          a(href='/auth/twitter', style='border: 0px')
+            img(style='border: 0px', src='/css/images/twitter_64.png')
+        #fb-login(style='float: left; margin-left: 5px')
+           a(href='/auth/facebook', style='border: 0px')
+            img(style='border: 0px', src='/css/images/facebook_64.png')
+        p <b>Won't tweet/post from your account </b>, won't  even load your friends or whatever. Purely for convenience. 
   .modal-footer
       button.btn.btn-primary(type="submit") Sign up!
       a.btn(href='#', data-dismiss='modal') Nevermind 
