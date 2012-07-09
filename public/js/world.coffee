@@ -385,6 +385,16 @@ doNowInit= (now)->
     now.personalWorldId= personalWorldId #may be blank
 
     map.addLayer(domTiles)
+    
+    $.doTimeout 2000, ->
+      if not state.selectedCell
+        return true
+      else
+        $.doTimeout 4000, ->
+          now.getCursors()
+          return false
+        return false
+
     setTileStyle() #set initial
 
     map.on 'zoomend', ->
@@ -407,7 +417,7 @@ doNowInit= (now)->
 
     now.setClientStateFromServer (s)->
       state.userPowers = s.powers
-      console.log 'setcl from serv', s
+      # console.log 'setcl from serv', s
       if s.color # s is session
         state.color= s.color
         $('#colorPicker').colorpicker("option", "color", s.color)

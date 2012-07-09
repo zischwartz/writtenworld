@@ -215,6 +215,32 @@
         return cb(toUpdate);
       });
     };
+    everyone.now.getCursors = function() {
+      var bounds, cid, _ref,
+        _this = this;
+      cid = this.user.cid;
+      bounds = (_ref = CUser.byCid(cid)) != null ? _ref.bounds : void 0;
+      nowjs.getGroup(this.now.currentWorldId).getUsers(function(users) {
+        var cursor, i, update, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = users.length; _i < _len; _i++) {
+          i = users[_i];
+          cursor = CUser.byCid(i).cursor;
+          if (bounds.contains(cursor) && cid !== i) {
+            update = {
+              cid: i,
+              x: cursor.x,
+              y: cursor.y,
+              color: CUser.byCid(i).color
+            };
+            _results.push(_this.now.updateCursors(update));
+          } else {
+            _results.push(void 0);
+          }
+        }
+        return _results;
+      });
+    };
     everyone.now.getTileCached = function(absTilePoint, numRows, callback) {
       var key, worldId,
         _this = this;
@@ -266,7 +292,6 @@
       if (!this.now.currentWorldId) {
         return false;
       }
-      console.log('getCloseUsers called');
       closeUsers = [];
       cid = this.user.clientId;
       aC = CUser.byCid(cid).cursor;
@@ -274,7 +299,7 @@
         var distance, i, key, u, uC, value, _i, _len, _ref;
         for (_i = 0, _len = users.length; _i < _len; _i++) {
           i = users[_i];
-          uC = CUser.byCid(i).cursor;
+          uC = CUser.byCidLess(i).cursor;
           distance = Math.sqrt((aC.x - uC.x) * (aC.x - uC.x) + (aC.y - uC.y) * (aC.y - uC.y));
           if (distance < 1000 && (i !== cid)) {
             u = {};
@@ -387,8 +412,17 @@
         return allByCid[cid];
       };
 
-      CUser.byCidFull = function(cid) {
-        return allByCid[cid];
+      CUser.byCidLess = function(cid) {
+        var less, u;
+        u = allByCid[cid];
+        less = {};
+        less.cursor = {
+          x: u.cursor.x,
+          y: u.cursor.y
+        };
+        less.cid = cid;
+        less.login = u.login;
+        return less;
       };
 
       CUser.bySid = function(sid) {
@@ -406,6 +440,7 @@
         this.cid = this.nowUser.clientId;
         this.sid = decodeURIComponent(this.nowUser.cookie['connect.sid']);
         this.riteQueue = [];
+        this.cursor = {};
         if ((_ref = nowUser.session) != null ? _ref.auth : void 0) {
           this.uid = nowUser.session.auth.userId;
           models.User.findById(this.uid, function(err, doc) {

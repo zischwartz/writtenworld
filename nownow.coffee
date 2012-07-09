@@ -110,9 +110,9 @@ module.exports = (app, SessionModel, redis_client) ->
         callback(results, absTilePoint)
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
-    # console.log 'getTile'
     if not this.now.currentWorldId
       return false
+
     models.Cell.where('world', this.now.currentWorldId)
       .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
       .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
@@ -139,10 +139,26 @@ module.exports = (app, SessionModel, redis_client) ->
             if CUser.byCid(i)?.bounds?.contains(cellPoint) # added the ? 
               toUpdate[i] = CUser.byCid(i)
       cb(toUpdate)
+  
+  everyone.now.getCursors = -> #for initial load. pull, don't push. Above is push
+    # console.log 'getcursors called'
+    cid=this.user.cid
+    bounds = CUser.byCid(cid)?.bounds
+    nowjs.getGroup(this.now.currentWorldId).getUsers (users) =>
+      for i in users
+        cursor=CUser.byCid(i).cursor
+        if bounds.contains(cursor) and cid isnt i
+          update =
+            cid: i
+            x: cursor.x
+            y: cursor.y
+            color: CUser.byCid(i).color
+          this.now.updateCursors(update)
+    return
+
 
   everyone.now.getTileCached= (absTilePoint, numRows, callback) ->
     # console.log 'getTileCached'
-    # really, we need access to the world.config, to know the zoom level. or make it two, well, three different functions. yeah.
     if not this.now.currentWorldId
       return false
     worldId= this.now.currentWorldId.toString()
@@ -182,15 +198,13 @@ module.exports = (app, SessionModel, redis_client) ->
   everyone.now.getCloseUsers= (cb)->
     if not this.now.currentWorldId
       return false
-    console.log 'getCloseUsers called'
     closeUsers= []
     cid = this.user.clientId
     aC=CUser.byCid(cid).cursor
     # console.log cUsers[cid]
-    # console.log 'ac', aC
     nowjs.getGroup(this.now.currentWorldId).getUsers (users) ->
       for i in users
-        uC = CUser.byCid(i).cursor
+        uC = CUser.byCidLess(i).cursor #less for security reasons
         distance = Math.sqrt((aC.x-uC.x)*(aC.x-uC.x)+(aC.y-uC.y)*(aC.y-uC.y))
         if distance < 1000 and (i isnt cid)
           u = {}
@@ -260,9 +274,14 @@ module.exports = (app, SessionModel, redis_client) ->
       return allByCid[cid]
     
     # sometimes we pass the whole thing to the client, security, bla
-    @byCidFull: (cid) ->
-      return allByCid[cid]
-    
+    @byCidLess: (cid) ->
+      u= allByCid[cid]
+      less = {}
+      less.cursor= {x:u.cursor.x,y: u.cursor.y}
+      less.cid = cid
+      less.login= u.login
+      return less
+
     @bySid: (sid) ->
       return allBySid[sid]
 
@@ -274,6 +293,7 @@ module.exports = (app, SessionModel, redis_client) ->
       @cid = @nowUser.clientId
       @sid = decodeURIComponent(@nowUser.cookie['connect.sid'])
       @riteQueue = []
+      @cursor = {}
       if nowUser.session?.auth
         @uid= nowUser.session.auth.userId
         models.User.findById @uid, (err, doc) =>
@@ -282,7 +302,6 @@ module.exports = (app, SessionModel, redis_client) ->
             # lets keep calling it login on this side. i really should change it, but this will be so much easier TODO
             @login = doc.name # .login
             @nowUser.login = doc.name # .login
-
             @nowUser.powers = doc.powers
         allByUid[@uid] = this
       else

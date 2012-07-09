@@ -430,6 +430,17 @@
     now.currentWorldId = initialWorldId;
     now.personalWorldId = personalWorldId;
     map.addLayer(domTiles);
+    $.doTimeout(2000, function() {
+      if (!state.selectedCell) {
+        return true;
+      } else {
+        $.doTimeout(4000, function() {
+          now.getCursors();
+          return false;
+        });
+        return false;
+      }
+    });
     setTileStyle();
     map.on('zoomend', function() {
       setTileStyle();
@@ -454,7 +465,6 @@
     });
     now.setClientStateFromServer(function(s) {
       state.userPowers = s.powers;
-      console.log('setcl from serv', s);
       if (s.color) {
         state.color = s.color;
         return $('#colorPicker').colorpicker("option", "color", s.color);
