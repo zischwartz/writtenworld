@@ -483,7 +483,7 @@
         if (this.login) {
           login = this.login;
         } else {
-          login = 'Someone';
+          login = "Anonymous #" + (Math.floor(Math.random() * 100));
         }
         for (type in toNotify) {
           _ref3 = toNotify[type];

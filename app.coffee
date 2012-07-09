@@ -146,29 +146,6 @@ app.get '/w/history', (req, res) ->
       console.log err if err
       render_world(req, res, {world: world})
 
-# app.get '/wid/:id' , (req, res) ->
-#     models.World.findById req.params.id,(err,world) ->
-#       if world
-#         if world.personal
-#           res.redirect("/uw/#{world.slug}")
-#         else
-#           res.redirect("/")
-#       else
-#         res.redirect("/")
-
-# app.get '/uw/:slug', (req, res)->
-#   if req.loggedIn
-#     models.World.findOne {slug: req.params.slug},(err,world) ->
-#       if world.personal
-#         if world.owner.toString() is req.user._id.toString()
-#           render_world(req, res, {world: world})
-#       else #it's not personal/private
-#         render_world(req, res, {world: world._id,})
-#         # res.render 'map_base.jade', {title: world.name}
-#   else
-#     #first add a message saying you gota login
-#     res.redirect('/login')
-
 app.get '/notes/:type?', (req, res) ->
   if not req.loggedIn
     res.redirect('/login')

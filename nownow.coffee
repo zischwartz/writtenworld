@@ -356,7 +356,10 @@ module.exports = (app, SessionModel, redis_client) ->
         if fixed[i+1] and fixed[i+1]?.y isnt fixed[i].y
           s+='<br>'
 
-      if @login then login=@login else login='Someone'
+      if @login
+        login=@login
+      else
+        login="Anonymous ##{Math.floor(Math.random()*100)}"
 
       for type of toNotify
         for uid in toNotify[type]
