@@ -112,7 +112,7 @@ render_world = (req, res, options={}) ->
     canLink=false
 
   res.render 'map_base.jade',
-    title: 'Written World'
+    title: if not options.world?.personal then 'Written World' else 'Your World'
     mainWorldId: models.mainWorldId
     initialWorldId: initialWorldId
     personalWorldId:personalWorldId
@@ -172,11 +172,11 @@ app.get '/notes/:type?', (req, res) ->
 app.get '/welcome', (req, res) ->
   # console.log req.user
   user = req.user
-  console.log '-------------'
+  # console.log '-------------'
   if not req.user?.inactive
-    #redirect to /
-    console.log 'not inactive'
+    # console.log 'not inactive'
     res.redirect("/")
+    return
   else
     if req.user.twit?.screenName
       user.name= req.user.twit.screenName
@@ -190,25 +190,9 @@ app.get '/welcome', (req, res) ->
       user.inactive = false
       user.save (err, doc) ->
         console.log err if err
-        console.log doc
-    
+        # console.log doc
     res.redirect("/")
 
-    #assign name, create personal world, redirect to /
-    # set active
-  # res.render 'welcome.jade', { title: 'About'}
-
-        # respondToRegistrationSucceed: (res, user, data) ->
-        #   personal= new exports.World {personal:true, owner:user._id, name:"#{user.login}'s History", ownerlogin: user.login }
-        #   personal.save (err, doc)->
-        #     user.personalWorld = personal._id
-        #     user.save (err) -> console.log err if err
-        #   if data.session.redirectTo
-        #     res.writeHead 303, {'Location': data.session.redirectTo}
-        #   else
-        #     res.writeHead 303, {'Location': '/'}  # data.session.redirectTo}
-        #   res.end()
-        #   return true
 # PAGES
 app.get '/home', (req, res) ->
   if req.loggedIn
