@@ -72,6 +72,9 @@
     },
     drawTile: function(tile, absTilePoint, zoom, tileData) {
       var c, cellData, ctx, fontSize, r, _i, _ref, _results;
+      if (!tileData) {
+        return false;
+      }
       ctx = tile.getContext('2d');
       fontSize = state.cellHeight();
       ctx.textBaseline = "top";

@@ -1,6 +1,5 @@
 delay = (ms, func) -> setTimeout func, ms
 
-
 L.WCanvas = L.TileLayer.extend(
   options:
     async: false
@@ -44,6 +43,7 @@ L.WCanvas = L.TileLayer.extend(
         @tileDrawn tile  unless @options.async
 
   drawTile: (tile, absTilePoint, zoom, tileData) ->
+    if not tileData then return false
     ctx = tile.getContext('2d')
     fontSize= state.cellHeight()
     ctx.textBaseline= "top"
@@ -61,7 +61,6 @@ L.WCanvas = L.TileLayer.extend(
 
   drawTileCircles: (tile, absTilePoint, zoom, density) ->
     if not density then return false
-
     ctx = tile.getContext('2d')
     offset= config.minLayerZoom()-zoom
     radius = density*offset*128
