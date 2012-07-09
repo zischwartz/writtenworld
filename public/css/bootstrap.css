@@ -7412,7 +7412,10 @@ body {
 .navbar .brand .subbrand a {
   color: #049cdb;
   font-size: 12px;
-  margin-right: 5px;
+  /*margin-right: 5px;*/
+
+  margin-left: 10px;
+  letter-spacing: 1px;
 }
 /* NAV STUFF */
 .navbar a i,
@@ -7476,6 +7479,27 @@ body {
   -moz-border-radius: 0px 0px 0px 15px;
   border-radius: 0px 0px 0px 15px;
   margin-right: -20px;
+}
+a#feedbackLink {
+  display: block;
+  position: absolute;
+  background-color: black;
+  -webkit-transform: rotate(270deg);
+  -moz-transform: rotate(270deg);
+  -ms-transform: rotate(270deg);
+  -o-transform: rotate(270deg);
+  transform: rotate(270deg);
+  -webkit-transform: rotate(270deg);
+  -moz-transform: rotate(270deg);
+  -ms-transform: rotate(270deg);
+  -o-transform: rotate(270deg);
+  transform: rotate(270deg);
+  padding: 8px 8px 4px 8px;
+  color: white !important;
+  text-decoration: none;
+  z-index: 10000;
+  left: -2em;
+  top: 43%;
 }
 /* BODY, ETC */
 .leaflet-top {

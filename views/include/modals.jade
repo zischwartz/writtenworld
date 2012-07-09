@@ -1,6 +1,27 @@
 
 // link(rel='stylesheet', href="/css/bootstrap.css")
 
+div.modal.hide#aboutModal
+  .modal-header
+      a.close(data-dismiss='modal') ×
+      h2 A Communal, Real-Time, Infinite Text Grid. On A Map. 
+        small Just Like You've Always Wanted.
+  .modal-body
+    h3 Say what?
+    p Basically, you're represented by the little glowing cursor, which ought to be close to your actual location. You can move around, write whatever, wherever, and change what others have already written.
+    h3 People can mess with what I write?
+    p Yep. It's sorta like grafiti. <b> But</b> with an account, you get your own <b> personal history world </b>, where everything you write is saved, no matter what.
+    h3 What are the colored boxes moving around?
+    p Other peoples' cursors.
+    h3 What's an 'echo' ?
+    p An echo is sort of like an upvote. With other people's text, you can write something new over it, or echo it by typing exactly what they wrote, where they wrote it, making it more permanent and harder for others to overwrite. 
+    h3 More Questions? 
+      a(href='/about') Checkout the about page 
+      | please.
+
+  .modal-footer
+      a.btn(href='#', data-dismiss='modal') Cool 
+
 form.modal.hide#linkModal
   .modal-header
       a.close(data-dismiss='modal') ×
