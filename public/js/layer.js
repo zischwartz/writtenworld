@@ -513,7 +513,7 @@
         if (frag) {
           return layer.populateTile(tile, tilePoint, zoom, frag);
         } else {
-          return now.getTile(absTilePoint, state.numRows(), function(tileData, atp) {
+          return now.getTileCached(absTilePoint, state.numRows(), function(tileData, atp) {
             return delay(0, function() {
               frag = betterBuildTile(tile, tileData, atp);
               return layer.populateTile(tile, tilePoint, zoom, frag);

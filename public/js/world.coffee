@@ -384,6 +384,7 @@ doNowInit= (now)->
     state.topLayerStamp = L.Util.stamp domTiles
     now.isLocal= state.isLocal
 
+    now.numRC= state.numRows()
     now.setGroup(initialWorldId)
     now.currentWorldId= initialWorldId
     now.personalWorldId= personalWorldId #may be blank
@@ -403,6 +404,7 @@ doNowInit= (now)->
 
     map.on 'zoomend', ->
       setTileStyle()
+      now.numRC= state.numRows()
       $('.leaflet-tile a').tooltip({placement:'top'})
 
     initializeInterface()

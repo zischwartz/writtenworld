@@ -430,6 +430,7 @@
     });
     state.topLayerStamp = L.Util.stamp(domTiles);
     now.isLocal = state.isLocal;
+    now.numRC = state.numRows();
     now.setGroup(initialWorldId);
     now.currentWorldId = initialWorldId;
     now.personalWorldId = personalWorldId;
@@ -448,6 +449,7 @@
     setTileStyle();
     map.on('zoomend', function() {
       setTileStyle();
+      now.numRC = state.numRows();
       return $('.leaflet-tile a').tooltip({
         placement: 'top'
       });

@@ -7,6 +7,8 @@ powers = require './powers'
 
 leaflet = require './lib/leaflet-custom-src.js'
 
+REDIS_EXPIRE_SECS=600
+
 module.exports = (app, SessionModel, redis_client) ->
   everyone = nowjs.initialize app
   # module.everyone = everyone
@@ -69,6 +71,12 @@ module.exports = (app, SessionModel, redis_client) ->
     currentWorldId = this.now.currentWorldId
     cid = this.user.clientId
 
+    #convert to abstilepoint
+    numRC= this.now.numRC
+    tilePoint = {x:Math.floor(cellPoint.x/numRC)*numRC, y: Math.floor(cellPoint.y/numRC)*numRC}
+    key="t:#{currentWorldId}:#{numRC}:#{tilePoint.x}:#{tilePoint.y}"
+    # console.log tilePoint
+
     if typeof content isnt 'string'
       for k, v of content
         if k is 'linkurl'
@@ -84,6 +92,12 @@ module.exports = (app, SessionModel, redis_client) ->
 
     bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false, originalOwner=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
+      if rite
+          console.log rite
+          #need TODO handle echoes downrotes, etc
+          pCell = {x: cellPoint.x, y: cellPoint.y, contents: rite.contents, props: rite.props}
+          redis_client.hmset key, "#{cellPoint.x}x#{cellPoint.y}", JSON.stringify(pCell)
+          redis_client.expire key, REDIS_EXPIRE_SECS 
       getWhoCanSee cellPoint, currentWorldId, (toUpdate)->
         for i of toUpdate
           # if i !=cid # ie not you, removed for my hack 
@@ -110,9 +124,11 @@ module.exports = (app, SessionModel, redis_client) ->
         callback(results, absTilePoint)
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
+    console.log absTilePoint
+    # key="t:#{this.now.currentWorldId}:#{numRows}:#{absTilePoint.x}:#{absTilePoint.y}"
+    # console.log key
     if not this.now.currentWorldId
       return false
-
     models.Cell.where('world', this.now.currentWorldId)
       .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
       .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
@@ -122,7 +138,7 @@ module.exports = (app, SessionModel, redis_client) ->
         if docs.length
           for c in docs
             if c.current
-              pCell = {x: c.y, y: c.y, contents: c.current.contents, props: c.current.props}
+              pCell = {x: c.x, y: c.y, contents: c.current.contents, props: c.current.props}#holy crap that said c.y instead of c.x
               results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
             # console.log "results"
           callback(results, absTilePoint)
@@ -130,7 +146,7 @@ module.exports = (app, SessionModel, redis_client) ->
           # console.log 'not found'
           callback(results, absTilePoint)
 
-  #utility for above 
+  #utilities for above 
   getWhoCanSee = (cellPoint, worldId, cb ) ->
     nowjs.getGroup(worldId).getUsers (users) ->
       toUpdate = {}
@@ -167,12 +183,12 @@ module.exports = (app, SessionModel, redis_client) ->
     redis_client.exists key, (err, exists) =>
       if exists
         redis_client.hgetall key, (err, obj)->
-          # console.log 'hit', key
+          console.log 'hit', key
           for i of obj
             obj[i] = JSON.parse obj[i]
           callback(obj, absTilePoint)
       else
-        # console.log 'miss', key
+        console.log 'miss', key
         models.Cell.where('world', this.now.currentWorldId)
           .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
           .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
@@ -185,7 +201,7 @@ module.exports = (app, SessionModel, redis_client) ->
                   pCell = {x: c.y, y: c.y, contents: c.current.contents, props: c.current.props}
                   results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
                   redis_client.hmset key, "#{c.x}x#{c.y}", JSON.stringify(pCell)
-                  redis_client.expire key, 600
+                  redis_client.expire key, REDIS_EXPIRE_SECS 
                 # console.log "results"
               callback(results, absTilePoint)
             else
