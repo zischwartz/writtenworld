@@ -7,17 +7,34 @@ div.modal.hide#aboutModal
       h2 A Communal, Real-Time, Infinite Text Grid. On A Map. 
         small Just Like You've Always Wanted.
   .modal-body
-    h3 Say what?
+    h3 Like overwrite for the world 
     p Basically, you're represented by the little glowing cursor, which ought to be close to your actual location. You can move around, write whatever, wherever, and change what others have already written.
-    h3 People can mess with what I write?
+    h3 People can change what I've written?
     p Yep. It's sorta like grafiti. <b> But</b> with an account, you get your own <b> personal history world </b>, where everything you write is saved, no matter what.
     h3 What are the colored boxes moving around?
-    p Other peoples' cursors.
+    p Other peoples' cursors. Nobody around? Click 'Nearby' to go find someone else and say hi.
     h3 What's an 'echo' ?
-    p An echo is sort of like an upvote. With other people's text, you can write something new over it, or echo it by typing exactly what they wrote, where they wrote it, making it more permanent and harder for others to overwrite. 
+    p Sort of like an upvote. With other people's text, you can write something new over it, or echo it by typing exactly what they wrote, where they wrote it, making it more permanent and harder for others to overwrite. 
     h3 More Questions? 
       a(href='/about') Checkout the about page 
       | please.
+
+  .modal-footer
+      a.btn(href='#', data-dismiss='modal') Cool 
+
+
+div.modal.hide#aboutModalTwo
+  .modal-header
+      a.close(data-dismiss='modal') ×
+      h2 Emotional cartography, 
+        small 
+  .modal-body
+
+    h3 Who made this?
+    p 
+      a(href="http://zachschwartz.com") Zach Schwartz 
+    | . It was inspired by this site, by Andrew Baddr. The first version of Written World was built with his code, and was a school project at NYU's ITP, with Martín Bravo, and Nara Kasbergen. I started over for my final project, and built this. I hope you like it. 
+
 
   .modal-footer
       a.btn(href='#', data-dismiss='modal') Cool 
@@ -54,10 +71,10 @@ form.modal.hide#registerModal(action="/register", method="POST")
         br
         h3 Or Use:
         br
-        #twitter-login(style='float: left; margin-left: 5px')
+        .twitter-login(style='float: left; margin-left: 5px')
           a(href='/auth/twitter', style='border: 0px')
             img(style='border: 0px', src='/css/images/twitter_64.png')
-        #fb-login(style='float: left; margin-left: 5px')
+        .fb-login(style='float: left; margin-left: 5px')
            a(href='/auth/facebook', style='border: 0px')
             img(style='border: 0px', src='/css/images/facebook_64.png')
         p <b>Won't tweet/post from your account </b>, won't  even load your friends or whatever. Purely for convenience. 
@@ -90,6 +107,15 @@ form.modal.hide#loginModal(action="/login", method="POST")
         input.span4(type='text', name='login')
         label Password 
         input.span4(type='password', name='password') 
+        h3 Or Use
+        p  
+          #twitter-login(style='float: left; margin-left: 5px')
+            a(href='/auth/twitter', style='border: 0px')
+              img(style='border: 0px', src='/css/images/twitter_64.png')
+          #fb-login(style='float: left; margin-left: 5px')
+             a(href='/auth/facebook', style='border: 0px')
+              img(style='border: 0px', src='/css/images/facebook_64.png')
+        p <b>Won't tweet/post from your account </b>, won't  even load your friends or whatever. Purely for convenience. 
   .modal-footer
       button.btn.btn-primary(type="submit") Sign in!
       a.btn(href='#', data-dismiss='modal') Nevermind 

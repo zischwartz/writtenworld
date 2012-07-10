@@ -391,7 +391,7 @@
           if (u) {
             name = u.name;
           } else {
-            name = 'Anonymous';
+            name = 'SomeoneWithoutAnAccount';
           }
           return _this.now.insertMessage("Written by <b>" + name + "</b>", " On " + cell.current.date + ". " + name + " " + waslocalstring + " There have been " + cell.history.length + " things written here total");
         });
@@ -558,7 +558,7 @@
         if (this.login) {
           login = this.login;
         } else {
-          login = "Anonymous #" + (Math.floor(Math.random() * 100));
+          login = "SomeoneWithoutAnAccount ";
         }
         for (type in toNotify) {
           _ref3 = toNotify[type];

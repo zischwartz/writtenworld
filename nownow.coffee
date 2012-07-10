@@ -261,7 +261,7 @@ module.exports = (app, SessionModel, redis_client) ->
         models.User.findById cell.current.owner, (err, u) =>
           console.log err if err
           console.log u
-          if u then name=u.name else name = 'Anonymous'
+          if u then name=u.name else name = 'SomeoneWithoutAnAccount'
           this.now.insertMessage("Written by <b>#{name}</b>", " On #{cell.current.date}. #{name} #{waslocalstring} There have been #{cell.history.length} things written here total")
 
   class CUser
@@ -386,7 +386,8 @@ module.exports = (app, SessionModel, redis_client) ->
       if @login
         login=@login
       else
-        login="Anonymous ##{Math.floor(Math.random()*100)}"
+        # login="Anonymous ##{Math.floor(Math.random()*100)}"
+        login="SomeoneWithoutAnAccount "
 
       for type of toNotify
         for uid in toNotify[type]
