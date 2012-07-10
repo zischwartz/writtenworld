@@ -242,7 +242,7 @@
             state.geoPos = latlng;
             now.isLocal = false;
           } else {
-            insertMessage('Too Far!', "Sorry, you can't jump that far. Signup to go further than " + (config.maxJumpDistance()) + " km.");
+            insertMessage('Too Far!', "Sorry, you can't jump that far.  Register to go wherever you want.");
           }
           $('#locationSearch').modal('hide');
           return centerCursor();
@@ -283,6 +283,9 @@
       if (type === 'geoLink') {
         now.createGeoLink(state.selectedCell.key.slice(1), map.getZoom());
       }
+      if (action === 'hide' && type === 'notes') {
+        $('#notes').slideToggle();
+      }
       if (action === 'set') {
         state[type] = payload;
         now.setServerState(type, payload);
@@ -295,6 +298,7 @@
       }
       if (action === 'show' && type === 'notes') {
         $('#notes').slideToggle().find('.loading').load("/notes/" + payload);
+        $("#notes li").removeClass('active');
         $("#notes li." + payload).addClass('active');
         if (payload === 'unread') {
           $(this).find('i').removeClass('hasUnread');

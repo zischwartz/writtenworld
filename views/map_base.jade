@@ -42,6 +42,8 @@ body
   include include/nav.jade
   a#feedbackLink(data-toggle="modal", href="#feedbackModal") Feedback 
   div#notes.span5
+    button.close.trigger(data-action='hide', data-type='notes') x
+
     ul.nav.nav-tabs
       li.all
         a.trigger(data-action='get', data-type='notes', data-payload='all', href="/notes/all/") All Notes 

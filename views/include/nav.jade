@@ -85,6 +85,14 @@
                 | echos, 
                 span#userTotalRites 0 
                 |  rites  
+              ul.nav.pull-right
+                li
+                  -if (unreadNotes)
+                    a.trigger(data-action='show', data-type='notes', data-payload='unread', href="#notes", rel="tooltip", title="#{unreadNotes} Unread Notes")
+                      i.icon-envelope.hasUnread
+                  -else
+                    a.trigger(data-action='show', data-type='notes', data-payload='all', href="#notes", rel="tooltip", title="No Unread Notes")
+                      i.icon-envelope
             - else
               ul.nav.pull-right
                 li

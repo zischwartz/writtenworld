@@ -212,7 +212,7 @@ initializeInterface = ->
           state.geoPos= latlng
           now.isLocal= false
         else
-          insertMessage('Too Far!', "Sorry, you can't jump that far. Signup to go further than #{config.maxJumpDistance()} km.")
+          insertMessage('Too Far!', "Sorry, you can't jump that far.  Register to go wherever you want.")
         $('#locationSearch').modal('hide')
         centerCursor()
     return false
@@ -250,6 +250,9 @@ initializeInterface = ->
       now.createGeoLink(state.selectedCell.key.slice(1), map.getZoom())
       #dang this won't work zoomed out, i don't have a selected cell...
 
+    if action == 'hide' and type is 'notes'
+      $('#notes').slideToggle()
+
     if action == 'set' #setServerState, more properly, like color
       state[type]=payload
       now.setServerState(type, payload)
@@ -261,6 +264,7 @@ initializeInterface = ->
 
     if action is 'show' and type is 'notes'
       $('#notes').slideToggle().find('.loading').load("/notes/#{payload}")
+      $("#notes li").removeClass('active')
       $("#notes li.#{payload}").addClass('active')
       if payload is 'unread'
         $(this).find('i').removeClass('hasUnread')
