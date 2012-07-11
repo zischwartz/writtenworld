@@ -12,7 +12,8 @@ console.log 'DEBUG? ', DEBUG
 require 'coffee-script'
 
 mongoose = require 'mongoose'
-mongoose.connect('mongodb://localhost/mapist')
+# mongoose.connect('mongodb://localhost/mapist')
+mongoose.connect('mongodb://localhost/writtenworld')
 jade = require('jade')
 
 redis = require "redis"

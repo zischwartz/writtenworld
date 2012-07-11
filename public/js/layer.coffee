@@ -114,7 +114,7 @@ betterBuildTile= (tile, tileData, absTilePoint)->
   frag = document.createDocumentFragment()
   for r in [0..state.numRows()-1]
     for c in [0..state.numCols()-1]
-      cellData=tileData["#{absTilePoint.x+c}x#{absTilePoint.y+r}"]
+      cellData=tileData?["#{absTilePoint.x+c}x#{absTilePoint.y+r}"]
       if cellData
         cell=Cell.getOrCreate r, c, tile, cellData.contents, cellData.props
       else
@@ -427,6 +427,7 @@ L.DomTileLayer = L.Class.extend
       else
         now.getTileCached absTilePoint, state.numRows(), (tileData, atp)->
         # now.getTile absTilePoint, state.numRows(), (tileData, atp)->
+          # console.log tileData
           delay 0, ->
             frag=betterBuildTile(tile, tileData, atp)
             layer.populateTile(tile, tilePoint, zoom, frag)

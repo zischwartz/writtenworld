@@ -92,19 +92,25 @@
       });
     };
     everyone.now.writeCell = function(cellPoint, content) {
-      var cid, currentWorldId, k, key, numRC, tilePoint, v,
+      var cid, currentWorldId, k, key, key2, numRC, tilePoint, tilePoint2, v,
         _this = this;
       if (!this.now.currentWorldId) {
         return false;
       }
       currentWorldId = this.now.currentWorldId;
       cid = this.user.clientId;
-      numRC = this.now.numRC;
+      numRC = 16;
       tilePoint = {
         x: Math.floor(cellPoint.x / numRC) * numRC,
         y: Math.floor(cellPoint.y / numRC) * numRC
       };
       key = "t:" + currentWorldId + ":" + numRC + ":" + tilePoint.x + ":" + tilePoint.y;
+      numRC = 8;
+      tilePoint2 = {
+        x: Math.floor(cellPoint.x / numRC) * numRC,
+        y: Math.floor(cellPoint.y / numRC) * numRC
+      };
+      key2 = "t:" + currentWorldId + ":" + numRC + ":" + tilePoint2.x + ":" + tilePoint2.y;
       if (typeof content !== 'string') {
         for (k in content) {
           v = content[k];
@@ -124,7 +130,7 @@
         }
       }
       bridge.processRite(cellPoint, content, this.user, this.now, currentWorldId, function(commandType, rite, cellPoint, cellProps, originalOwner) {
-        var pCell;
+        var pCell, ppCell;
         if (rite == null) {
           rite = false;
         }
@@ -138,15 +144,17 @@
           originalOwner = false;
         }
         if (rite) {
-          console.log(rite);
           pCell = {
             x: cellPoint.x,
             y: cellPoint.y,
             contents: rite.contents,
             props: rite.props
           };
-          redis_client.hmset(key, "" + cellPoint.x + "x" + cellPoint.y, JSON.stringify(pCell));
+          ppCell = JSON.stringify(pCell);
+          redis_client.hmset(key, "" + cellPoint.x + "x" + cellPoint.y, ppCell);
+          redis_client.hmset(key2, "" + cellPoint.x + "x" + cellPoint.y, ppCell);
           redis_client.expire(key, REDIS_EXPIRE_SECS);
+          redis_client.expire(key2, REDIS_EXPIRE_SECS);
         }
         return getWhoCanSee(cellPoint, currentWorldId, function(toUpdate) {
           var i, _results;
@@ -195,7 +203,6 @@
     };
     everyone.now.getTile = function(absTilePoint, numRows, callback) {
       var _this = this;
-      console.log(absTilePoint);
       if (!this.now.currentWorldId) {
         return false;
       }
@@ -302,7 +309,7 @@
               }
               return callback(results, absTilePoint);
             } else {
-              redis_client.set(key, results);
+              redis_client.hset(key, '0', '0');
               redis_client.expire(key, 600);
               return callback(results, absTilePoint);
             }

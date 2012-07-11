@@ -72,10 +72,14 @@ module.exports = (app, SessionModel, redis_client) ->
     cid = this.user.clientId
 
     #convert to abstilepoint
-    numRC= this.now.numRC
+    # numRC= this.now.numRC
+    numRC=16
     tilePoint = {x:Math.floor(cellPoint.x/numRC)*numRC, y: Math.floor(cellPoint.y/numRC)*numRC}
     key="t:#{currentWorldId}:#{numRC}:#{tilePoint.x}:#{tilePoint.y}"
-    # console.log tilePoint
+    numRC=8
+    tilePoint2 = {x:Math.floor(cellPoint.x/numRC)*numRC, y: Math.floor(cellPoint.y/numRC)*numRC}
+    key2="t:#{currentWorldId}:#{numRC}:#{tilePoint2.x}:#{tilePoint2.y}"
+    #this is dumb, but neccesary for now if i want to cache whole tiles, until i think of a better way
 
     if typeof content isnt 'string'
       for k, v of content
@@ -93,18 +97,17 @@ module.exports = (app, SessionModel, redis_client) ->
     bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false, originalOwner=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
       if rite
-          console.log rite
-          #need TODO handle echoes downrotes, etc
           pCell = {x: cellPoint.x, y: cellPoint.y, contents: rite.contents, props: rite.props}
-          redis_client.hmset key, "#{cellPoint.x}x#{cellPoint.y}", JSON.stringify(pCell)
-          redis_client.expire key, REDIS_EXPIRE_SECS 
+          ppCell= JSON.stringify(pCell)
+          redis_client.hmset key, "#{cellPoint.x}x#{cellPoint.y}", ppCell
+          redis_client.hmset key2, "#{cellPoint.x}x#{cellPoint.y}", ppCell
+          redis_client.expire key, REDIS_EXPIRE_SECS
+          redis_client.expire key2, REDIS_EXPIRE_SECS
       getWhoCanSee cellPoint, currentWorldId, (toUpdate)->
         for i of toUpdate
-          # if i !=cid # ie not you, removed for my hack 
-            if rite # it was a legit rite
+            if rite # it was a legit rite  # if i !=cid # ALSO: ie not you, removed for hacky 'rite to server than to screen'
               CUser.byCid(cid).addToRiteQueue {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite, commandType, originalOwner}
               nowjs.getClient i, ->
-                # console.log i
                 this.now.drawRite(commandType, rite, cellPoint, cellProps)
     return true
 
@@ -124,9 +127,6 @@ module.exports = (app, SessionModel, redis_client) ->
         callback(results, absTilePoint)
 
   everyone.now.getTile= (absTilePoint, numRows, callback) ->
-    console.log absTilePoint
-    # key="t:#{this.now.currentWorldId}:#{numRows}:#{absTilePoint.x}:#{absTilePoint.y}"
-    # console.log key
     if not this.now.currentWorldId
       return false
     models.Cell.where('world', this.now.currentWorldId)
@@ -183,12 +183,12 @@ module.exports = (app, SessionModel, redis_client) ->
     redis_client.exists key, (err, exists) =>
       if exists
         redis_client.hgetall key, (err, obj)->
-          console.log 'hit', key
+          # console.log 'hit', key
           for i of obj
             obj[i] = JSON.parse obj[i]
           callback(obj, absTilePoint)
       else
-        console.log 'miss', key
+        # console.log 'miss', key
         models.Cell.where('world', this.now.currentWorldId)
           .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
           .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
@@ -201,12 +201,12 @@ module.exports = (app, SessionModel, redis_client) ->
                   pCell = {x: c.y, y: c.y, contents: c.current.contents, props: c.current.props}
                   results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
                   redis_client.hmset key, "#{c.x}x#{c.y}", JSON.stringify(pCell)
-                  redis_client.expire key, REDIS_EXPIRE_SECS 
+                  redis_client.expire key, REDIS_EXPIRE_SECS
                 # console.log "results"
               callback(results, absTilePoint)
             else
               # console.log 'not found'
-              redis_client.set key, results
+              redis_client.hset key, '0','0'
               redis_client.expire key, 600
               callback(results, absTilePoint)
 

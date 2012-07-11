@@ -155,7 +155,7 @@
     frag = document.createDocumentFragment();
     for (r = _i = 0, _ref = state.numRows() - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; r = 0 <= _ref ? ++_i : --_i) {
       for (c = _j = 0, _ref1 = state.numCols() - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; c = 0 <= _ref1 ? ++_j : --_j) {
-        cellData = tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)];
+        cellData = tileData != null ? tileData["" + (absTilePoint.x + c) + "x" + (absTilePoint.y + r)] : void 0;
         if (cellData) {
           cell = Cell.getOrCreate(r, c, tile, cellData.contents, cellData.props);
         } else {
