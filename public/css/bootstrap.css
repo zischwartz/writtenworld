@@ -7632,6 +7632,7 @@ a#feedbackLink {
   width: 20%;
   left: 74%;
   position: absolute;
+  color: #333333;
 }
 .alert blockquote {
   padding: 5px 5px 5px 15px;
@@ -8053,6 +8054,9 @@ div.leaflet-tile-loaded {
   font-size: 19em !important;
   top: 400px !important;
   left: 150px !important;
+}
+.ai99 {
+  z-index: 100;
 }
 .ai1 {
   -webkit-transition: all ease-out 0.2s;

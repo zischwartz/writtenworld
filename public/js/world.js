@@ -191,6 +191,9 @@
         state.selectedCell.write(c);
         userTotalRites = parseInt($userTotalRites.text());
         $userTotalRites.text(userTotalRites + 1);
+        if (!config.isAuth() && (userTotalRites === 4 || userTotalRites === 25)) {
+          insertMessage('Register!!1', "With an account, all the stuff you're writing gets archived to a personal world, where nobody can mess with it", 'alert-info');
+        }
         moveCursor(state.writeDirection);
       }
     });
@@ -371,7 +374,9 @@
 
   jQuery(function() {
     var centerPoint, mapOptions, tileServeLayer;
-    welcome();
+    if (!config.isAuth()) {
+      welcome();
+    }
     if (!window.NOMAP) {
       tileServeLayer = new L.TileLayer(config.tileServeUrl(), {
         maxZoom: config.maxZoom()
@@ -883,13 +888,13 @@
   welcome = function() {
     var c, welcome_cells, welcome_message, _i, _len, _ref;
     welcome_message = [];
-    _ref = "Hey. Try typing on the map./It'll be fun. I swear. ";
+    _ref = "Hey. Try typing on the map./It'll be fun. I swear. // You can move around with the mouse and arrow keys. ";
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       c = _ref[_i];
       welcome_message.push(c);
     }
     welcome_cells = [];
-    return $.doTimeout(8000, function() {
+    return $.doTimeout(5000, function() {
       var initial_x, key, layer, target, targetCell;
       $('.cS0').live('click', function() {
         $.doTimeout('welcome');
@@ -901,8 +906,13 @@
         $('.cS0').addClass('ar1').doTimeout(200, function() {
           return this.remove();
         });
-        $.doTimeout('welcome');
-        return false;
+        return $.doTimeout('welcome');
+      });
+      inputEl.keypress(function(e) {
+        $('.cS0').addClass('ar1').doTimeout(200, function() {
+          return this.remove();
+        });
+        return $.doTimeout('welcome');
       });
       layer = getLayer(state.topLayerStamp);
       if (!layer) {
@@ -927,7 +937,7 @@
           target.x += 1;
           key = "c" + target.x + "x" + target.y;
           targetCell = Cell.all()[key];
-          targetCell.animateTextInsert(l, 4, 'cS0', true);
+          targetCell.animateTextInsert(l, 99, 'cS0', true);
           welcome_cells.push(targetCell);
         }
         if (welcome_message.length) {
@@ -942,6 +952,7 @@
           return false;
         }
       });
+      return false;
     });
   };
 

@@ -43,7 +43,7 @@ geoSucceeded = (position) ->
 
 # chicago = new L.LatLng(41.878114,-87.629798) # for testing
 # nj = new L.LatLng(40.058324,-74.405661) # for testing
-# la = new L.LatLng(34.052234,-118.243685) # for testing
+la = new L.LatLng(34.052234,-118.243685) # for testing
 
 geoHasPosition = (position) ->
   # console.log 'has pos', position 
@@ -61,6 +61,7 @@ geoHasPosition = (position) ->
   distanceToClosest = 10000000000000000000000000000000
 
   p = new L.LatLng(position.coords.latitude,position.coords.longitude)
+  # p =la 
   state.geoPos = p
   state.geoAccuracy = position.coords.accuracy
   if window.VARYLATLNG and position.coords.accuracy > 2000 or position.coords.accuracy is -1

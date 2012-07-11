@@ -273,6 +273,7 @@
       type: Boolean,
       "default": true
     },
+    initialPos: String,
     powers: {
       jumpDistance: {
         type: Number,

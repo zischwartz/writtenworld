@@ -1,5 +1,5 @@
 window.DEBUG = false
-window.NOMAP = true 
+window.NOMAP = false
 window.VARYLATLNG = false
 window.MapBoxBadZoomOffset=3 #3 for mapbox, 2 for a ts with max zoom of 18
 
@@ -9,9 +9,9 @@ mapBoxUrl = "http://{s}.tiles.mapbox.com/v3/zischwartz.map-ei57zypj/{z}/{x}/{y}.
 tileServeUrl = "http://23.23.200.225/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png"
 
 colorOptions=[
-   '92A5C7'
-   '4E7BCE'
-   '6B52D2'
+   '73A5FF'
+   '20FE00'
+   '6716F7'
    '3EC8B9'
    '0500FF'
    'EC535A'

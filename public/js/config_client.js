@@ -4,7 +4,7 @@
 
   window.DEBUG = false;
 
-  window.NOMAP = true;
+  window.NOMAP = false;
 
   window.VARYLATLNG = false;
 
@@ -16,7 +16,7 @@
 
   tileServeUrl = "http://23.23.200.225/tiles/tiles.py/wwtiles/{z}/{x}/{y}.png";
 
-  colorOptions = ['92A5C7', '4E7BCE', '6B52D2', '3EC8B9', '0500FF', 'EC535A', 'D64BA2', 'D91D27'];
+  colorOptions = ['73A5FF', '20FE00', '6716F7', '3EC8B9', '0500FF', 'EC535A', 'D64BA2', 'D91D27'];
 
   Configuration = Configuration = (function() {
 

@@ -58,24 +58,25 @@ module.exports = (everyone, SessionModel) ->
         if not cell or not cell.current
           # console.log 'no cell or blank cell'
           cell = new models.Cell {x:cellPoint.x, y:cellPoint.y, world:currentWorldId}
-          [already, alreadyPos] = [false, -1]
+          # [already, alreadyPos] = [false, -1]
+          already= {echoer: false, downroter: false, downPos:-1, echoPos: -1} 
 
         if cell and cell.current
           # console.log 'cell found w/ current'
           # console.log determineStatus(cell, riter)
-          [already, alreadyPos] = determineStatus(cell, riter)
+          # [already, alreadyPos] = determineStatus(cell, riter)
+          already = determineStatus(cell, riter)
        
         logic=
           blankCurrently : not cell?.current or cell?.current?.contents == models.mainWorld.config.defaultChar #TODO make this a config
           blankRite: contents == models.mainWorld.config.defaultChar
           potentialEcho : cell?.current?.contents == contents
           cEchoes : cell?.current?.props?.echoes
-          already: already #echoer or downroter --string
-          alreadyPos: alreadyPos
           riteToHistory: true #flag
+          already: already
 
-        logic.legitEcho = already != 'echoer' and logic.potentialEcho
-        logic.legitDownrote= not logic.blankCurrently and not logic.potentialEcho and already != 'downroter'
+        logic.legitEcho = logic.potentialEcho and not already.echoer
+        logic.legitDownrote= not logic.blankCurrently and not logic.potentialEcho and not already.downroter
         originalOwner = cell.current?.owner
 
         # debug = ' '
@@ -89,32 +90,31 @@ module.exports = (everyone, SessionModel) ->
         # console.log debug
 
         if logic.blankCurrently
-          # console.log 'Blank, just write'
+          console.log 'Blank, just write'
           normalRite(cell, rite, riter, logic)
-          callback('normalRite', rite, cellPoint)
-        else if logic.potentialEcho and logic.already == 'echoer'
-          # console.log 'Echoing yourself too much will make you go blind'
+          callback('normalRite', rite, cellPoint, rite) #borderline clever, the second passing of rite is cell.current
+        else if logic.potentialEcho and logic.already.echoer
+          console.log 'Echoing yourself too much will make you go blind'
           logic.riteToHistory=false
           callback('alreadyEchoed')
-        else if logic.already=='downroter' and not logic.potentialEcho
-          # console.log 'You cannot downrote again '
+        else if logic.already.downroter and not logic.potentialEcho
+          console.log 'You cannot downrote again '
           logic.riteToHistory=false
           callback('alreadyDownroted')
         else if logic.legitEcho
-            # console.log 'Legit echo, cool'
+            console.log 'Legit echo, cool'
             echoIt(cell, rite, riter, logic)
             callback('echo', rite, cellPoint, cell.current, originalOwner)
         else if logic.cEchoes<=0
-            # console.log 'Legit overrite, there were no echoes'
+            console.log 'Legit overrite, there were no echoes'
             overriteIt(cell, rite, riter, logic) # this changes c.current to the rite
             callback('overrite', rite, cellPoint, cell.current, originalOwner)
         else if logic.cEchoes>=1
-            # console.log '.'
-            if logic.already isnt 'echoer'
-              # console.log 'Legit Downrote'
+            if not logic.already.echoer
+              console.log 'Legit Downrote'
               downroteIt(cell, rite, riter, logic)
               callback('downrote', rite, cellPoint, cell.current, originalOwner)
-            else if logic.already == 'echoer'
+            else if logic.already.echoer
               if logic.cEchoes ==1
                 console.log 'Overrite something you echoed!'
                 overriteIt(cell, rite, riter, logic)
@@ -134,17 +134,11 @@ module.exports = (everyone, SessionModel) ->
               user.totalRites+=1
               user.save (err) -> console.log err if err
 
-        # make CUser based? TODO
         if originalOwner and  (logic.legitEcho or logic.legitDownrote)
           models.User.findById originalOwner, (err, user) ->
             if user and logic.legitEcho
               user.totalEchoes+=1
               user.save (err)-> console.log err if err
-              #
-              # Removed in favor of using the CUser obj
-              # user.emit('receivedEcho', rite)
-            # if user and logic.legitDownrote and originalOwner.toString() isnt riter.toString()
-              # user.emit('receivedOverRite', rite)
 
   # END processRite
 
@@ -167,7 +161,7 @@ determineStatus = (cell, riter) ->
         isAlreadyEchoer = true
         alreadyEchoPos= i
         # console.log "already echoer!!! #{alreadyEchoPos}"
-        return ['echoer', i]
+        # return ['echoer', i]
   if cell?.current?.props.downroters
     for d in cell?.current?.props.downroters
       i+=1
@@ -175,9 +169,10 @@ determineStatus = (cell, riter) ->
         isAlreadyDownroter = true
         alreadyDownPos=i
         # console.log "already downroter!!! #{alreadyDownPos}"
-        return ['downroter', i]
+        # return ['downroter', i]
   # console.log 'returning false from determine status'
-  return [false, -1]
+  # return [false, -1]
+  return {echoer: isAlreadyEchoer, downroter: isAlreadyDownroter, echoPos:alreadyEchoPos, downPos: alreadyDownPos}
 
 normalRite = (cell, rite, riter, logic) ->
   rite.props.echoes+=1
@@ -189,8 +184,8 @@ normalRite = (cell, rite, riter, logic) ->
 echoIt = (cell, rite, riter, logic) ->
   cell.current.props.echoes+=1
   cell.current.props.echoers.push(riter)
-  if logic.already=='downroter'
-    cell.current.props.downroters.splice(logic.alreadyPos, 1)
+  if logic.already.downroter
+    cell.current.props.downroters.splice(logic.already.downPos, 1)
   rite.save()
   cell.current.markModified('props')
   cell.current.save (err) -> console.log err if err
@@ -199,8 +194,8 @@ echoIt = (cell, rite, riter, logic) ->
 downroteIt = (cell, rite, riter, logic) ->
   cell.current.props.echoes-=1
   cell.current.props.downroters.push(riter)
-  if logic.already=='echoer'
-    cell.current.props.echoers.splice(logic.alreadyPos, 1)
+  if logic.already.echoer
+    cell.current.props.echoers.splice(logic.already.echoPos, 1)
   rite.save()
   cell.current.markModified('props')
   cell.current.save (err) -> console.log err if err

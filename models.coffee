@@ -132,6 +132,7 @@ UserSchema = new Schema
   email: String
   name: String # we'll use this for display purposes, non unique
   inactive: {type:Boolean, default: true}
+  initialPos: String
   powers:
     jumpDistance: {type: Number, default: 500000}
     lastLinkOn: {type: Date, default: new Date(0)} #epoch

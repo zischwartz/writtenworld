@@ -130,61 +130,50 @@
         }
       }
       bridge.processRite(cellPoint, content, this.user, this.now, currentWorldId, function(commandType, rite, cellPoint, cellCurrent, originalOwner) {
-        var pCell, ppCell, props;
+        var pCell, ppCell;
         if (rite == null) {
           rite = false;
-        }
-        if (cellPoint == null) {
-          cellPoint = false;
-        }
-        if (cellCurrent == null) {
-          cellCurrent = false;
         }
         if (originalOwner == null) {
           originalOwner = false;
         }
         if (rite) {
-          if (cellCurrent) {
-            props = cellCurrent.props;
-          } else {
-            props = rite.props;
-          }
           pCell = {
             x: cellPoint.x,
             y: cellPoint.y,
             contents: cellCurrent.contents,
-            props: props
+            props: cellCurrent.props
           };
           ppCell = JSON.stringify(pCell);
           redis_client.hmset(key, "" + cellPoint.x + "x" + cellPoint.y, ppCell);
           redis_client.hmset(key2, "" + cellPoint.x + "x" + cellPoint.y, ppCell);
           redis_client.expire(key, REDIS_EXPIRE_SECS);
           redis_client.expire(key2, REDIS_EXPIRE_SECS);
-        }
-        return getWhoCanSee(cellPoint, currentWorldId, function(toUpdate) {
-          var i, _ref, _results;
-          _results = [];
-          for (i in toUpdate) {
-            if (rite) {
-              if ((_ref = CUser.byCid(cid)) != null) {
-                _ref.addToRiteQueue({
-                  x: cellPoint.x,
-                  y: cellPoint.y,
-                  world: currentWorldId,
-                  rite: rite,
-                  commandType: commandType,
-                  originalOwner: originalOwner
-                });
+          return getWhoCanSee(cellPoint, currentWorldId, function(toUpdate) {
+            var i, _ref, _results;
+            _results = [];
+            for (i in toUpdate) {
+              if (rite) {
+                if ((_ref = CUser.byCid(cid)) != null) {
+                  _ref.addToRiteQueue({
+                    x: cellPoint.x,
+                    y: cellPoint.y,
+                    world: currentWorldId,
+                    rite: rite,
+                    commandType: commandType,
+                    originalOwner: originalOwner
+                  });
+                }
+                _results.push(nowjs.getClient(i, function() {
+                  return this.now.drawRite(commandType, rite, cellPoint, cellCurrent != null ? cellCurrent.props : void 0);
+                }));
+              } else {
+                _results.push(void 0);
               }
-              _results.push(nowjs.getClient(i, function() {
-                return this.now.drawRite(commandType, rite, cellPoint, cellCurrent != null ? cellCurrent.props : void 0);
-              }));
-            } else {
-              _results.push(void 0);
             }
-          }
-          return _results;
-        });
+            return _results;
+          });
+        }
       });
       return true;
     };
@@ -288,14 +277,12 @@
         if (exists) {
           return redis_client.hgetall(key, function(err, obj) {
             var i;
-            console.log('hit', key);
             for (i in obj) {
               obj[i] = JSON.parse(obj[i]);
             }
             return callback(obj, absTilePoint);
           });
         } else {
-          console.log('miss', key);
           return models.Cell.where('world', _this.now.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
             var c, pCell, results, _i, _len;
             results = {};
@@ -392,7 +379,7 @@
       var b, geoLink64;
       b = "" + zoom + "x" + cellKey;
       geoLink64 = new Buffer(b).toString('base64');
-      return this.now.insertMessage('Have a link:', "<a href='/l/" + geoLink64 + "'>/l/" + geoLink64 + "</a>");
+      return this.now.insertMessage('Have a link:', "<input type='text' value='writtenworld.org/l/" + geoLink64 + "' class=span4></input>", 'major');
     };
     everyone.now.getCellInfo = function() {
       var cid, cursor, worldId,

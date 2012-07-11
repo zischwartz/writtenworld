@@ -126,7 +126,6 @@ initializeInterface = ->
   
   $userTotalRites = $("#userTotalRites")
 
-
   colorselectcounter=0
   $("#colorPicker").colorpicker
     realtime: false
@@ -157,6 +156,8 @@ initializeInterface = ->
 
       userTotalRites=parseInt($userTotalRites.text())
       $userTotalRites.text(userTotalRites+1)
+      if not config.isAuth() and (userTotalRites is 4 or userTotalRites is 25)
+        insertMessage('Register!!1', "With an account, all the stuff you're writing gets archived to a personal world, where nobody can mess with it", 'alert-info')
       moveCursor(state.writeDirection)
       return
 
@@ -322,7 +323,8 @@ panIfAppropriate = (direction, force)->
 
 
 jQuery ->
-  welcome()
+   
+  welcome() if not config.isAuth()
 
   if not window.NOMAP then tileServeLayer = new L.TileLayer(config.tileServeUrl(), {maxZoom: config.maxZoom()}) else  tileServeLayer = new L.TileLayer('', {maxZoom: config.maxZoom()})
   # state.baseLayer= tileServeLayer
@@ -709,16 +711,18 @@ layerUtils=
 
 welcome = ->
   welcome_message=[]
-  welcome_message.push c for c in "Hey. Try typing on the map./It'll be fun. I swear. "
+  welcome_message.push c for c in "Hey. Try typing on the map./It'll be fun. I swear. // You can move around with the mouse and arrow keys. "
   welcome_cells=[]
-  $.doTimeout 8000, ->
+  $.doTimeout 5000, ->
     $('.cS0').live 'click', ->
       $.doTimeout 'welcome'
       $('.cS0').addClass('ar1').doTimeout 200, -> @remove()
     map.on 'movestart', ->
       $('.cS0').addClass('ar1').doTimeout 200, -> @remove()
       $.doTimeout 'welcome'
-      return false
+    inputEl.keypress (e) ->
+      $('.cS0').addClass('ar1').doTimeout 200, -> @remove()
+      $.doTimeout 'welcome'
     layer=getLayer(state.topLayerStamp)
     if not layer then return true
     target=layer.getCenterTile()
@@ -737,7 +741,7 @@ welcome = ->
         target.x+=1
         key = "c#{target.x}x#{target.y}"
         targetCell=Cell.all()[key]
-        targetCell.animateTextInsert(l, 4, 'cS0', true)
+        targetCell.animateTextInsert(l, 99, 'cS0', true)
         welcome_cells.push targetCell
       if welcome_message.length
         return true
@@ -746,7 +750,7 @@ welcome = ->
           $('.cS0').addClass('ar1').doTimeout 200, -> @remove()
           return false
         return false
-    return
+    return false
 
 getLayer = (stamp) ->
   return map._layers[stamp]
