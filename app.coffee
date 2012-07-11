@@ -15,7 +15,7 @@ mongoose = require 'mongoose'
 if DEBUG
   mongoose.connect('mongodb://localhost/writtenworld')
 else
-  mongoose.connect('mongodb://localhost/mapist')
+mongoose.connect('mongodb://localhost/mapist')
 jade = require('jade')
 
 redis = require "redis"
@@ -229,8 +229,16 @@ app.get '/secretreset11' , (req, res) ->
       'major alert-danger'
       25]
     nownow.now.insertMessage msg[0], msg[1], msg[2], msg[3] 
-    res.render 'about.jade', { title: 'About'}
     
+    models.User.find {}, (err, docs) ->
+      console.log err if err
+      # console.log docs
+      for u in docs
+        if not u.name
+          u.name=u.login
+          u.save()
+          console.log u
+      res.render 'about.jade', { title: 'About'}
     #special color update code
     # colormap =
     #   c0: '92A5C7'

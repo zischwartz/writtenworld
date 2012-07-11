@@ -894,7 +894,7 @@
       welcome_message.push(c);
     }
     welcome_cells = [];
-    return $.doTimeout(5000, function() {
+    return $.doTimeout(10000, function() {
       var initial_x, key, layer, target, targetCell;
       $('.cS0').live('click', function() {
         $.doTimeout('welcome');

@@ -713,7 +713,7 @@ welcome = ->
   welcome_message=[]
   welcome_message.push c for c in "Hey. Try typing on the map./It'll be fun. I swear. // You can move around with the mouse and arrow keys. "
   welcome_cells=[]
-  $.doTimeout 5000, ->
+  $.doTimeout 10000, ->
     $('.cS0').live 'click', ->
       $.doTimeout 'welcome'
       $('.cS0').addClass('ar1').doTimeout 200, -> @remove()
