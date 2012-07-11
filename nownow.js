@@ -129,26 +129,31 @@
           }
         }
       }
-      bridge.processRite(cellPoint, content, this.user, this.now, currentWorldId, function(commandType, rite, cellPoint, cellProps, originalOwner) {
-        var pCell, ppCell;
+      bridge.processRite(cellPoint, content, this.user, this.now, currentWorldId, function(commandType, rite, cellPoint, cellCurrent, originalOwner) {
+        var pCell, ppCell, props;
         if (rite == null) {
           rite = false;
         }
         if (cellPoint == null) {
           cellPoint = false;
         }
-        if (cellProps == null) {
-          cellProps = false;
+        if (cellCurrent == null) {
+          cellCurrent = false;
         }
         if (originalOwner == null) {
           originalOwner = false;
         }
         if (rite) {
+          if (cellCurrent) {
+            props = cellCurrent.props;
+          } else {
+            props = rite.props;
+          }
           pCell = {
             x: cellPoint.x,
             y: cellPoint.y,
-            contents: rite.contents,
-            props: rite.props
+            contents: cellCurrent.contents,
+            props: props
           };
           ppCell = JSON.stringify(pCell);
           redis_client.hmset(key, "" + cellPoint.x + "x" + cellPoint.y, ppCell);
@@ -157,20 +162,22 @@
           redis_client.expire(key2, REDIS_EXPIRE_SECS);
         }
         return getWhoCanSee(cellPoint, currentWorldId, function(toUpdate) {
-          var i, _results;
+          var i, _ref, _results;
           _results = [];
           for (i in toUpdate) {
             if (rite) {
-              CUser.byCid(cid).addToRiteQueue({
-                x: cellPoint.x,
-                y: cellPoint.y,
-                world: currentWorldId,
-                rite: rite,
-                commandType: commandType,
-                originalOwner: originalOwner
-              });
+              if ((_ref = CUser.byCid(cid)) != null) {
+                _ref.addToRiteQueue({
+                  x: cellPoint.x,
+                  y: cellPoint.y,
+                  world: currentWorldId,
+                  rite: rite,
+                  commandType: commandType,
+                  originalOwner: originalOwner
+                });
+              }
               _results.push(nowjs.getClient(i, function() {
-                return this.now.drawRite(commandType, rite, cellPoint, cellProps);
+                return this.now.drawRite(commandType, rite, cellPoint, cellCurrent != null ? cellCurrent.props : void 0);
               }));
             } else {
               _results.push(void 0);

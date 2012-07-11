@@ -7791,8 +7791,10 @@ html {
   display: block;
   /*debug*/
 
-  background: rgba(0, 190, 0, 0.5);
-  -webkit-box-shadow: 0px 0px 1px red;
+  /*background: rgba(0,190, 0, 0.5);*/
+
+  /*-webkit-box-shadow: 0px 0px 1px red;*/
+
 }
 .cell a {
   text-decoration: underline !important;
@@ -7804,13 +7806,14 @@ html {
   background-color: black;
 }
 div.leaflet-tile {
-  /*.rotate(32) !important;*/
+  /*-webkit-box-shadow: 0px 0px 4px yellow;*/
 
-  -webkit-box-shadow: 0px 0px 4px yellow;
   color: white;
   /*.transition(opacity ease-in 0.3s) !important;*/
 
   /*.opacity(0) !important;*/
+
+  /*.rotate(32) !important;*/
 
 }
 /*div.leaflet-tile span */

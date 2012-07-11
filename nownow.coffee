@@ -94,10 +94,14 @@ module.exports = (app, SessionModel, redis_client) ->
               this.now.insertMessage "Sorry, 1 link per minute", "For now. Sorry." , 'alert-error'
               return false
 
-    bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false, originalOwner=false)->
+    bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellCurrent=false, originalOwner=false)->
       # console.log "CALL BACK! #{commandType} - #{rite} #{cellPoint}"
       if rite
-          pCell = {x: cellPoint.x, y: cellPoint.y, contents: rite.contents, props: rite.props}
+          # console.log 'cellProps', cellProps
+          # console.log ' '
+          # console.log 'rite.props', rite.props
+          if cellCurrent then props=cellCurrent.props else props=rite.props
+          pCell = {x: cellPoint.x, y: cellPoint.y, contents: cellCurrent.contents, props: props}
           ppCell= JSON.stringify(pCell)
           redis_client.hmset key, "#{cellPoint.x}x#{cellPoint.y}", ppCell
           redis_client.hmset key2, "#{cellPoint.x}x#{cellPoint.y}", ppCell
@@ -106,9 +110,9 @@ module.exports = (app, SessionModel, redis_client) ->
       getWhoCanSee cellPoint, currentWorldId, (toUpdate)->
         for i of toUpdate
             if rite # it was a legit rite  # if i !=cid # ALSO: ie not you, removed for hacky 'rite to server than to screen'
-              CUser.byCid(cid).addToRiteQueue {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite, commandType, originalOwner}
+              CUser.byCid(cid)?.addToRiteQueue {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite, commandType, originalOwner}
               nowjs.getClient i, ->
-                this.now.drawRite(commandType, rite, cellPoint, cellProps)
+                this.now.drawRite(commandType, rite, cellPoint, cellCurrent?.props)
     return true
 
 
@@ -183,12 +187,12 @@ module.exports = (app, SessionModel, redis_client) ->
     redis_client.exists key, (err, exists) =>
       if exists
         redis_client.hgetall key, (err, obj)->
-          # console.log 'hit', key
+          console.log 'hit', key
           for i of obj
             obj[i] = JSON.parse obj[i]
           callback(obj, absTilePoint)
       else
-        # console.log 'miss', key
+        console.log 'miss', key
         models.Cell.where('world', this.now.currentWorldId)
           .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
           .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
@@ -202,7 +206,6 @@ module.exports = (app, SessionModel, redis_client) ->
                   results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
                   redis_client.hmset key, "#{c.x}x#{c.y}", JSON.stringify(pCell)
                   redis_client.expire key, REDIS_EXPIRE_SECS
-                # console.log "results"
               callback(results, absTilePoint)
             else
               # console.log 'not found'
