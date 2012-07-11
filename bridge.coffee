@@ -90,37 +90,37 @@ module.exports = (everyone, SessionModel) ->
         # console.log debug
 
         if logic.blankCurrently
-          console.log 'Blank, just write'
+          # console.log 'Blank, just write'
           normalRite(cell, rite, riter, logic)
           callback('normalRite', rite, cellPoint, rite) #borderline clever, the second passing of rite is cell.current
         else if logic.potentialEcho and logic.already.echoer
-          console.log 'Echoing yourself too much will make you go blind'
+          # console.log 'Echoing yourself too much will make you go blind'
           logic.riteToHistory=false
           callback('alreadyEchoed')
         else if logic.already.downroter and not logic.potentialEcho
-          console.log 'You cannot downrote again '
+          # console.log 'You cannot downrote again '
           logic.riteToHistory=false
           callback('alreadyDownroted')
         else if logic.legitEcho
-            console.log 'Legit echo, cool'
+            # console.log 'Legit echo, cool'
             echoIt(cell, rite, riter, logic)
             callback('echo', rite, cellPoint, cell.current, originalOwner)
         else if logic.cEchoes<=0
-            console.log 'Legit overrite, there were no echoes'
+            # console.log 'Legit overrite, there were no echoes'
             overriteIt(cell, rite, riter, logic) # this changes c.current to the rite
             callback('overrite', rite, cellPoint, cell.current, originalOwner)
         else if logic.cEchoes>=1
             if not logic.already.echoer
-              console.log 'Legit Downrote'
+              # console.log 'Legit Downrote'
               downroteIt(cell, rite, riter, logic)
               callback('downrote', rite, cellPoint, cell.current, originalOwner)
             else if logic.already.echoer
               if logic.cEchoes ==1
-                console.log 'Overrite something you echoed!'
+                # console.log 'Overrite something you echoed!'
                 overriteIt(cell, rite, riter, logic)
                 callback('overrite', rite, cellPoint, cell.current, originalOwner)
               else
-                console.log 'Downroting something you echoed!'
+                # console.log 'Downroting something you echoed!'
                 downroteIt(cell, rite, riter, logic)
                 callback('downrote', rite, cellPoint, cell.current, originalOwner)
         else
