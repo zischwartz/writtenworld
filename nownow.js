@@ -17,7 +17,7 @@
   module.exports = function(app, SessionModel, redis_client) {
     var CUser, bridge, everyone, getWhoCanSee;
     everyone = nowjs.initialize(app);
-    bridge = require('./bridge')(everyone, SessionModel);
+    bridge = require('./bridge')(everyone, SessionModel, redis_client);
     everyone.now.setGroup = function(currentWorldId) {
       var group;
       if (currentWorldId) {
@@ -92,25 +92,13 @@
       });
     };
     everyone.now.writeCell = function(cellPoint, content) {
-      var cid, currentWorldId, k, key, key2, numRC, tilePoint, tilePoint2, v,
+      var cid, currentWorldId, k, v,
         _this = this;
       if (!this.now.currentWorldId) {
         return false;
       }
       currentWorldId = this.now.currentWorldId;
       cid = this.user.clientId;
-      numRC = 16;
-      tilePoint = {
-        x: Math.floor(cellPoint.x / numRC) * numRC,
-        y: Math.floor(cellPoint.y / numRC) * numRC
-      };
-      key = "t:" + currentWorldId + ":" + numRC + ":" + tilePoint.x + ":" + tilePoint.y;
-      numRC = 8;
-      tilePoint2 = {
-        x: Math.floor(cellPoint.x / numRC) * numRC,
-        y: Math.floor(cellPoint.y / numRC) * numRC
-      };
-      key2 = "t:" + currentWorldId + ":" + numRC + ":" + tilePoint2.x + ":" + tilePoint2.y;
       if (typeof content !== 'string') {
         for (k in content) {
           v = content[k];
@@ -129,47 +117,37 @@
           }
         }
       }
-      bridge.processRite(cellPoint, content, this.user, this.now, currentWorldId, function(commandType, rite, cellPoint, cellCurrent, originalOwner) {
-        var pCell, ppCell;
+      bridge.processRite(cellPoint, content, this.user, this.now, currentWorldId, function(commandType, rite, cellPoint, cellProps, originalOwner) {
         if (rite == null) {
           rite = false;
+        }
+        if (cellPoint == null) {
+          cellPoint = false;
+        }
+        if (cellProps == null) {
+          cellProps = false;
         }
         if (originalOwner == null) {
           originalOwner = false;
         }
         if (rite) {
-          pCell = {
-            x: cellPoint.x,
-            y: cellPoint.y,
-            contents: cellCurrent.contents,
-            props: cellCurrent.props
-          };
-          ppCell = JSON.stringify(pCell);
-          redis_client.hmset(key, "" + cellPoint.x + "x" + cellPoint.y, ppCell);
-          redis_client.hmset(key2, "" + cellPoint.x + "x" + cellPoint.y, ppCell);
-          redis_client.expire(key, REDIS_EXPIRE_SECS);
-          redis_client.expire(key2, REDIS_EXPIRE_SECS);
           return getWhoCanSee(cellPoint, currentWorldId, function(toUpdate) {
             var i, _ref, _results;
             _results = [];
             for (i in toUpdate) {
-              if (rite) {
-                if ((_ref = CUser.byCid(cid)) != null) {
-                  _ref.addToRiteQueue({
-                    x: cellPoint.x,
-                    y: cellPoint.y,
-                    world: currentWorldId,
-                    rite: rite,
-                    commandType: commandType,
-                    originalOwner: originalOwner
-                  });
-                }
-                _results.push(nowjs.getClient(i, function() {
-                  return this.now.drawRite(commandType, rite, cellPoint, cellCurrent != null ? cellCurrent.props : void 0);
-                }));
-              } else {
-                _results.push(void 0);
+              if ((_ref = CUser.byCid(cid)) != null) {
+                _ref.addToRiteQueue({
+                  x: cellPoint.x,
+                  y: cellPoint.y,
+                  world: currentWorldId,
+                  rite: rite,
+                  commandType: commandType,
+                  originalOwner: originalOwner
+                });
               }
+              _results.push(nowjs.getClient(i, function() {
+                return this.now.drawRite(commandType, rite, cellPoint, cellProps);
+              }));
             }
             return _results;
           });
@@ -266,50 +244,68 @@
       });
     };
     everyone.now.getTileCached = function(absTilePoint, numRows, callback) {
-      var key, worldId,
+      var key, results, worldId,
         _this = this;
       if (!this.now.currentWorldId) {
         return false;
       }
       worldId = this.now.currentWorldId.toString();
-      key = "t:" + worldId + ":" + numRows + ":" + absTilePoint.x + ":" + absTilePoint.y;
-      return redis_client.exists(key, function(err, exists) {
-        if (exists) {
-          return redis_client.hgetall(key, function(err, obj) {
-            var i;
-            for (i in obj) {
-              obj[i] = JSON.parse(obj[i]);
+      results = {};
+      if (this.now.personalWorldId.toString() === worldId) {
+        return models.Cell.where('world', this.now.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
+          var c, pCell, _i, _len;
+          for (_i = 0, _len = docs.length; _i < _len; _i++) {
+            c = docs[_i];
+            if (c.current) {
+              pCell = {
+                x: c.x,
+                y: c.y,
+                contents: c.current.contents,
+                props: c.current.props
+              };
+              results["" + c.x + "x" + c.y] = pCell;
             }
-            return callback(obj, absTilePoint);
-          });
-        } else {
-          return models.Cell.where('world', _this.now.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
-            var c, pCell, results, _i, _len;
-            results = {};
-            if (docs.length) {
-              for (_i = 0, _len = docs.length; _i < _len; _i++) {
-                c = docs[_i];
-                if (c.current) {
-                  pCell = {
-                    x: c.y,
-                    y: c.y,
-                    contents: c.current.contents,
-                    props: c.current.props
-                  };
-                  results["" + c.x + "x" + c.y] = pCell;
-                  redis_client.hmset(key, "" + c.x + "x" + c.y, JSON.stringify(pCell));
-                  redis_client.expire(key, REDIS_EXPIRE_SECS);
+          }
+          return callback(results, absTilePoint);
+        });
+      } else {
+        key = "t:" + worldId + ":" + numRows + ":" + absTilePoint.x + ":" + absTilePoint.y;
+        return redis_client.exists(key, function(err, exists) {
+          if (exists) {
+            return redis_client.hgetall(key, function(err, obj) {
+              var i;
+              for (i in obj) {
+                obj[i] = JSON.parse(obj[i]);
+              }
+              return callback(obj, absTilePoint);
+            });
+          } else {
+            return models.Cell.where('world', _this.now.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x + numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y + numRows).populate('current').run(function(err, docs) {
+              var c, pCell, _i, _len;
+              if (docs.length) {
+                for (_i = 0, _len = docs.length; _i < _len; _i++) {
+                  c = docs[_i];
+                  if (c.current) {
+                    pCell = {
+                      x: c.x,
+                      y: c.y,
+                      contents: c.current.contents,
+                      props: c.current.props
+                    };
+                    results["" + c.x + "x" + c.y] = pCell;
+                    redis_client.hmset(key, "" + c.x + "x" + c.y, JSON.stringify(pCell));
+                    redis_client.expire(key, REDIS_EXPIRE_SECS);
+                  }
                 }
+              } else {
+                redis_client.hset(key, '0', '0');
+                redis_client.expire(key, 600);
               }
               return callback(results, absTilePoint);
-            } else {
-              redis_client.hset(key, '0', '0');
-              redis_client.expire(key, 600);
-              return callback(results, absTilePoint);
-            }
-          });
-        }
-      });
+            });
+          }
+        });
+      }
     };
     everyone.now.getCloseUsers = function(cb) {
       var aC, cid, closeUsers;

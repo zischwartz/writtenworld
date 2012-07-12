@@ -12,7 +12,7 @@ REDIS_EXPIRE_SECS=600
 module.exports = (app, SessionModel, redis_client) ->
   everyone = nowjs.initialize app
   # module.everyone = everyone
-  bridge = require('./bridge')(everyone, SessionModel)
+  bridge = require('./bridge')(everyone, SessionModel, redis_client)
 
   everyone.now.setGroup = (currentWorldId) ->
     if currentWorldId
@@ -70,17 +70,6 @@ module.exports = (app, SessionModel, redis_client) ->
       return false
     currentWorldId = this.now.currentWorldId
     cid = this.user.clientId
-    # console.log currentWorldId
-
-    #convert to abstilepoint
-    # numRC= this.now.numRC
-    numRC=16
-    tilePoint = {x:Math.floor(cellPoint.x/numRC)*numRC, y: Math.floor(cellPoint.y/numRC)*numRC}
-    key="t:#{currentWorldId}:#{numRC}:#{tilePoint.x}:#{tilePoint.y}"
-    numRC=8
-    tilePoint2 = {x:Math.floor(cellPoint.x/numRC)*numRC, y: Math.floor(cellPoint.y/numRC)*numRC}
-    key2="t:#{currentWorldId}:#{numRC}:#{tilePoint2.x}:#{tilePoint2.y}"
-    #this is dumb, but neccesary for now if i want to cache whole tiles, until i think of a better way
 
     if typeof content isnt 'string'
       for k, v of content
@@ -95,20 +84,14 @@ module.exports = (app, SessionModel, redis_client) ->
               this.now.insertMessage "Sorry, 1 link per minute", "For now. Sorry." , 'alert-error'
               return false
 
-    bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint, cellCurrent, originalOwner=false)->
+    bridge.processRite cellPoint, content, this.user, this.now, currentWorldId, (commandType, rite=false, cellPoint=false, cellProps=false, originalOwner=false)->
       if rite
-        pCell = {x: cellPoint.x, y: cellPoint.y, contents: cellCurrent.contents, props: cellCurrent.props}
-        ppCell= JSON.stringify(pCell)
-        redis_client.hmset key, "#{cellPoint.x}x#{cellPoint.y}", ppCell
-        redis_client.hmset key2, "#{cellPoint.x}x#{cellPoint.y}", ppCell
-        redis_client.expire key, REDIS_EXPIRE_SECS
-        redis_client.expire key2, REDIS_EXPIRE_SECS
         getWhoCanSee cellPoint, currentWorldId, (toUpdate)->
           for i of toUpdate
-              if rite # it was a legit rite  # if i !=cid # ALSO: ie not you, removed for hacky 'rite to server than to screen'
-                CUser.byCid(cid)?.addToRiteQueue {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite, commandType, originalOwner}
-                nowjs.getClient i, ->
-                  this.now.drawRite(commandType, rite, cellPoint, cellCurrent?.props)
+            # if rite # it was a legit rite  # if i !=cid # ALSO: ie not you, removed for hacky 'rite to server than to screen'
+            CUser.byCid(cid)?.addToRiteQueue {x: cellPoint.x, y:cellPoint.y,  world:currentWorldId, rite, commandType, originalOwner}
+            nowjs.getClient i, ->
+              this.now.drawRite(commandType, rite, cellPoint, cellProps)
     return true
 
 
@@ -175,38 +158,45 @@ module.exports = (app, SessionModel, redis_client) ->
 
   everyone.now.getTileCached= (absTilePoint, numRows, callback) ->
     # console.log 'getTileCached'
+    # console.log this.now
     if not this.now.currentWorldId
       return false
     worldId= this.now.currentWorldId.toString()
-
-    key="t:#{worldId}:#{numRows}:#{absTilePoint.x}:#{absTilePoint.y}"
-    redis_client.exists key, (err, exists) =>
-      if exists
-        redis_client.hgetall key, (err, obj)->
-          # console.log 'hit', key
-          for i of obj
-            obj[i] = JSON.parse obj[i]
-          callback(obj, absTilePoint)
-      else
-        # console.log 'miss', key
-        models.Cell.where('world', this.now.currentWorldId)
-          .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
-          .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
-          .populate('current')
-          .run (err,docs) =>
-            results = {}
-            if docs.length
-              for c in docs
-                if c.current
-                  pCell = {x: c.y, y: c.y, contents: c.current.contents, props: c.current.props}
-                  results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
-                  redis_client.hmset key, "#{c.x}x#{c.y}", JSON.stringify(pCell)
-                  redis_client.expire key, REDIS_EXPIRE_SECS
-              callback(results, absTilePoint)
-            else
-              # console.log 'not found'
-              redis_client.hset key, '0','0'
-              redis_client.expire key, 600
+    results = {}
+    if this.now.personalWorldId.toString() is worldId #personal world, don't deal with caching
+      # console.log 'personal'
+      models.Cell.where('world', this.now.currentWorldId).where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows).where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows).populate('current').run (err,docs) =>
+            for c in docs
+              if c.current
+                pCell = {x: c.x, y: c.y, contents: c.current.contents, props: c.current.props}#holy crap that said c.y instead of c.x
+                results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
+            callback(results, absTilePoint)
+    else #normal world
+      key="t:#{worldId}:#{numRows}:#{absTilePoint.x}:#{absTilePoint.y}"
+      redis_client.exists key, (err, exists) =>
+        if exists
+          redis_client.hgetall key, (err, obj)->
+            # console.log 'hit', key
+            for i of obj
+              obj[i] = JSON.parse obj[i]
+            callback(obj, absTilePoint)
+        else
+          # console.log 'miss', key
+          models.Cell.where('world', this.now.currentWorldId)
+            .where('x').gte(absTilePoint.x).lt(absTilePoint.x+numRows)
+            .where('y').gte(absTilePoint.y).lt(absTilePoint.y+numRows)
+            .populate('current')
+            .run (err,docs) =>
+              if docs.length
+                for c in docs
+                  if c.current
+                    pCell = {x: c.x, y: c.y, contents: c.current.contents, props: c.current.props}
+                    results["#{c.x}x#{c.y}"] = pCell #pCell is a processed cell
+                    redis_client.hmset key, "#{c.x}x#{c.y}", JSON.stringify(pCell)
+                    redis_client.expire key, REDIS_EXPIRE_SECS
+              else
+                redis_client.hset key, '0','0'
+                redis_client.expire key, 600
               callback(results, absTilePoint)
 
 

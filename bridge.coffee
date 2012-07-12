@@ -5,23 +5,21 @@ async = require './lib/async.js'
 leaflet = require './lib/leaflet-custom-src.js'
 
 # otherWorlds = require './otherworlds'
+redis={}
 
-module.exports = (everyone, SessionModel) ->
-  
+module.exports = (everyone, SessionModel, redis_client) ->
+  redis=redis_client
+
   processRite = (cellPoint, contents, nowUser, nowThis, currentWorldId, callback) ->
     cid = nowUser.clientId
     sid= decodeURIComponent nowUser.cookie['connect.sid']
     color= nowUser.session?.color
 
-    # console.log contents
-    # console.log typeof contents
     if typeof contents isnt 'string'
       extras=contents
       contents= extras.contents
       delete extras.contents
-      # console.log 'extras', extras
-      # console.log 'contents', contents
-
+  
     # If user has an account and is logged in
     if nowUser.session.auth
       personalWorld = models.ObjectIdFromString(nowThis.personalWorldId)
@@ -39,12 +37,10 @@ module.exports = (everyone, SessionModel) ->
           rite.save (err) ->
             cell.current= rite._id
             cell.save()
-
       if nowThis.personalWorldId.toString() is currentWorldId  #check if they're already in their own world (heh)
         # console.log 'was actually writing directly to yr world, so skip the echo behavior below'
         callback('normalRite', rite, cellPoint)
         return
-
     # Not logged in
     else
       riter = nowUser.soid #session object id
@@ -58,13 +54,9 @@ module.exports = (everyone, SessionModel) ->
         if not cell or not cell.current
           # console.log 'no cell or blank cell'
           cell = new models.Cell {x:cellPoint.x, y:cellPoint.y, world:currentWorldId}
-          # [already, alreadyPos] = [false, -1]
-          already= {echoer: false, downroter: false, downPos:-1, echoPos: -1} 
+          already= {echoer: false, downroter: false, downPos:-1, echoPos: -1}
 
         if cell and cell.current
-          # console.log 'cell found w/ current'
-          # console.log determineStatus(cell, riter)
-          # [already, alreadyPos] = determineStatus(cell, riter)
           already = determineStatus(cell, riter)
        
         logic=
@@ -92,7 +84,7 @@ module.exports = (everyone, SessionModel) ->
         if logic.blankCurrently
           # console.log 'Blank, just write'
           normalRite(cell, rite, riter, logic)
-          callback('normalRite', rite, cellPoint, rite) #borderline clever, the second passing of rite is cell.current
+          callback('normalRite', rite, cellPoint)
         else if logic.potentialEcho and logic.already.echoer
           # console.log 'Echoing yourself too much will make you go blind'
           logic.riteToHistory=false
@@ -104,25 +96,25 @@ module.exports = (everyone, SessionModel) ->
         else if logic.legitEcho
             # console.log 'Legit echo, cool'
             echoIt(cell, rite, riter, logic)
-            callback('echo', rite, cellPoint, cell.current, originalOwner)
+            callback('echo', rite, cellPoint, cell.current.props, originalOwner)
         else if logic.cEchoes<=0
             # console.log 'Legit overrite, there were no echoes'
             overriteIt(cell, rite, riter, logic) # this changes c.current to the rite
-            callback('overrite', rite, cellPoint, cell.current, originalOwner)
+            callback('overrite', rite, cellPoint, cell.current.props, originalOwner)
         else if logic.cEchoes>=1
             if not logic.already.echoer
               # console.log 'Legit Downrote'
               downroteIt(cell, rite, riter, logic)
-              callback('downrote', rite, cellPoint, cell.current, originalOwner)
+              callback('downrote', rite, cellPoint, cell.current.props, originalOwner)
             else if logic.already.echoer
               if logic.cEchoes ==1
                 # console.log 'Overrite something you echoed!'
                 overriteIt(cell, rite, riter, logic)
-                callback('overrite', rite, cellPoint, cell.current, originalOwner)
+                callback('overrite', rite, cellPoint, cell.current.props, originalOwner)
               else
                 # console.log 'Downroting something you echoed!'
                 downroteIt(cell, rite, riter, logic)
-                callback('downrote', rite, cellPoint, cell.current, originalOwner)
+                callback('downrote', rite, cellPoint, cell.current.props, originalOwner)
         else
           console.log 'WELL SHIT THIS SHOULDNT HAVE HAPPENED'
         
@@ -150,7 +142,6 @@ module.exports = (everyone, SessionModel) ->
 
 
 # Helpers for processRite
-
 determineStatus = (cell, riter) ->
   isAlreadyEchoer=false; isAlreadyDownroter = false; i=-1; alreadyDownPos= -1; alreadyEchoPos=-1; 
     #hacktastic, because indexof doesn't work with mongoose objectIds
@@ -160,29 +151,25 @@ determineStatus = (cell, riter) ->
       if e.toString()==riter.toString()
         isAlreadyEchoer = true
         alreadyEchoPos= i
-        # console.log "already echoer!!! #{alreadyEchoPos}"
-        # return ['echoer', i]
   if cell?.current?.props.downroters
     for d in cell?.current?.props.downroters
       i+=1
       if d.toString()==riter.toString()
         isAlreadyDownroter = true
         alreadyDownPos=i
-        # console.log "already downroter!!! #{alreadyDownPos}"
-        # return ['downroter', i]
-  # console.log 'returning false from determine status'
-  # return [false, -1]
   return {echoer: isAlreadyEchoer, downroter: isAlreadyDownroter, echoPos:alreadyEchoPos, downPos: alreadyDownPos}
 
 normalRite = (cell, rite, riter, logic) ->
   rite.props.echoes+=1
   rite.props.echoers.push(riter)
+  writeToRedis(cell, rite)
   rite.save (err) ->
     cell.current= rite._id
     cell.save()
   
 echoIt = (cell, rite, riter, logic) ->
   cell.current.props.echoes+=1
+  writeToRedis(cell)
   cell.current.props.echoers.push(riter)
   if logic.already.downroter
     cell.current.props.downroters.splice(logic.already.downPos, 1)
@@ -196,6 +183,7 @@ downroteIt = (cell, rite, riter, logic) ->
   cell.current.props.downroters.push(riter)
   if logic.already.echoer
     cell.current.props.echoers.splice(logic.already.echoPos, 1)
+  writeToRedis(cell)
   rite.save()
   cell.current.markModified('props')
   cell.current.save (err) -> console.log err if err
@@ -204,10 +192,41 @@ downroteIt = (cell, rite, riter, logic) ->
 overriteIt = (cell, rite, riter, logic) ->
   rite.props.echoes+=1
   rite.props.echoers.push(riter)
+  writeToRedis(cell, rite)
   rite.save (err) ->
     cell.current = rite._id
     cell.save (err) -> console.log err if err
   return
+
+
+writeToRedis = (cell, rite=false)->
+    # console.log 'WRITE TO REDIS'
+    # console.log cell
+    if rite
+      # console.log 'rite', rite
+      contents= rite.contents
+      props= rite.props
+    else
+      contents = cell.current.contents
+      props= cell.current.props
+
+    cellPoint=cell
+    currentWorldId= cell.world.toString()
+    numRC=16
+    tilePoint = {x:Math.floor(cellPoint.x/numRC)*numRC, y: Math.floor(cellPoint.y/numRC)*numRC}
+    key="t:#{currentWorldId}:#{numRC}:#{tilePoint.x}:#{tilePoint.y}"
+    numRC=8
+    tilePoint2 = {x:Math.floor(cellPoint.x/numRC)*numRC, y: Math.floor(cellPoint.y/numRC)*numRC}
+    key2="t:#{currentWorldId}:#{numRC}:#{tilePoint2.x}:#{tilePoint2.y}"
+    #this is dumb, but neccesary for now if i want to cache whole tiles, until i think of a better way
+    pCell = {x: cellPoint.x, y: cellPoint.y, contents: contents, props: props}
+    # console.log key2
+    # console.log pCell
+    ppCell= JSON.stringify(pCell)
+    redis.hmset key, "#{cellPoint.x}x#{cellPoint.y}", ppCell
+    redis.hmset key2, "#{cellPoint.x}x#{cellPoint.y}", ppCell
+    redis.expire key, 600
+    redis.expire key2, 600
 
 # Utility 
 Array::filter = (func) -> x for x in @ when func(x)
