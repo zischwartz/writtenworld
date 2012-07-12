@@ -337,6 +337,10 @@
     t: {
       type: String,
       "default": ' '
+    },
+    date: {
+      type: Date,
+      "default": Date.now
     }
   });
 

@@ -578,8 +578,10 @@ window.Cell = class Cell
   cursor: (color) ->
       if color
         @span.style.backgroundColor='#'+color
+        @span.className+=' otherSelected '
       else
         @span.style.backgroundColor=''
+        $(@span).removeClass('otherSelected')
       return
 
   # COMMAND PATTERN

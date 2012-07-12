@@ -184,32 +184,36 @@ div.leaflet-tile-loaded
 @-webkit-keyframes pulserBg {
   0%  { 
         background-color: @bgcolor;
-        /*box-shadow: 0px 0px 4px white;*/
+        box-shadow: 0px 0px 4px white;
       }
  50%  {
         background-color: darken(@bgcolor, 50%);
-        /*box-shadow: 0px 0px 8px white;*/
+        box-shadow: 0px 0px 8px white;
       }
  100% {
         background-color: @bgcolor;
-         /*box-shadow: 0px 0px 4px white;*/
+         box-shadow: 0px 0px 4px white;
       }
 }
 
 @-moz-keyframes pulserBg {
-  0%  { 
-        background-color: @bgcolor;
-        /*box-shadow: 0px 0px 4px white;*/
-      }
- 50%  {
-        background-color: darken(@bgcolor, 50%);
-        /*box-shadow: 0px 0px 8px white;*/
-      }
- 100% {
-        background-color: @bgcolor;
-         /*box-shadow: 0px 0px 4px white;*/
-      }
+  0%  { background-color: @bgcolor; }
+ 50%  { background-color: darken(@bgcolor, 50%); }
+ 100% { background-color: @bgcolor; }
 }
+
+@-webkit-keyframes pulseShadow {
+  0%  { box-shadow: 0px 0px 4px white; }
+ 50%  { box-shadow: 0px 0px 8px white; }
+ 100% { box-shadow: 0px 0px 4px white; }
+}
+
+/*eats cpu*/
+/*@-moz-keyframes pulseShadow {*/
+/*  0%  { box-shadow: 0px 0px 4px white; }*/
+/* 50%  { box-shadow: 0px 0px 8px white; }*/
+/* 100% { box-shadow: 0px 0px 4px white; }*/
+/*}*/
 /* SELECTED CELLS */
 /* SELECTED CELLS */
 
@@ -227,6 +231,8 @@ div.leaflet-tile-loaded
   /*border: 1px solid white;*/
   box-shadow: 0px 0px 4px white;
   /*-webkit-animation: pulserOp 1s infinite;   */
+  -webkit-animation: pulseShadow 1s infinite;   
+  /*-moz-animation: pulseShadow 1s infinite;   */
 }
 
 

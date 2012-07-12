@@ -185,6 +185,7 @@ exports.User= mongoose.model('User', UserSchema)
 FeedbackSchema = new Schema
   contents: {type: String, default: ' '}
   t: {type: String, default: ' '}
+  date: { type: Date, default: Date.now }
 
 exports.Feedback = mongoose.model('Feedback', FeedbackSchema)
 

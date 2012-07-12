@@ -676,8 +676,10 @@
     Cell.prototype.cursor = function(color) {
       if (color) {
         this.span.style.backgroundColor = '#' + color;
+        this.span.className += ' otherSelected ';
       } else {
         this.span.style.backgroundColor = '';
+        $(this.span).removeClass('otherSelected');
       }
     };
 

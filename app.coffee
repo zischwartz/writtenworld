@@ -15,7 +15,7 @@ mongoose = require 'mongoose'
 if DEBUG
   mongoose.connect('mongodb://localhost/writtenworld')
 else
-mongoose.connect('mongodb://localhost/mapist')
+  mongoose.connect('mongodb://localhost/mapist')
 jade = require('jade')
 
 redis = require "redis"

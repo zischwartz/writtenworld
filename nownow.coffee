@@ -70,6 +70,7 @@ module.exports = (app, SessionModel, redis_client) ->
       return false
     currentWorldId = this.now.currentWorldId
     cid = this.user.clientId
+    # console.log currentWorldId
 
     #convert to abstilepoint
     # numRC= this.now.numRC
