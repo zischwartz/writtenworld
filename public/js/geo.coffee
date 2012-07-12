@@ -63,7 +63,7 @@ geoHasPosition = (position) ->
 
   p = new L.LatLng(position.coords.latitude,position.coords.longitude)
   
-  p =la  #FOR DEBUG 
+  # p =la  #FOR DEBUG 
 
   state.geoPos = p
   state.geoAccuracy = position.coords.accuracy

@@ -75,7 +75,6 @@
     closest = '';
     distanceToClosest = 10000000000000000000000000000000;
     p = new L.LatLng(position.coords.latitude, position.coords.longitude);
-    p = la;
     state.geoPos = p;
     state.geoAccuracy = position.coords.accuracy;
     if (window.VARYLATLNG && position.coords.accuracy > 2000 || position.coords.accuracy === -1) {
