@@ -44,6 +44,7 @@ geoSucceeded = (position) ->
 # chicago = new L.LatLng(41.878114,-87.629798) # for testing
 # nj = new L.LatLng(40.058324,-74.405661) # for testing
 la = new L.LatLng(34.052234,-118.243685) # for testing
+nyc= new L.LatLng(40.73037270272987, -73.99361729621887)
 
 geoHasPosition = (position) ->
   # console.log 'has pos', position 
@@ -61,7 +62,9 @@ geoHasPosition = (position) ->
   distanceToClosest = 10000000000000000000000000000000
 
   p = new L.LatLng(position.coords.latitude,position.coords.longitude)
-  # p =la 
+  
+  p =la  #FOR DEBUG 
+
   state.geoPos = p
   state.geoAccuracy = position.coords.accuracy
   if window.VARYLATLNG and position.coords.accuracy > 2000 or position.coords.accuracy is -1
@@ -83,13 +86,16 @@ geoHasPosition = (position) ->
 
   else
     # console.log 'not official city YO'
-    if window.VARYLATLNG
-      map.setView(varyLatLng(officialCities[closest]), config.defZoom() )
-    else
-      map.setView(officialCities[closest], config.defZoom() )
-    msgbody="We're in beta, so we're concentrating on a few cities for now. We took you to <b>#{closest}</b>.<br><br>Want a head start writing on your actual location? It may be kinda empty. <br><br><a href='#' class='goToActualPos btn btn-primary' data-dismiss='alert'>Go to your location</a> <a href='#' class='btn' data-dismiss='alert'>Stay</a>"
-    window.clearMessages()
-    window.insertMessage "&quotHey, That's Not Where I Am!&quot", msgbody, 'alert-info', 45 # was major
+    # if window.VARYLATLNG
+    #   map.setView(varyLatLng(officialCities[closest]), config.defZoom() )
+    # else
+    #   map.setView(officialCities[closest], config.defZoom() )
+    # msgbody="We're in beta, so we're concentrating on a few cities for now. We took you to <b>#{closest}</b>.<br><br>Want a head start writing on your actual location? It may be kinda empty. <br><br><a href='#' class='goToActualPos btn btn-primary' data-dismiss='alert'>Go to your location</a> <a href='#' class='btn' data-dismiss='alert'>Stay</a>"
+    map.setView(p, config.defZoom() )
+    msgbody="We're in beta, so your location may be kinda empty. New York City is pretty crazy if you'd like to check it out: <br><br><a href='#' class='goToNYC btn btn-primary' data-dismiss='alert'>Go to NYC</a> <a href='#' class='btn' data-dismiss='alert'>Stay</a>"
+    # window.clearMessages()
+    # window.insertMessage "&quotHey, That's Not Where I Am!&quot", msgbody, 'alert-info', 45 # was major
+    window.insertMessage "&quotWhere is everyone? &quot", msgbody, 'alert-info', 95 # was major
     state.isLocal=false
   return true
 
@@ -100,6 +106,12 @@ $('.goToActualPos').live 'click', ->
   window.centerCursor()
   true
 
+$('.goToNYC').live 'click', ->
+  map.setView(varyLatLng(nyc), config.defZoom() )
+  state.isLocal=false
+  state.selectedCell = false
+  window.centerCursor()
+  true
 
 window.varyLatLng = (l) ->
   latOffset = Math.random()/100
